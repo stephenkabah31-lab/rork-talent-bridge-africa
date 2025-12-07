@@ -60,7 +60,7 @@ export default function AdminLoginScreen() {
         [
           {
             text: 'Continue',
-            onPress: () => router.replace('/home'),
+            onPress: () => router.replace('/admin-verify'),
           },
         ]
       );

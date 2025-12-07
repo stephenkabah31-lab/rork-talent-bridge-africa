@@ -9,6 +9,7 @@ import {
   Search,
   Building2,
   Clock,
+  BadgeCheck,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -45,6 +46,7 @@ interface Job {
   recruiterName: string;
   salaryUSD?: { min: number; max: number };
   currencyType?: 'USD' | 'local';
+  isVerified?: boolean;
 }
 
 const MOCK_JOBS: Job[] = [
@@ -61,6 +63,7 @@ const MOCK_JOBS: Job[] = [
     recruiterName: 'Sarah Johnson',
     salaryUSD: { min: 50000, max: 80000 },
     currencyType: 'USD',
+    isVerified: true,
   },
   {
     id: '2',
@@ -74,6 +77,7 @@ const MOCK_JOBS: Job[] = [
     recruiterName: 'Michael Chen',
     salaryUSD: { min: 60000, max: 90000 },
     currencyType: 'local',
+    isVerified: true,
   },
   {
     id: '3',
@@ -87,6 +91,7 @@ const MOCK_JOBS: Job[] = [
     recruiterName: 'Emma Thompson',
     salaryUSD: { min: 40000, max: 65000 },
     currencyType: 'local',
+    isVerified: false,
   },
   {
     id: '4',
@@ -100,6 +105,7 @@ const MOCK_JOBS: Job[] = [
     recruiterName: 'David Martinez',
     salaryUSD: { min: 45000, max: 70000 },
     currencyType: 'local',
+    isVerified: true,
   },
   {
     id: '5',
@@ -113,6 +119,7 @@ const MOCK_JOBS: Job[] = [
     recruiterName: 'Lisa Anderson',
     salaryUSD: { min: 50000, max: 75000 },
     currencyType: 'USD',
+    isVerified: false,
   },
 ];
 
@@ -224,8 +231,18 @@ export default function JobsScreen() {
                   <Building2 color={Colors.primary} size={24} />
                 </View>
                 <View style={styles.jobTitleContainer}>
-                  <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.jobCompany}>{job.company}</Text>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.jobTitle}>{job.title}</Text>
+                  </View>
+                  <View style={styles.companyRow}>
+                    <Text style={styles.jobCompany}>{job.company}</Text>
+                    {job.isVerified && (
+                      <View style={styles.verifiedBadge}>
+                        <BadgeCheck color={Colors.success} size={16} />
+                        <Text style={styles.verifiedText}>Verified</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
 
@@ -458,5 +475,29 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.98 }],
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  companyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  verifiedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.success,
   },
 });

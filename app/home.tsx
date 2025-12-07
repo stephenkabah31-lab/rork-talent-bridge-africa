@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Building2, Crown, Search, User } from 'lucide-react-native';
+import { Building2, Crown, Search, User, Shield } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -121,6 +121,22 @@ export default function HomeScreen() {
                 Connect with professionals across Africa to expand your reach
               </Text>
             </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quick Access</Text>
+            <Pressable
+              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+              onPress={() => router.push('/admin-login')}
+            >
+              <View style={styles.cardHeader}>
+                <Shield color={Colors.primary} size={20} />
+                <Text style={styles.cardTitle}>Admin Portal</Text>
+              </View>
+              <Text style={styles.cardDescription}>
+                Access admin tools to verify companies and manage the platform
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.footer}>
@@ -273,5 +289,11 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.98 }],
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 6,
   },
 });

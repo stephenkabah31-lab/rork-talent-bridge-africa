@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as DocumentPicker from 'expo-document-picker';
 import { Stack, useRouter } from 'expo-router';
-import { Building2, Globe, Mail, MapPin, Phone, User, Users } from 'lucide-react-native';
+import { Building2, Globe, Mail, MapPin, Phone, User, Users, Upload, CheckCircle } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -27,6 +28,9 @@ interface FormData {
   industry: string;
   companySize: string;
   website: string;
+  registrationNumber: string;
+  verificationDocUri?: string;
+  verificationDocName?: string;
 }
 
 export default function SignupCompanyScreen() {
@@ -40,11 +44,34 @@ export default function SignupCompanyScreen() {
     industry: '',
     companySize: '',
     website: '',
+    registrationNumber: '',
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleUploadVerificationDoc = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setFormData((prev) => ({
+          ...prev,
+          verificationDocUri: file.uri,
+          verificationDocName: file.name,
+        }));
+        Alert.alert('Success', 'Document uploaded successfully!');
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      Alert.alert('Error', 'Failed to upload document');
+    }
   };
 
   const handleSignup = async () => {
@@ -54,9 +81,11 @@ export default function SignupCompanyScreen() {
       !formData.email ||
       !formData.phone ||
       !formData.location ||
-      !formData.industry
+      !formData.industry ||
+      !formData.registrationNumber ||
+      !formData.verificationDocUri
     ) {
-      Alert.alert('Missing Information', 'Please fill in all required fields');
+      Alert.alert('Missing Information', 'Please fill in all required fields and upload verification documents');
       return;
     }
 
@@ -66,17 +95,18 @@ export default function SignupCompanyScreen() {
       const userData = {
         ...formData,
         userType: 'company',
+        verificationStatus: 'pending',
         createdAt: new Date().toISOString(),
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(userData));
 
       Alert.alert(
-        'Welcome to TalentBridge!',
-        'Your company account has been created successfully.',
+        'Account Pending Verification',
+        'Your company account has been created. We will review your verification documents and notify you within 24-48 hours.',
         [
           {
-            text: 'Get Started',
+            text: 'OK',
             onPress: () => {
               setIsLoading(false);
               router.replace('/home');
@@ -249,6 +279,50 @@ export default function SignupCompanyScreen() {
                   />
                 </View>
               </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Business Registration Number *</Text>
+                <View style={styles.inputContainer}>
+                  <Building2 color={Colors.textLight} size={20} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="BN12345678"
+                    placeholderTextColor={Colors.textLight}
+                    value={formData.registrationNumber}
+                    onChangeText={(text) => handleInputChange('registrationNumber', text)}
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.verificationSection}>
+              <View style={styles.verificationHeader}>
+                <CheckCircle color={Colors.accent} size={24} />
+                <View style={styles.verificationHeaderText}>
+                  <Text style={styles.verificationTitle}>Verification Required</Text>
+                  <Text style={styles.verificationSubtitle}>
+                    Upload business registration or incorporation documents
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.uploadButton,
+                  pressed && styles.uploadButtonPressed,
+                ]}
+                onPress={handleUploadVerificationDoc}
+              >
+                <Upload color={Colors.white} size={20} />
+                <Text style={styles.uploadButtonText}>
+                  {formData.verificationDocName || 'Upload Verification Documents'}
+                </Text>
+              </Pressable>
+
+              <Text style={styles.verificationNote}>
+                Accepted formats: PDF, JPG, PNG. Max 10MB
+              </Text>
             </View>
 
             <Pressable
@@ -387,5 +461,57 @@ const styles = StyleSheet.create({
     color: Colors.light,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  verificationSection: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: Colors.accent,
+  },
+  verificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  verificationHeaderText: {
+    flex: 1,
+  },
+  verificationTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  verificationSubtitle: {
+    fontSize: 13,
+    color: Colors.light,
+    lineHeight: 18,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.accent,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  uploadButtonPressed: {
+    opacity: 0.8,
+  },
+  uploadButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  verificationNote: {
+    fontSize: 12,
+    color: Colors.light,
+    textAlign: 'center',
+    marginTop: 12,
   },
 });
