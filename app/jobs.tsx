@@ -274,7 +274,14 @@ export default function JobsScreen() {
                     pressed && styles.buttonPressed,
                   ]}
                   onPress={() =>
-                    Alert.alert('Apply', `Apply to ${job.title} at ${job.company}?`)
+                    router.push({
+                      pathname: '/apply-job',
+                      params: {
+                        jobId: job.id,
+                        jobTitle: job.title,
+                        company: job.company,
+                      },
+                    })
                   }
                 >
                   <Text style={styles.applyButtonText}>Apply</Text>
