@@ -80,7 +80,7 @@ export default function ApplyJobScreen() {
       toValue: currentStep / totalSteps,
       useNativeDriver: false,
     }).start();
-  }, [currentStep]);
+  }, [currentStep, progressAnim, totalSteps]);
 
   const loadProfileData = async () => {
     try {

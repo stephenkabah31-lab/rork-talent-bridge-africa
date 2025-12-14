@@ -34,7 +34,6 @@ interface Message {
 export default function MessagesScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const recruiterName = params.recruiterName as string;
   const jobTitle = params.jobTitle as string;
 
   const [messages, setMessages] = useState<Message[]>([

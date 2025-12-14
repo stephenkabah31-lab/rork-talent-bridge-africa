@@ -10,8 +10,11 @@ import {
   Building2,
   Clock,
   BadgeCheck,
+  Plus,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -59,7 +62,7 @@ const MOCK_JOBS: Job[] = [
     type: 'Full-time',
     postedDate: '2 days ago',
     description:
-      'We are looking for an experienced software engineer to join our growing team.',
+      'We are looking for an experienced software engineer to join our growing team in Accra. You will be working on cutting-edge technology, building scalable web and mobile applications that serve millions of users across Africa. This role offers excellent growth opportunities and the chance to work with a talented team of engineers.\n\nKey Responsibilities:\n• Design and develop high-quality software solutions\n• Collaborate with cross-functional teams\n• Participate in code reviews and technical discussions\n• Mentor junior developers\n\nRequirements:\n• 5+ years of software development experience\n• Strong knowledge of React, Node.js, and TypeScript\n• Experience with cloud platforms (AWS/GCP)\n• Excellent problem-solving skills',
     recruiterName: 'Sarah Johnson',
     salaryUSD: { min: 50000, max: 80000 },
     currencyType: 'USD',
@@ -73,7 +76,7 @@ const MOCK_JOBS: Job[] = [
     salary: '$60,000 - $90,000',
     type: 'Full-time',
     postedDate: '5 days ago',
-    description: 'Lead product strategy and development for our mobile platform.',
+    description: 'Lead product strategy and development for our mobile platform. As a Product Manager, you will define the product vision, create roadmaps, and work closely with engineering and design teams to deliver exceptional user experiences. This is a key leadership role with significant impact on company growth.\n\nResponsibilities:\n• Define product strategy and roadmap\n• Conduct user research and market analysis\n• Prioritize features and manage product backlog\n• Work with stakeholders to align on goals\n\nQualifications:\n• 3+ years in product management\n• Experience with mobile products\n• Strong analytical and communication skills\n• Data-driven decision making',
     recruiterName: 'Michael Chen',
     salaryUSD: { min: 60000, max: 90000 },
     currencyType: 'local',
@@ -87,7 +90,7 @@ const MOCK_JOBS: Job[] = [
     salary: '$40,000 - $65,000',
     type: 'Full-time',
     postedDate: '1 week ago',
-    description: 'Design beautiful and intuitive user experiences for our products.',
+    description: 'Design beautiful and intuitive user experiences for our products. Join our creative team and help shape the future of digital experiences for African users. You will work on diverse projects spanning mobile apps, web platforms, and enterprise software.\n\nWhat You\'ll Do:\n• Create wireframes, prototypes, and high-fidelity designs\n• Conduct user research and usability testing\n• Collaborate with developers to ensure design quality\n• Maintain design systems and style guides\n\nRequirements:\n• 3+ years of UI/UX design experience\n• Proficiency in Figma, Sketch, or Adobe XD\n• Strong portfolio demonstrating your work\n• Understanding of mobile-first design principles',
     recruiterName: 'Emma Thompson',
     salaryUSD: { min: 40000, max: 65000 },
     currencyType: 'local',
@@ -101,7 +104,7 @@ const MOCK_JOBS: Job[] = [
     salary: '$45,000 - $70,000',
     type: 'Full-time',
     postedDate: '3 days ago',
-    description: 'Analyze data and provide insights to drive business decisions.',
+    description: 'Analyze data and provide insights to drive business decisions. Work with large datasets to uncover trends, build dashboards, and help stakeholders make informed decisions. This role is perfect for someone who loves working with data and telling stories through analytics.\n\nKey Duties:\n• Analyze complex datasets and extract actionable insights\n• Create reports and dashboards for stakeholders\n• Build predictive models and forecasts\n• Collaborate with teams across the organization\n\nSkills Needed:\n• 2+ years in data analysis\n• Proficiency in SQL, Python, or R\n• Experience with BI tools (Tableau, Power BI)\n• Strong statistical knowledge',
     recruiterName: 'David Martinez',
     salaryUSD: { min: 45000, max: 70000 },
     currencyType: 'local',
@@ -115,7 +118,7 @@ const MOCK_JOBS: Job[] = [
     salary: '$50,000 - $75,000',
     type: 'Full-time',
     postedDate: '4 days ago',
-    description: 'Develop and execute marketing strategies to grow our brand.',
+    description: 'Develop and execute marketing strategies to grow our brand across African markets. Lead marketing campaigns, manage budgets, and drive customer acquisition. This role combines creativity with data-driven strategy to achieve business goals.\n\nMain Responsibilities:\n• Develop comprehensive marketing strategies\n• Manage digital marketing campaigns\n• Analyze campaign performance and optimize ROI\n• Lead a team of marketing professionals\n• Build partnerships with key stakeholders\n\nRequired Experience:\n• 4+ years in marketing management\n• Proven track record of successful campaigns\n• Experience with digital marketing tools\n• Strong leadership and communication skills',
     recruiterName: 'Lisa Anderson',
     salaryUSD: { min: 50000, max: 75000 },
     currencyType: 'USD',
@@ -148,6 +151,7 @@ function formatSalary(job: Job): string {
 export default function JobsScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   const { data: user } = useQuery<UserData>({
     queryKey: ['user'],
@@ -157,11 +161,15 @@ export default function JobsScreen() {
     },
   });
 
-  const filteredJobs = MOCK_JOBS.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredJobs = useMemo(
+    () =>
+      MOCK_JOBS.filter(
+        (job) =>
+          job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.location.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [searchQuery]
   );
 
   const handleContactRecruiter = (job: Job) => {
@@ -184,6 +192,19 @@ export default function JobsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+        {(user?.userType === 'recruiter' || user?.userType === 'company') && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.postJobButton,
+              pressed && styles.postJobButtonPressed,
+            ]}
+            onPress={() => router.push('/post-job')}
+          >
+            <Plus color={Colors.white} size={20} strokeWidth={3} />
+            <Text style={styles.postJobButtonText}>Post a Job</Text>
+          </Pressable>
+        )}
+
         {!user?.isPremium && (
           <Pressable
             style={({ pressed }) => [
@@ -265,7 +286,30 @@ export default function JobsScreen() {
                 </View>
               </View>
 
-              <Text style={styles.jobDescription}>{job.description}</Text>
+              <Pressable
+                onPress={() =>
+                  setExpandedJobId(expandedJobId === job.id ? null : job.id)
+                }
+              >
+                <Text
+                  style={styles.jobDescription}
+                  numberOfLines={expandedJobId === job.id ? undefined : 3}
+                >
+                  {job.description}
+                </Text>
+                {job.description.length > 150 && (
+                  <View style={styles.expandButton}>
+                    <Text style={styles.expandButtonText}>
+                      {expandedJobId === job.id ? 'Show less' : 'Read more'}
+                    </Text>
+                    {expandedJobId === job.id ? (
+                      <ChevronUp color={Colors.primary} size={16} />
+                    ) : (
+                      <ChevronDown color={Colors.primary} size={16} />
+                    )}
+                  </View>
+                )}
+              </Pressable>
 
               <View style={styles.jobActions}>
                 <Pressable
@@ -482,6 +526,42 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.98 }],
+  },
+  postJobButton: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    margin: 16,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  postJobButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  postJobButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  expandButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
   },
   titleRow: {
     flexDirection: 'row',
