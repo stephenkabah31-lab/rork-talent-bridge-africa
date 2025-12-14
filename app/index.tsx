@@ -112,7 +112,7 @@ function WelcomeScreen() {
               <Briefcase color={Colors.white} size={48} strokeWidth={2} />
             </View>
             <Text style={styles.logo}>TalentBridge</Text>
-            <Text style={styles.tagline}>Connect. Grow. Succeed.</Text>
+            <Text style={styles.tagline}>Africa&apos;s Professional Network</Text>
           </View>
 
           <View style={styles.featuresContainer}>
@@ -168,7 +168,10 @@ function WelcomeScreen() {
 
           <View style={styles.footerContainer}>
             <Text style={styles.footer}>
-              Building Africa&apos;s professional future
+              Empowering African professionals
+            </Text>
+            <Text style={styles.footerLegal}>
+              By continuing, you agree to our Terms & Privacy Policy
             </Text>
           </View>
         </Animated.View>
@@ -309,5 +312,12 @@ const styles = StyleSheet.create({
     color: Colors.light,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  footerLegal: {
+    fontSize: 11,
+    color: Colors.light,
+    textAlign: 'center',
+    opacity: 0.7,
+    marginTop: 8,
   },
 });

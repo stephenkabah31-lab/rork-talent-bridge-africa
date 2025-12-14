@@ -96,7 +96,7 @@ export default function UserTypeScreen() {
             <View style={styles.header}>
               <Text style={styles.title}>Join TalentBridge</Text>
               <Text style={styles.subtitle}>
-                Select your account type to get started
+                Choose your account type to begin
               </Text>
             </View>
 

@@ -50,12 +50,12 @@ const MOCK_POSTS: Post[] = [
     id: '1',
     author: {
       id: 'u1',
-      name: 'Sarah Johnson',
-      title: 'Senior Recruiter at Tech Africa',
+      name: 'Amara Okafor',
+      title: 'Talent Acquisition Lead',
       isVerified: true,
     },
     content:
-      'Excited to announce we\'re hiring 5 Software Engineers! Join our team building the future of African tech. Remote-friendly positions with competitive salaries. Drop your CV in the comments or DM me! 🚀\n\n#AfricanTech #Hiring #SoftwareEngineering',
+      'We are looking for talented software developers to join our growing team. Multiple positions available across West Africa. Competitive compensation and growth opportunities. Reach out if interested! 🚀\n\n#TechJobs #AfricaTech #Careers',
     timestamp: '2h ago',
     likes: 234,
     comments: 45,
@@ -66,11 +66,11 @@ const MOCK_POSTS: Post[] = [
     id: '2',
     author: {
       id: 'u2',
-      name: 'Michael Chen',
-      title: 'Product Manager | Innovation Hub',
+      name: 'Kwame Mensah',
+      title: 'Product Strategy Consultant',
     },
     content:
-      'Just finished an incredible workshop on product strategy with 50+ entrepreneurs from across Africa. The innovation happening on this continent is truly inspiring! 🌍\n\nKey takeaway: Always start with the user problem, not the solution.',
+      'Had an amazing session with entrepreneurs discussing digital innovation strategies. The talent and creativity in Africa continues to impress! 🌍\n\nReminder: Focus on solving real problems for your users first.',
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800',
     timestamp: '4h ago',
     likes: 567,
@@ -82,12 +82,12 @@ const MOCK_POSTS: Post[] = [
     id: '3',
     author: {
       id: 'u3',
-      name: 'Emma Thompson',
-      title: 'UI/UX Designer | Creative Studios',
+      name: 'Zainab Hassan',
+      title: 'Design Lead | Digital Agency',
       isVerified: true,
     },
     content:
-      'Design tip of the day: Consistency is key! 🎨\n\nWhen building mobile apps, make sure your spacing, colors, and typography follow a clear system. Your users will notice the polish even if they can\'t articulate why it feels good.\n\nWhat\'s your favorite design system?',
+      'Design insight: Consistency creates trust! 🎨\n\nWhen working on digital products, maintaining consistent patterns helps users feel comfortable and confident. Small details make a big difference.\n\nWhat design principles do you follow?',
     timestamp: '6h ago',
     likes: 892,
     comments: 156,
@@ -98,12 +98,12 @@ const MOCK_POSTS: Post[] = [
     id: '4',
     author: {
       id: 'u4',
-      name: 'Tech Africa',
-      title: 'Leading African Tech Company',
+      name: 'AfriTech Solutions',
+      title: 'Technology Company',
       isVerified: true,
     },
     content:
-      '🎉 We\'re thrilled to announce $10M Series A funding! This will help us expand across 10 more African countries and hire 200+ talented professionals.\n\nThank you to our investors and the amazing team that made this possible. The journey continues! 💪',
+      '🎉 Exciting news! We have secured significant funding for expansion across African markets. This enables us to create hundreds of new opportunities for talented professionals.\n\nGrateful to everyone who supported this milestone. Onward! 💪',
     image: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800',
     timestamp: '1d ago',
     likes: 3241,
