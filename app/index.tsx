@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Briefcase, Globe, TrendingUp } from 'lucide-react-native';
@@ -9,7 +10,43 @@ import Colors from '@/constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
-export default function WelcomeScreen() {
+export default function IndexRedirect() {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = React.useState(true);
+
+  const checkUserStatus = React.useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem('user');
+      if (stored) {
+        router.replace('/(tabs)' as any);
+      } else {
+        setIsChecking(false);
+      }
+    } catch {
+      setIsChecking(false);
+    }
+  }, [router]);
+
+  React.useEffect(() => {
+    checkUserStatus();
+  }, [checkUserStatus]);
+
+  if (isChecking) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.dark, Colors.darkLight, Colors.primary]}
+          locations={[0, 0.6, 1]}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </View>
+    );
+  }
+
+  return <WelcomeScreen />;
+}
+
+function WelcomeScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
