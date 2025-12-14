@@ -18,7 +18,7 @@ export default function IndexRedirect() {
     try {
       const stored = await AsyncStorage.getItem('user');
       if (stored) {
-        router.replace('/(tabs)' as any);
+        router.replace('/(tabs)/home' as any);
       } else {
         setIsChecking(false);
       }
