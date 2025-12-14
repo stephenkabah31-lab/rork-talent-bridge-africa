@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Crown, Send } from 'lucide-react-native';
+import { Calendar, Crown, Phone, Send } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -95,6 +95,40 @@ export default function MessagesScreen() {
           <View style={styles.jobContext}>
             <Text style={styles.jobContextLabel}>Regarding:</Text>
             <Text style={styles.jobContextTitle}>{jobTitle}</Text>
+          </View>
+        )}
+
+        {(user?.userType === 'recruiter' || user?.userType === 'company') && (
+          <View style={styles.actionsBar}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.scheduleCallButton,
+                pressed && styles.scheduleCallButtonPressed,
+              ]}
+              onPress={() =>
+                router.push({
+                  pathname: '/schedule-call' as any,
+                  params: {
+                    candidateName: params.candidateName || 'Candidate',
+                    jobTitle: jobTitle || '',
+                  },
+                })
+              }
+            >
+              <Calendar color={Colors.primary} size={18} />
+              <Text style={styles.scheduleCallText}>Schedule Call</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.viewCallsButton,
+                pressed && styles.viewCallsButtonPressed,
+              ]}
+              onPress={() => router.push('/scheduled-calls' as any)}
+            >
+              <Phone color={Colors.secondary} size={18} />
+              <Text style={styles.viewCallsText}>View Calls</Text>
+            </Pressable>
           </View>
         )}
 
@@ -275,5 +309,55 @@ const styles = StyleSheet.create({
   sendButtonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.95 }],
+  },
+  actionsBar: {
+    flexDirection: 'row',
+    padding: 12,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light,
+    gap: 12,
+  },
+  scheduleCallButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  scheduleCallButtonPressed: {
+    opacity: 0.7,
+  },
+  scheduleCallText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  viewCallsButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.secondary,
+  },
+  viewCallsButtonPressed: {
+    opacity: 0.7,
+  },
+  viewCallsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.secondary,
   },
 });

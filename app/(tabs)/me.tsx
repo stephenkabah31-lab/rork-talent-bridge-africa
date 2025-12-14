@@ -10,6 +10,7 @@ import {
   Crown,
   ChevronRight,
   Edit,
+  Phone,
 } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -57,6 +58,17 @@ export default function MeScreen() {
       route: '/messages',
       color: Colors.warning,
     },
+    ...(user?.userType === 'recruiter' || user?.userType === 'company'
+      ? [
+          {
+            id: '4.5',
+            icon: Phone,
+            label: 'Scheduled Calls',
+            route: '/scheduled-calls',
+            color: Colors.secondary,
+          },
+        ]
+      : []),
     {
       id: '5',
       icon: Crown,
