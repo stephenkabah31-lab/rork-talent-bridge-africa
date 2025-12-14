@@ -32,12 +32,14 @@ function RootLayoutNav() {
       <Stack.Screen name="apply-job" options={{ title: 'Apply for Job' }} />
       <Stack.Screen name="post-job" options={{ title: 'Post a Job' }} />
       <Stack.Screen name="messages" options={{ title: 'Messages' }} />
-      <Stack.Screen name="edit-profile" options={{ title: 'Edit Profile' }} />
+      <Stack.Screen name="profile" options={{ title: 'Edit Profile' }} />
       <Stack.Screen name="create-post" options={{ title: 'Create Post' }} />
       <Stack.Screen name="user-profile" options={{ title: 'Profile' }} />
-      <Stack.Screen name="company-profile" options={{ title: 'Company' }} />
       <Stack.Screen name="connections" options={{ title: 'My Connections' }} />
       <Stack.Screen name="people-search" options={{ title: 'Find People' }} />
+      <Stack.Screen name="jobs" options={{ title: 'Jobs' }} />
+      <Stack.Screen name="terms" options={{ title: 'Terms of Service' }} />
+      <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
     </Stack>
   );
 }
