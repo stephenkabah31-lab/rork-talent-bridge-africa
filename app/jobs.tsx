@@ -50,6 +50,7 @@ interface Job {
   salaryUSD?: { min: number; max: number };
   currencyType?: 'USD' | 'local';
   isVerified?: boolean;
+  requiredSkills?: string[];
 }
 
 const MOCK_JOBS: Job[] = [
@@ -67,6 +68,7 @@ const MOCK_JOBS: Job[] = [
     salaryUSD: { min: 50000, max: 80000 },
     currencyType: 'USD',
     isVerified: true,
+    requiredSkills: ['React', 'Node.js', 'TypeScript', 'AWS', 'Problem Solving'],
   },
   {
     id: '2',
@@ -81,6 +83,7 @@ const MOCK_JOBS: Job[] = [
     salaryUSD: { min: 60000, max: 90000 },
     currencyType: 'local',
     isVerified: true,
+    requiredSkills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis', 'Leadership'],
   },
   {
     id: '3',
@@ -95,6 +98,7 @@ const MOCK_JOBS: Job[] = [
     salaryUSD: { min: 40000, max: 65000 },
     currencyType: 'local',
     isVerified: false,
+    requiredSkills: ['Figma', 'UI Design', 'UX Research', 'Prototyping', 'Mobile Design'],
   },
   {
     id: '4',
@@ -109,6 +113,7 @@ const MOCK_JOBS: Job[] = [
     salaryUSD: { min: 45000, max: 70000 },
     currencyType: 'local',
     isVerified: true,
+    requiredSkills: ['SQL', 'Python', 'Tableau', 'Statistics', 'Excel'],
   },
   {
     id: '5',
@@ -123,6 +128,7 @@ const MOCK_JOBS: Job[] = [
     salaryUSD: { min: 50000, max: 75000 },
     currencyType: 'USD',
     isVerified: false,
+    requiredSkills: ['Digital Marketing', 'SEO', 'Content Strategy', 'Analytics', 'Team Management'],
   },
 ];
 
@@ -285,6 +291,19 @@ export default function JobsScreen() {
                   <Text style={styles.detailText}>{job.postedDate}</Text>
                 </View>
               </View>
+
+              {job.requiredSkills && job.requiredSkills.length > 0 && (
+                <View style={styles.skillsContainer}>
+                  <Text style={styles.skillsLabel}>Required Skills:</Text>
+                  <View style={styles.skillsWrapper}>
+                    {job.requiredSkills.map((skill, index) => (
+                      <View key={index} style={styles.skillTag}>
+                        <Text style={styles.skillText}>{skill}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
 
               <Pressable
                 onPress={() =>
@@ -586,5 +605,32 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.success,
+  },
+  skillsContainer: {
+    marginBottom: 12,
+  },
+  skillsLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  skillsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  skillTag: {
+    backgroundColor: Colors.light,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  skillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
   },
 });

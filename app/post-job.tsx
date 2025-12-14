@@ -36,6 +36,7 @@ interface JobPostData {
   responsibilities: string;
   qualifications: string;
   benefits: string;
+  requiredSkills: string;
 }
 
 export default function PostJobScreen() {
@@ -51,6 +52,7 @@ export default function PostJobScreen() {
     responsibilities: '',
     qualifications: '',
     benefits: '',
+    requiredSkills: '',
   });
 
   const validateForm = (): boolean => {
@@ -87,6 +89,10 @@ export default function PostJobScreen() {
     }
     if (!jobData.qualifications.trim()) {
       Alert.alert('Required', 'Please enter required qualifications');
+      return false;
+    }
+    if (!jobData.requiredSkills.trim()) {
+      Alert.alert('Required', 'Please enter required skills');
       return false;
     }
     return true;
@@ -336,6 +342,24 @@ export default function PostJobScreen() {
                 }
                 multiline
                 numberOfLines={6}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Required Skills *</Text>
+            <Text style={styles.hint}>
+              List the key skills needed for success (separate with commas)
+            </Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="React, TypeScript, Node.js, AWS, Problem Solving"
+                placeholderTextColor={Colors.textLight}
+                value={jobData.requiredSkills}
+                onChangeText={(text) =>
+                  setJobData((prev) => ({ ...prev, requiredSkills: text }))
+                }
               />
             </View>
           </View>
