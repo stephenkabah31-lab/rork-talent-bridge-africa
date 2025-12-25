@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Briefcase, Globe, TrendingUp } from 'lucide-react-native';
+import { Globe, TrendingUp } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -108,9 +109,11 @@ function WelcomeScreen() {
           ]}
         >
           <View style={styles.logoContainer}>
-            <View style={styles.iconCircle}>
-              <Briefcase color={Colors.white} size={48} strokeWidth={2} />
-            </View>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logoImage}
+              contentFit="contain"
+            />
             <Text style={styles.logo}>TalentBridge</Text>
             <Text style={styles.tagline}>Africa&apos;s Professional Network</Text>
           </View>
@@ -209,19 +212,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 40,
   },
-  iconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 120,
+    height: 120,
     marginBottom: 20,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
   },
   logo: {
     fontSize: 48,

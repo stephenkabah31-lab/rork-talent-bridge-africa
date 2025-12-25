@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { Eye, EyeOff, Lock, Shield, User } from 'lucide-react-native';
@@ -119,6 +120,11 @@ export default function AdminLoginScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.header}>
+              <Image
+                source={require('@/assets/images/icon.png')}
+                style={styles.logo}
+                contentFit="contain"
+              />
               <View style={styles.iconCircle}>
                 <Shield color={Colors.white} size={36} strokeWidth={2.5} />
               </View>
@@ -293,6 +299,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
   },
   iconCircle: {
     width: 80,
