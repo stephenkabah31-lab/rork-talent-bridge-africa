@@ -141,10 +141,10 @@ export default function LoginScreen() {
                 style={({ pressed }) => [
                   styles.submitButton,
                   pressed && styles.buttonPressed,
-                  isLoading && styles.buttonDisabled,
+                  (isLoading || !email || !password) && styles.buttonDisabled,
                 ]}
                 onPress={handleLogin}
-                disabled={isLoading}
+                disabled={isLoading || !email || !password}
               >
                 <LinearGradient
                   colors={[Colors.primary, '#F59E0B']}

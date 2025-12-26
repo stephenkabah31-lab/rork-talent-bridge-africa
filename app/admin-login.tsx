@@ -184,10 +184,10 @@ export default function AdminLoginScreen() {
                   style={({ pressed }) => [
                     styles.submitButton,
                     pressed && styles.buttonPressed,
-                    isLoading && styles.buttonDisabled,
+                    (isLoading || !username || !password) && styles.buttonDisabled,
                   ]}
                   onPress={handleLogin}
-                  disabled={isLoading}
+                  disabled={isLoading || !username || !password}
                 >
                   <LinearGradient
                     colors={['#1E40AF', '#3B82F6']}
