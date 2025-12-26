@@ -88,9 +88,9 @@ export default function MessagesTabScreen() {
         pressed && styles.conversationPressed,
       ]}
       onPress={() => {
-        console.log('Conversation clicked:', item.name);
+        console.log('Opening conversation with:', item.name);
         router.push({
-          pathname: '/messages',
+          pathname: '/messages' as any,
           params: {
             candidateName: item.name,
             jobTitle: item.jobTitle || '',
@@ -277,7 +277,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   conversationPressed: {
-    backgroundColor: Colors.light,
+    backgroundColor: '#E5E7EB',
+    opacity: 0.8,
   },
   avatar: {
     width: 56,
