@@ -103,14 +103,28 @@ export default function CallsTabScreen() {
   const handleJoinCall = (call: Call) => {
     if (call.status !== 'scheduled') return;
 
-    router.push({
-      pathname: '/active-call',
-      params: {
-        callType: call.type,
-        participantName: call.name,
-        jobTitle: call.jobTitle || '',
-      },
-    });
+    if (user?.userType === 'professional') {
+      router.push({
+        pathname: '/waiting-room',
+        params: {
+          callId: call.id,
+          candidateName: user?.fullName || 'Candidate',
+          callType: call.type,
+          participantName: call.name,
+          jobTitle: call.jobTitle || '',
+        },
+      });
+    } else {
+      router.push({
+        pathname: '/admit-candidates' as any,
+        params: {
+          callId: call.id,
+          callType: call.type,
+          participantName: call.name,
+          jobTitle: call.jobTitle || '',
+        },
+      });
+    }
   };
 
   const handleScheduleCall = () => {
