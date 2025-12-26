@@ -23,6 +23,7 @@ interface Conversation {
   unread: number;
   avatar?: string;
   jobTitle?: string;
+  isReceived: boolean;
 }
 
 const MOCK_CONVERSATIONS: Conversation[] = [
@@ -33,6 +34,7 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     timestamp: '10:30 AM',
     unread: 2,
     jobTitle: 'Senior Software Engineer',
+    isReceived: true,
   },
   {
     id: '2',
@@ -41,6 +43,7 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     timestamp: 'Yesterday',
     unread: 0,
     jobTitle: 'Product Manager',
+    isReceived: true,
   },
   {
     id: '3',
@@ -49,6 +52,7 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     timestamp: '2 days ago',
     unread: 1,
     jobTitle: 'UI/UX Designer',
+    isReceived: true,
   },
   {
     id: '4',
@@ -57,16 +61,25 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     timestamp: '3 days ago',
     unread: 0,
     jobTitle: 'Multiple Positions',
+    isReceived: false,
   },
 ];
+
+type MessageFilter = 'all' | 'received' | 'sent';
 
 export default function MessagesTabScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<MessageFilter>('all');
 
-  const filteredConversations = MOCK_CONVERSATIONS.filter((conv) =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredConversations = MOCK_CONVERSATIONS.filter((conv) => {
+    const matchesSearch = conv.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = 
+      filter === 'all' || 
+      (filter === 'received' && conv.isReceived) || 
+      (filter === 'sent' && !conv.isReceived);
+    return matchesSearch && matchesFilter;
+  });
 
   const renderConversation = ({ item }: { item: Conversation }) => (
     <Pressable
@@ -130,6 +143,33 @@ export default function MessagesTabScreen() {
         <Text style={styles.headerTitle}>Messages</Text>
       </View>
 
+      <View style={styles.filterContainer}>
+        <Pressable
+          style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
+          onPress={() => setFilter('all')}
+        >
+          <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
+            All
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.filterButton, filter === 'received' && styles.filterButtonActive]}
+          onPress={() => setFilter('received')}
+        >
+          <Text style={[styles.filterText, filter === 'received' && styles.filterTextActive]}>
+            Received
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.filterButton, filter === 'sent' && styles.filterButtonActive]}
+          onPress={() => setFilter('sent')}
+        >
+          <Text style={[styles.filterText, filter === 'sent' && styles.filterTextActive]}>
+            Sent
+          </Text>
+        </Pressable>
+      </View>
+
       <View style={styles.searchContainer}>
         <Search color={Colors.textLight} size={20} />
         <TextInput
@@ -172,8 +212,36 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+    gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: Colors.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+  filterText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  filterTextActive: {
+    color: Colors.white,
   },
   headerTitle: {
     fontSize: 24,

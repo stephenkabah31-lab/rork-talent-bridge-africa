@@ -115,8 +115,8 @@ const MOCK_POSTS: Post[] = [
 
 const QUICK_ACTIONS = [
   { id: '1', icon: Briefcase, label: 'Jobs', color: Colors.primary, route: '/jobs' as const },
-  { id: '2', icon: Users, label: 'Network', color: Colors.secondary, route: '/network' as const },
-  { id: '3', icon: Building2, label: 'Companies', color: Colors.accent, route: '/home' as const },
+  { id: '2', icon: Users, label: 'Network', color: Colors.secondary, route: '/people-search' as const },
+  { id: '3', icon: Building2, label: 'Companies', color: Colors.accent, route: '/connections' as const },
   { id: '4', icon: TrendingUp, label: 'Premium', color: Colors.warning, route: '/subscription' as const },
 ];
 
