@@ -10,6 +10,7 @@ import {
   Text,
   View,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -171,7 +172,11 @@ export default function WaitingRoomScreen() {
         }}
       />
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.topSection}>
             <Text style={styles.title}>Waiting Room</Text>
             <Text style={styles.subtitle}>
@@ -289,7 +294,7 @@ export default function WaitingRoomScreen() {
               Having trouble? The host may need to manually admit you
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </>
   );
@@ -300,9 +305,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'space-between',
+  },
+  content: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingVertical: 32,
   },
@@ -322,10 +329,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   middleSection: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 32,
+    paddingVertical: 40,
   },
   iconContainer: {
     width: 120,
