@@ -13,9 +13,11 @@ import {
   User,
   SwitchCamera,
   MessageSquare,
-  MoreVertical,
   Maximize2,
   Users,
+  Image as ImageIcon,
+  Sparkles,
+  X,
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -26,6 +28,8 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -39,6 +43,8 @@ interface CallState {
   cameraType: CameraType;
   showControls: boolean;
   isFullscreen: boolean;
+  backgroundEffect: string;
+  showEffectsMenu: boolean;
 }
 
 export default function ActiveCallScreen() {
@@ -64,6 +70,8 @@ export default function ActiveCallScreen() {
     cameraType: 'front' as CameraType,
     showControls: true,
     isFullscreen: false,
+    backgroundEffect: 'none',
+    showEffectsMenu: false,
   });
 
   const [pulseAnim] = useState(new Animated.Value(1));
@@ -276,6 +284,26 @@ export default function ActiveCallScreen() {
     setCallState((prev) => ({ ...prev, showControls: !prev.showControls }));
   };
 
+  const toggleEffectsMenu = () => {
+    setCallState((prev) => ({ ...prev, showEffectsMenu: !prev.showEffectsMenu }));
+  };
+
+  const selectBackgroundEffect = (effect: string) => {
+    setCallState((prev) => ({ ...prev, backgroundEffect: effect, showEffectsMenu: false }));
+    console.log('🎨 Background effect applied:', effect);
+  };
+
+  const backgroundEffects = [
+    { id: 'none', name: 'None', icon: 'X' },
+    { id: 'blur', name: 'Blur', icon: 'Sparkles' },
+    { id: 'office', name: 'Office', color: '#8B7355' },
+    { id: 'beach', name: 'Beach', color: '#87CEEB' },
+    { id: 'space', name: 'Space', color: '#0B1929' },
+    { id: 'library', name: 'Library', color: '#654321' },
+    { id: 'gradient1', name: 'Gradient Blue', color: '#667EEA' },
+    { id: 'gradient2', name: 'Gradient Pink', color: '#F093FB' },
+  ];
+
   return (
     <>
       <Stack.Screen
@@ -389,10 +417,12 @@ export default function ActiveCallScreen() {
                         <Pressable
                           style={({ pressed }) => [
                             styles.teamsButton,
+                            callState.backgroundEffect !== 'none' && styles.teamsButtonActive,
                             pressed && styles.buttonPressed,
                           ]}
+                          onPress={toggleEffectsMenu}
                         >
-                          <MoreVertical color={Colors.white} size={24} />
+                          <ImageIcon color={Colors.white} size={24} />
                         </Pressable>
 
                         <Pressable
@@ -504,10 +534,12 @@ export default function ActiveCallScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.teamsButton,
+                        callState.backgroundEffect !== 'none' && styles.teamsButtonActive,
                         pressed && styles.buttonPressed,
                       ]}
+                      onPress={toggleEffectsMenu}
                     >
-                      <MoreVertical color={Colors.white} size={24} />
+                      <ImageIcon color={Colors.white} size={24} />
                     </Pressable>
 
                     <Pressable
@@ -525,6 +557,71 @@ export default function ActiveCallScreen() {
             </View>
           </SafeAreaView>
         )}
+
+        <Modal
+          visible={callState.showEffectsMenu}
+          transparent
+          animationType="slide"
+          onRequestClose={toggleEffectsMenu}
+        >
+          <Pressable style={styles.modalOverlay} onPress={toggleEffectsMenu}>
+            <Pressable style={styles.effectsMenu} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.effectsHeader}>
+                <Text style={styles.effectsTitle}>Background Effects</Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.closeButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={toggleEffectsMenu}
+                >
+                  <X color={Colors.white} size={24} />
+                </Pressable>
+              </View>
+
+              <ScrollView
+                style={styles.effectsScroll}
+                contentContainerStyle={styles.effectsGrid}
+              >
+                {backgroundEffects.map((effect) => (
+                  <Pressable
+                    key={effect.id}
+                    style={({ pressed }) => [
+                      styles.effectCard,
+                      callState.backgroundEffect === effect.id && styles.effectCardActive,
+                      pressed && styles.buttonPressed,
+                    ]}
+                    onPress={() => selectBackgroundEffect(effect.id)}
+                  >
+                    <View
+                      style={[
+                        styles.effectPreview,
+                        effect.color ? { backgroundColor: effect.color } : styles.effectPreviewDefault,
+                        effect.id === 'blur' && styles.effectBlur,
+                      ]}
+                    >
+                      {effect.id === 'none' && <X color={Colors.white} size={32} />}
+                      {effect.id === 'blur' && <Sparkles color={Colors.white} size={32} />}
+                    </View>
+                    <Text style={styles.effectName}>{effect.name}</Text>
+                    {callState.backgroundEffect === effect.id && (
+                      <View style={styles.activeIndicator} />
+                    )}
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              {callState.backgroundEffect !== 'none' && (
+                <View style={styles.effectNotice}>
+                  <Sparkles color={Colors.secondary} size={16} />
+                  <Text style={styles.effectNoticeText}>
+                    {callState.backgroundEffect === 'blur' ? 'Background blur active' : 'Virtual background active'}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
     </>
   );
@@ -718,5 +815,108 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.95 }],
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
+  },
+  effectsMenu: {
+    backgroundColor: '#2A2A2A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  effectsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  effectsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  effectsScroll: {
+    maxHeight: 450,
+  },
+  effectsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 20,
+    gap: 16,
+  },
+  effectCard: {
+    width: '30%',
+    aspectRatio: 0.75,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  effectCardActive: {
+    borderColor: Colors.secondary,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+  },
+  effectPreview: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  effectPreviewDefault: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  effectBlur: {
+    backgroundColor: 'rgba(200, 200, 255, 0.3)',
+  },
+  effectName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.white,
+    textAlign: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  activeIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.secondary,
+  },
+  effectNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    marginHorizontal: 20,
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+  },
+  effectNoticeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.secondary,
   },
 });
