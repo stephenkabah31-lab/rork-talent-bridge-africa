@@ -87,15 +87,16 @@ export default function MessagesTabScreen() {
         styles.conversationItem,
         pressed && styles.conversationPressed,
       ]}
-      onPress={() =>
+      onPress={() => {
+        console.log('Conversation clicked:', item.name);
         router.push({
           pathname: '/messages',
           params: {
             candidateName: item.name,
-            jobTitle: item.jobTitle,
+            jobTitle: item.jobTitle || '',
           },
-        })
-      }
+        });
+      }}
     >
       <View style={styles.avatar}>
         {item.avatar ? (
