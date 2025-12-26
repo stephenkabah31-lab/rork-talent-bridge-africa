@@ -12,6 +12,10 @@ import {
   Volume2,
   User,
   SwitchCamera,
+  MessageSquare,
+  MoreVertical,
+  Maximize2,
+  Users,
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -33,6 +37,8 @@ interface CallState {
   isSpeakerOn: boolean;
   duration: number;
   cameraType: CameraType;
+  showControls: boolean;
+  isFullscreen: boolean;
 }
 
 export default function ActiveCallScreen() {
@@ -56,6 +62,8 @@ export default function ActiveCallScreen() {
     isSpeakerOn: callType === 'audio',
     duration: 0,
     cameraType: 'front' as CameraType,
+    showControls: true,
+    isFullscreen: false,
   });
 
   const [pulseAnim] = useState(new Animated.Value(1));
@@ -260,6 +268,14 @@ export default function ActiveCallScreen() {
     console.log('🔄 Camera flipped');
   };
 
+  const toggleFullscreen = () => {
+    setCallState((prev) => ({ ...prev, isFullscreen: !prev.isFullscreen }));
+  };
+
+  const toggleControls = () => {
+    setCallState((prev) => ({ ...prev, showControls: !prev.showControls }));
+  };
+
   return (
     <>
       <Stack.Screen
@@ -269,103 +285,132 @@ export default function ActiveCallScreen() {
       />
       <View style={styles.container}>
         {callType === 'video' && callState.isVideoEnabled && permissionsGranted && Platform.OS !== 'web' ? (
-          <CameraView
-            style={styles.camera}
-            facing={callState.cameraType}
-          >
-            <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-              <View style={styles.videoOverlay}>
-                <View style={styles.videoHeader}>
-                  <View style={styles.statusBadge}>
-                    <View style={styles.recordingDot} />
-                    <Text style={styles.callStatus}>Connected</Text>
+          <Pressable style={styles.camera} onPress={toggleControls}>
+            <CameraView
+              style={styles.cameraView}
+              facing={callState.cameraType}
+            >
+              <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+                {callState.showControls && (
+                  <View style={styles.videoTopBar}>
+                    <View style={styles.topBarLeft}>
+                      <View style={styles.connectionIndicator}>
+                        <View style={styles.recordingDot} />
+                        <Text style={styles.connectionText}>{formatDuration(callState.duration)}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.topBarCenter}>
+                      <Text style={styles.participantNameTop}>{candidateName}</Text>
+                      {jobTitle && <Text style={styles.participantRole}>{jobTitle}</Text>}
+                    </View>
+                    <View style={styles.topBarRight}>
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.topBarButton,
+                          pressed && styles.buttonPressed,
+                        ]}
+                        onPress={toggleFullscreen}
+                      >
+                        <Maximize2 color={Colors.white} size={20} />
+                      </Pressable>
+                    </View>
                   </View>
-                  <Text style={styles.durationVideo}>{formatDuration(callState.duration)}</Text>
-                </View>
+                )}
 
-                <View style={styles.participantInfo}>
-                  <Text style={styles.participantLabel}>Interview with</Text>
-                  <Text style={styles.candidateName}>{candidateName}</Text>
-                  {jobTitle && <Text style={styles.jobTitleVideo}>{jobTitle}</Text>}
-                </View>
-
-                <View style={styles.controls}>
-                  <View style={styles.controlsRow}>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.controlButton,
-                        callState.isMuted && styles.controlButtonActive,
-                        pressed && styles.controlButtonPressed,
-                      ]}
-                      onPress={toggleMute}
-                    >
-                      {callState.isMuted ? (
-                        <MicOff color={Colors.white} size={26} />
-                      ) : (
-                        <Mic color={Colors.white} size={26} />
-                      )}
-                      <Text style={styles.controlLabel}>
-                        {callState.isMuted ? 'Unmute' : 'Mute'}
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.controlButton,
-                        !callState.isVideoEnabled && styles.controlButtonActive,
-                        pressed && styles.controlButtonPressed,
-                      ]}
-                      onPress={toggleVideo}
-                    >
-                      {callState.isVideoEnabled ? (
-                        <Video color={Colors.white} size={26} />
-                      ) : (
-                        <VideoOff color={Colors.white} size={26} />
-                      )}
-                      <Text style={styles.controlLabel}>
-                        {callState.isVideoEnabled ? 'Stop' : 'Start'}
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.controlButton,
-                        pressed && styles.controlButtonPressed,
-                      ]}
-                      onPress={flipCamera}
-                    >
-                      <SwitchCamera color={Colors.white} size={26} />
-                      <Text style={styles.controlLabel}>Flip</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.controlButton,
-                        callState.isSpeakerOn && styles.controlButtonActive,
-                        pressed && styles.controlButtonPressed,
-                      ]}
-                      onPress={toggleSpeaker}
-                    >
-                      <Volume2 color={Colors.white} size={26} />
-                      <Text style={styles.controlLabel}>
-                        {callState.isSpeakerOn ? 'Speaker' : 'Earpiece'}
-                      </Text>
-                    </Pressable>
+                <View style={styles.selfViewContainer}>
+                  <View style={styles.selfView}>
+                    <User color={Colors.white} size={32} />
                   </View>
-
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.endCallButton,
-                      pressed && styles.endCallButtonPressed,
-                    ]}
-                    onPress={handleEndCall}
-                  >
-                    <PhoneOff color={Colors.white} size={32} />
-                  </Pressable>
                 </View>
-              </View>
-            </SafeAreaView>
-          </CameraView>
+
+                {callState.showControls && (
+                  <View style={styles.teamsControlsContainer}>
+                    <View style={styles.teamsControls}>
+                      <View style={styles.teamsControlsRow}>
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsButton,
+                            callState.isMuted && styles.teamsButtonActive,
+                            pressed && styles.buttonPressed,
+                          ]}
+                          onPress={toggleMute}
+                        >
+                          {callState.isMuted ? (
+                            <MicOff color={Colors.white} size={24} />
+                          ) : (
+                            <Mic color={Colors.white} size={24} />
+                          )}
+                        </Pressable>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsButton,
+                            !callState.isVideoEnabled && styles.teamsButtonActive,
+                            pressed && styles.buttonPressed,
+                          ]}
+                          onPress={toggleVideo}
+                        >
+                          {callState.isVideoEnabled ? (
+                            <Video color={Colors.white} size={24} />
+                          ) : (
+                            <VideoOff color={Colors.white} size={24} />
+                          )}
+                        </Pressable>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsButton,
+                            pressed && styles.buttonPressed,
+                          ]}
+                          onPress={flipCamera}
+                        >
+                          <SwitchCamera color={Colors.white} size={24} />
+                        </Pressable>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsButton,
+                            pressed && styles.buttonPressed,
+                          ]}
+                          onPress={toggleSpeaker}
+                        >
+                          <Volume2 color={Colors.white} size={24} />
+                        </Pressable>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsButton,
+                            pressed && styles.buttonPressed,
+                          ]}
+                        >
+                          <MessageSquare color={Colors.white} size={24} />
+                        </Pressable>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsButton,
+                            pressed && styles.buttonPressed,
+                          ]}
+                        >
+                          <MoreVertical color={Colors.white} size={24} />
+                        </Pressable>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.teamsEndButton,
+                            pressed && styles.buttonPressed,
+                          ]}
+                          onPress={handleEndCall}
+                        >
+                          <PhoneOff color={Colors.white} size={24} />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </SafeAreaView>
+            </CameraView>
+          </Pressable>
         ) : (
           <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
             <View style={styles.content}>
@@ -393,70 +438,89 @@ export default function ActiveCallScreen() {
                 </View>
               )}
 
-              <View style={styles.controls}>
-                <View style={styles.controlsRow}>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.controlButton,
-                      callState.isMuted && styles.controlButtonActive,
-                      pressed && styles.controlButtonPressed,
-                    ]}
-                    onPress={toggleMute}
-                  >
-                    {callState.isMuted ? (
-                      <MicOff color={Colors.white} size={28} />
-                    ) : (
-                      <Mic color={Colors.white} size={28} />
-                    )}
-                    <Text style={styles.controlLabel}>
-                      {callState.isMuted ? 'Unmute' : 'Mute'}
-                    </Text>
-                  </Pressable>
-
-                  {callType === 'video' && (
+              <View style={styles.teamsControlsContainer}>
+                <View style={styles.teamsControls}>
+                  <View style={styles.teamsControlsRow}>
                     <Pressable
                       style={({ pressed }) => [
-                        styles.controlButton,
-                        !callState.isVideoEnabled && styles.controlButtonActive,
-                        pressed && styles.controlButtonPressed,
+                        styles.teamsButton,
+                        callState.isMuted && styles.teamsButtonActive,
+                        pressed && styles.buttonPressed,
                       ]}
-                      onPress={toggleVideo}
+                      onPress={toggleMute}
                     >
-                      {callState.isVideoEnabled ? (
-                        <Video color={Colors.white} size={28} />
+                      {callState.isMuted ? (
+                        <MicOff color={Colors.white} size={24} />
                       ) : (
-                        <VideoOff color={Colors.white} size={28} />
+                        <Mic color={Colors.white} size={24} />
                       )}
-                      <Text style={styles.controlLabel}>
-                        {callState.isVideoEnabled ? 'Stop Video' : 'Start Video'}
-                      </Text>
                     </Pressable>
-                  )}
 
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.controlButton,
-                      callState.isSpeakerOn && styles.controlButtonActive,
-                      pressed && styles.controlButtonPressed,
-                    ]}
-                    onPress={toggleSpeaker}
-                  >
-                    <Volume2 color={Colors.white} size={28} />
-                    <Text style={styles.controlLabel}>
-                      {callState.isSpeakerOn ? 'Speaker On' : 'Speaker Off'}
-                    </Text>
-                  </Pressable>
+                    {callType === 'video' && (
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.teamsButton,
+                          !callState.isVideoEnabled && styles.teamsButtonActive,
+                          pressed && styles.buttonPressed,
+                        ]}
+                        onPress={toggleVideo}
+                      >
+                        {callState.isVideoEnabled ? (
+                          <Video color={Colors.white} size={24} />
+                        ) : (
+                          <VideoOff color={Colors.white} size={24} />
+                        )}
+                      </Pressable>
+                    )}
+
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.teamsButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={toggleSpeaker}
+                    >
+                      <Volume2 color={Colors.white} size={24} />
+                    </Pressable>
+
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.teamsButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                    >
+                      <MessageSquare color={Colors.white} size={24} />
+                    </Pressable>
+
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.teamsButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                    >
+                      <Users color={Colors.white} size={24} />
+                    </Pressable>
+
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.teamsButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                    >
+                      <MoreVertical color={Colors.white} size={24} />
+                    </Pressable>
+
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.teamsEndButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={handleEndCall}
+                    >
+                      <PhoneOff color={Colors.white} size={24} />
+                    </Pressable>
+                  </View>
                 </View>
-
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.endCallButton,
-                    pressed && styles.endCallButtonPressed,
-                  ]}
-                  onPress={handleEndCall}
-                >
-                  <PhoneOff color={Colors.white} size={32} />
-                </Pressable>
               </View>
             </View>
           </SafeAreaView>
@@ -469,69 +533,92 @@ export default function ActiveCallScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#1E1E1E',
   },
   camera: {
     flex: 1,
   },
+  cameraView: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
-  },
-  videoOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'space-between',
-    paddingVertical: 20,
   },
-  videoHeader: {
+  videoTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    gap: 12,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  statusBadge: {
+  topBarLeft: {
+    flex: 1,
+  },
+  topBarCenter: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  topBarRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  connectionIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     alignSelf: 'flex-start',
   },
   recordingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.error,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
   },
-  participantInfo: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    borderRadius: 16,
-  },
-  participantLabel: {
+  connectionText: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontWeight: '600',
+    color: Colors.white,
   },
-  durationVideo: {
-    fontSize: 18,
+  participantNameTop: {
+    fontSize: 16,
     fontWeight: '700',
     color: Colors.white,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
   },
-  jobTitleVideo: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 4,
+  participantRole: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+  },
+  topBarButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selfViewContainer: {
+    position: 'absolute',
+    top: 80,
+    right: 16,
+    width: 100,
+    height: 140,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  selfView: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   content: {
     flex: 1,
@@ -593,52 +680,43 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: '600',
   },
-  controls: {
-    paddingHorizontal: 20,
-    gap: 32,
+  teamsControlsContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  controlsRow: {
+  teamsControls: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  teamsControlsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    gap: 12,
-  },
-  controlButton: {
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    minWidth: 80,
-    flex: 1,
   },
-  controlButtonActive: {
-    backgroundColor: 'rgba(239, 68, 68, 0.4)',
-  },
-  controlButtonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.95 }],
-  },
-  controlLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.white,
-  },
-  endCallButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.error,
+  teamsButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    shadowColor: Colors.error,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 8,
   },
-  endCallButtonPressed: {
-    opacity: 0.8,
+  teamsButtonActive: {
+    backgroundColor: '#D32F2F',
+  },
+  teamsEndButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D32F2F',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonPressed: {
+    opacity: 0.7,
     transform: [{ scale: 0.95 }],
   },
 });
