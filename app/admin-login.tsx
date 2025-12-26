@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { Eye, EyeOff, Lock, Shield, User } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -28,6 +28,7 @@ export default function AdminLoginScreen() {
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -78,8 +79,13 @@ export default function AdminLoginScreen() {
     setVerificationCode(newCode);
 
     if (text && index < 5) {
-      const nextInput = index + 1;
-      console.log(`Moving to input ${nextInput}`);
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCodeKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !verificationCode[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -220,12 +226,17 @@ export default function AdminLoginScreen() {
                   {verificationCode.map((digit, index) => (
                     <View key={index} style={styles.codeBox}>
                       <TextInput
+                        ref={(ref) => {
+                          inputRefs.current[index] = ref;
+                        }}
                         style={styles.codeInput}
                         value={digit}
                         onChangeText={(text) => handleCodeInput(text, index)}
+                        onKeyPress={(e) => handleCodeKeyPress(e, index)}
                         keyboardType="number-pad"
                         maxLength={1}
                         selectTextOnFocus
+                        autoFocus={index === 0}
                       />
                     </View>
                   ))}
