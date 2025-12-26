@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -10,7 +11,7 @@ import {
   User,
   Video,
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -43,6 +44,29 @@ export default function ScheduleCallScreen() {
   const params = useLocalSearchParams();
   const candidateName = (params.candidateName as string) || '';
   const jobTitle = params.jobTitle as string;
+
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
+  useEffect(() => {
+    if (user && user.userType !== 'recruiter' && user.userType !== 'company') {
+      Alert.alert(
+        'Access Restricted',
+        'Only recruiters and companies can schedule interviews.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    }
+  }, [user, router]);
 
   const [callData, setCallData] = useState<ScheduleCallData>({
     date: '',
