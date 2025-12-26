@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Clock, User, Phone, Video } from 'lucide-react-native';
+import { Clock, User, Phone, Video, Sparkles, Image as ImageIcon } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -34,6 +34,7 @@ export default function WaitingRoomScreen() {
 
   const [pulseAnim] = useState(new Animated.Value(1));
   const [waitingTime, setWaitingTime] = useState(0);
+  const [backgroundEffect, setBackgroundEffect] = useState<'none' | 'blur' | 'gradient'>('none');
 
   useEffect(() => {
     Animated.loop(
@@ -121,6 +122,7 @@ export default function WaitingRoomScreen() {
                   candidateName,
                   callType,
                   jobTitle: jobTitle || '',
+                  backgroundEffect,
                 },
               });
             },
@@ -128,7 +130,7 @@ export default function WaitingRoomScreen() {
         ]
       );
     }
-  }, [admissionStatus?.isAdmitted, router, callId, candidateName, callType, jobTitle]);
+  }, [admissionStatus?.isAdmitted, router, callId, candidateName, callType, jobTitle, backgroundEffect]);
 
   const handleLeaveWaitingRoom = () => {
     Alert.alert(
@@ -212,6 +214,64 @@ export default function WaitingRoomScreen() {
                 The host will let you in soon
               </Text>
             </View>
+
+            {callType === 'video' && (
+              <View style={styles.effectsSection}>
+                <Text style={styles.effectsTitle}>Background Effects</Text>
+                <View style={styles.effectsContainer}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.effectButton,
+                      backgroundEffect === 'none' && styles.effectButtonActive,
+                      pressed && styles.effectButtonPressed,
+                    ]}
+                    onPress={() => setBackgroundEffect('none')}
+                  >
+                    <View style={styles.effectIconContainer}>
+                      <Video color={backgroundEffect === 'none' ? Colors.white : Colors.text} size={24} />
+                    </View>
+                    <Text style={[
+                      styles.effectLabel,
+                      backgroundEffect === 'none' && styles.effectLabelActive,
+                    ]}>None</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.effectButton,
+                      backgroundEffect === 'blur' && styles.effectButtonActive,
+                      pressed && styles.effectButtonPressed,
+                    ]}
+                    onPress={() => setBackgroundEffect('blur')}
+                  >
+                    <View style={styles.effectIconContainer}>
+                      <Sparkles color={backgroundEffect === 'blur' ? Colors.white : Colors.text} size={24} />
+                    </View>
+                    <Text style={[
+                      styles.effectLabel,
+                      backgroundEffect === 'blur' && styles.effectLabelActive,
+                    ]}>Blur</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.effectButton,
+                      backgroundEffect === 'gradient' && styles.effectButtonActive,
+                      pressed && styles.effectButtonPressed,
+                    ]}
+                    onPress={() => setBackgroundEffect('gradient')}
+                  >
+                    <View style={styles.effectIconContainer}>
+                      <ImageIcon color={backgroundEffect === 'gradient' ? Colors.white : Colors.text} size={24} />
+                    </View>
+                    <Text style={[
+                      styles.effectLabel,
+                      backgroundEffect === 'gradient' && styles.effectLabelActive,
+                    ]}>Gradient</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </View>
 
           <View style={styles.bottomSection}>
@@ -364,5 +424,57 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  effectsSection: {
+    width: '100%',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+  },
+  effectsTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  effectsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+  },
+  effectButton: {
+    flex: 1,
+    backgroundColor: Colors.light,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  effectButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  effectButtonPressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.96 }],
+  },
+  effectIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  effectLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  effectLabelActive: {
+    color: Colors.white,
   },
 });
