@@ -163,7 +163,7 @@ function WelcomeScreen() {
                 styles.secondaryButton,
                 pressed && styles.buttonPressed,
               ]}
-              onPress={() => console.log('Sign In')}
+              onPress={() => router.push('/login')}
             >
               <Text style={styles.secondaryButtonText}>Sign In</Text>
             </Pressable>
