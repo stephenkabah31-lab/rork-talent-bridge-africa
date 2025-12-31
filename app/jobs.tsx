@@ -13,6 +13,7 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  Users,
 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
@@ -166,6 +167,26 @@ export default function JobsScreen() {
       return stored ? JSON.parse(stored) : null;
     },
   });
+
+  const { data: postedJobs = [] } = useQuery({
+    queryKey: ['postedJobs'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('postedJobs');
+      return stored ? JSON.parse(stored) : [];
+    },
+  });
+
+  const { data: allApplications = [] } = useQuery({
+    queryKey: ['applications'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('applications');
+      return stored ? JSON.parse(stored) : [];
+    },
+  });
+
+  const getApplicationCount = (jobId: string) => {
+    return allApplications.filter((app: any) => app.jobId === jobId).length;
+  };
 
   const filteredJobs = useMemo(
     () =>
@@ -331,45 +352,71 @@ export default function JobsScreen() {
               </Pressable>
 
               <View style={styles.jobActions}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.applyButton,
-                    pressed && styles.buttonPressed,
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/apply-job',
-                      params: {
-                        jobId: job.id,
-                        jobTitle: job.title,
-                        company: job.company,
-                      },
-                    })
-                  }
-                >
-                  <Text style={styles.applyButtonText}>Apply</Text>
-                </Pressable>
-
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.messageButton,
-                    !user?.isPremium && styles.messageButtonDisabled,
-                    pressed && styles.buttonPressed,
-                  ]}
-                  onPress={() => handleContactRecruiter(job)}
-                >
-                  {!user?.isPremium && (
-                    <Crown color={Colors.primary} size={16} strokeWidth={2} />
-                  )}
-                  <Text
-                    style={[
-                      styles.messageButtonText,
-                      !user?.isPremium && styles.messageButtonTextDisabled,
+                {(user?.userType === 'recruiter' || user?.userType === 'company') &&
+                postedJobs.some((pj: any) => pj.id === job.id) ? (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.viewApplicationsButton,
+                      pressed && styles.buttonPressed,
                     ]}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/manage-applications',
+                        params: {
+                          jobId: job.id,
+                          jobTitle: job.title,
+                        },
+                      })
+                    }
                   >
-                    Message
-                  </Text>
-                </Pressable>
+                    <Users color={Colors.white} size={20} />
+                    <Text style={styles.viewApplicationsButtonText}>
+                      View Applications ({getApplicationCount(job.id)})
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.applyButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/apply-job',
+                          params: {
+                            jobId: job.id,
+                            jobTitle: job.title,
+                            company: job.company,
+                          },
+                        })
+                      }
+                    >
+                      <Text style={styles.applyButtonText}>Apply</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.messageButton,
+                        !user?.isPremium && styles.messageButtonDisabled,
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={() => handleContactRecruiter(job)}
+                    >
+                      {!user?.isPremium && (
+                        <Crown color={Colors.primary} size={16} strokeWidth={2} />
+                      )}
+                      <Text
+                        style={[
+                          styles.messageButtonText,
+                          !user?.isPremium && styles.messageButtonTextDisabled,
+                        ]}
+                      >
+                        Message
+                      </Text>
+                    </Pressable>
+                  </>
+                )}
               </View>
             </View>
           ))}
@@ -545,6 +592,21 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.98 }],
+  },
+  viewApplicationsButton: {
+    flex: 1,
+    backgroundColor: Colors.secondary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  viewApplicationsButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.white,
   },
   postJobButton: {
     backgroundColor: Colors.primary,

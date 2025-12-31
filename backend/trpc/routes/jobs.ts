@@ -55,7 +55,7 @@ interface Application {
   coverLetter: string;
   resume?: string;
   appliedAt: Date;
-  status: "pending" | "reviewing" | "accepted" | "rejected";
+  status: "pending" | "reviewing" | "shortlisted" | "accepted" | "rejected";
 }
 
 const mockApplications: Application[] = [];
@@ -195,5 +195,29 @@ export const jobsRouter = createTRPCRouter({
       }
 
       return applications;
+    }),
+
+  updateApplicationStatus: publicProcedure
+    .input(
+      z.object({
+        applicationId: z.string(),
+        status: z.enum(["pending", "reviewing", "shortlisted", "accepted", "rejected"]),
+      })
+    )
+    .mutation(({ input }) => {
+      const application = mockApplications.find((app) => app.id === input.applicationId);
+
+      if (!application) {
+        throw new Error("Application not found");
+      }
+
+      application.status = input.status;
+
+      console.log(`Updated application ${input.applicationId} status to ${input.status}`);
+
+      return {
+        success: true,
+        application,
+      };
     }),
 });
