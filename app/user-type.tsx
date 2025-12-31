@@ -166,7 +166,7 @@ export default function UserTypeScreen() {
                 Already have an account?{' '}
                 <Text
                   style={styles.footerLink}
-                  onPress={() => console.log('Sign In')}
+                  onPress={() => router.push('/login')}
                 >
                   Sign In
                 </Text>
