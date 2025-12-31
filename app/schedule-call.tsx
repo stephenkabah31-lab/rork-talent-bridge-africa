@@ -188,7 +188,7 @@ export default function ScheduleCallScreen() {
             <View>
               <Text style={styles.candidateName}>{candidateName}</Text>
               {jobTitle && (
-                <Text style={styles.candidateRole}>Applying for: {jobTitle}</Text>
+                <Text style={styles.candidateRole}>Interview for: {jobTitle}</Text>
               )}
             </View>
           </View>

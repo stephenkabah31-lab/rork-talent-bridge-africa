@@ -197,7 +197,7 @@ export default function ScheduledCallsScreen() {
                               {call.candidateName}
                             </Text>
                             {call.jobTitle && (
-                              <Text style={styles.jobTitle}>{call.jobTitle}</Text>
+                              <Text style={styles.jobTitle}>Position: {call.jobTitle}</Text>
                             )}
                           </View>
                         </View>
@@ -278,7 +278,7 @@ export default function ScheduledCallsScreen() {
                               {call.candidateName}
                             </Text>
                             {call.jobTitle && (
-                              <Text style={styles.jobTitle}>{call.jobTitle}</Text>
+                              <Text style={styles.jobTitle}>Position: {call.jobTitle}</Text>
                             )}
                           </View>
                         </View>
