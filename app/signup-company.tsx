@@ -94,7 +94,7 @@ export default function SignupCompanyScreen() {
     try {
       const userData = {
         ...formData,
-        userType: 'company',
+        type: 'company',
         verificationStatus: 'pending',
         createdAt: new Date().toISOString(),
       };

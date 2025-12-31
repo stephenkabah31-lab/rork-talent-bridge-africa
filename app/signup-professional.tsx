@@ -60,7 +60,7 @@ export default function SignupProfessionalScreen() {
     try {
       const userData = {
         ...formData,
-        userType: 'professional',
+        type: 'professional',
         createdAt: new Date().toISOString(),
       };
 

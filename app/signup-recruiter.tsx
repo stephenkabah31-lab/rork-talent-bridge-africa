@@ -60,7 +60,7 @@ export default function SignupRecruiterScreen() {
     try {
       const userData = {
         ...formData,
-        userType: 'recruiter',
+        type: 'recruiter',
         createdAt: new Date().toISOString(),
       };
 
