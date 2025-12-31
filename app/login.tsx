@@ -47,7 +47,7 @@ export default function LoginScreen() {
         id: Date.now().toString(),
         email,
         name: 'User',
-        type: userType,
+        userType: userType,
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(user));
