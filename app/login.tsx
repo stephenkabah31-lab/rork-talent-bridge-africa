@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react-native';
+import { Building2, Eye, EyeOff, Lock, Mail, Search, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -19,12 +19,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
 
+type UserType = 'professional' | 'recruiter' | 'company';
+
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState<UserType>('professional');
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -44,7 +47,7 @@ export default function LoginScreen() {
         id: Date.now().toString(),
         email,
         name: 'User',
-        type: 'professional',
+        type: userType,
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(user));
@@ -91,6 +94,74 @@ export default function LoginScreen() {
               />
               <Text style={styles.title}>Welcome Back</Text>
               <Text style={styles.subtitle}>Sign in to continue to TalentBridge</Text>
+            </View>
+
+            <View style={styles.userTypeSelector}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.typeButton,
+                  userType === 'professional' && styles.typeButtonActive,
+                  pressed && styles.typeButtonPressed,
+                ]}
+                onPress={() => setUserType('professional')}
+              >
+                <User
+                  color={userType === 'professional' ? Colors.primary : Colors.textLight}
+                  size={20}
+                />
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    userType === 'professional' && styles.typeButtonTextActive,
+                  ]}
+                >
+                  Professional
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.typeButton,
+                  userType === 'recruiter' && styles.typeButtonActive,
+                  pressed && styles.typeButtonPressed,
+                ]}
+                onPress={() => setUserType('recruiter')}
+              >
+                <Search
+                  color={userType === 'recruiter' ? Colors.secondary : Colors.textLight}
+                  size={20}
+                />
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    userType === 'recruiter' && styles.typeButtonTextActive,
+                  ]}
+                >
+                  Recruiter
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.typeButton,
+                  userType === 'company' && styles.typeButtonActive,
+                  pressed && styles.typeButtonPressed,
+                ]}
+                onPress={() => setUserType('company')}
+              >
+                <Building2
+                  color={userType === 'company' ? Colors.accent : Colors.textLight}
+                  size={20}
+                />
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    userType === 'company' && styles.typeButtonTextActive,
+                  ]}
+                >
+                  Company
+                </Text>
+              </Pressable>
             </View>
 
             <View style={styles.form}>
@@ -324,5 +395,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textLight,
     fontWeight: '600',
+  },
+  userTypeSelector: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 24,
+  },
+  typeButton: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    gap: 6,
+  },
+  typeButtonActive: {
+    backgroundColor: Colors.white,
+    borderColor: Colors.white,
+  },
+  typeButtonPressed: {
+    opacity: 0.8,
+  },
+  typeButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textLight,
+  },
+  typeButtonTextActive: {
+    color: Colors.dark,
   },
 });
