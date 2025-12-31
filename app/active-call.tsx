@@ -85,6 +85,7 @@ export default function ActiveCallScreen() {
       }
 
       try {
+        console.log('🎬 Initializing call...');
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: true,
           playsInSilentModeIOS: true,
@@ -93,34 +94,53 @@ export default function ActiveCallScreen() {
           playThroughEarpieceAndroid: false,
         });
 
+        console.log('🎤 Requesting microphone permission...');
         const micStatus = await requestMicPermission();
+        console.log('🎤 Microphone permission status:', micStatus?.granted);
         
         if (callType === 'video') {
+          console.log('📹 Requesting camera permission...');
           const camStatus = await requestCameraPermission();
-          setPermissionsGranted(micStatus?.granted && camStatus?.granted);
+          console.log('📹 Camera permission status:', camStatus?.granted);
           
-          if (!micStatus?.granted || !camStatus?.granted) {
-            Alert.alert(
-              'Permissions Required',
-              'Camera and microphone access is required for video calls.',
-              [{ text: 'OK', onPress: () => router.back() }]
-            );
+          const permissionsOk = micStatus?.granted && camStatus?.granted;
+          setPermissionsGranted(permissionsOk);
+          
+          if (!permissionsOk) {
+            console.log('❌ Permissions denied - showing alert');
+            setTimeout(() => {
+              Alert.alert(
+                'Permissions Required',
+                'Camera and microphone access is required for video calls. Please enable them in your device settings.',
+                [
+                  { text: 'Cancel', style: 'cancel', onPress: () => router.back() },
+                  { text: 'Go Back', onPress: () => router.back() }
+                ]
+              );
+            }, 100);
             return;
           }
         } else {
-          setPermissionsGranted(micStatus?.granted);
+          setPermissionsGranted(!!micStatus?.granted);
           
           if (!micStatus?.granted) {
-            Alert.alert(
-              'Permission Required',
-              'Microphone access is required for calls.',
-              [{ text: 'OK', onPress: () => router.back() }]
-            );
+            console.log('❌ Microphone permission denied - showing alert');
+            setTimeout(() => {
+              Alert.alert(
+                'Permission Required',
+                'Microphone access is required for calls. Please enable it in your device settings.',
+                [
+                  { text: 'Cancel', style: 'cancel', onPress: () => router.back() },
+                  { text: 'Go Back', onPress: () => router.back() }
+                ]
+              );
+            }, 100);
             return;
           }
         }
 
         if (micStatus?.granted) {
+          console.log('🎙️ Starting audio recording...');
           const recording = new Audio.Recording();
           await recording.prepareToRecordAsync({
             ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
@@ -130,8 +150,14 @@ export default function ActiveCallScreen() {
           console.log('✅ Audio recording started - Microphone active');
         }
       } catch (error) {
-        console.error('Error initializing call:', error);
-        Alert.alert('Permission Error', 'Failed to access camera or microphone');
+        console.error('❌ Error initializing call:', error);
+        setTimeout(() => {
+          Alert.alert(
+            'Error',
+            'Failed to access camera or microphone. Please check your device settings.',
+            [{ text: 'OK', onPress: () => router.back() }]
+          );
+        }, 100);
       }
     };
 
