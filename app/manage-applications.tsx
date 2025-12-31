@@ -155,13 +155,7 @@ export default function ManageApplicationsScreen() {
             styles.backButton,
             pressed && styles.backButtonPressed,
           ]}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/jobs');
-            }
-          }}
+          onPress={() => router.back()}
         >
           <ArrowLeft color={Colors.text} size={24} />
         </Pressable>
@@ -371,7 +365,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -425,7 +419,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
   },
   countText: {
     fontSize: 14,
