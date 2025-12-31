@@ -146,7 +146,7 @@ export default function AdmitCandidatesScreen() {
         [{ text: 'OK', style: 'cancel' }]
       );
     } else {
-      router.replace({
+      router.push({
         pathname: '/active-call',
         params: {
           callId,
