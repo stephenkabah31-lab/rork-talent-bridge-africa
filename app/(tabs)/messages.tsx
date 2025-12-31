@@ -90,7 +90,7 @@ export default function MessagesTabScreen() {
       onPress={() => {
         console.log('Opening conversation with:', item.name);
         router.push({
-          pathname: '/messages' as any,
+          pathname: '/messages',
           params: {
             candidateName: item.name,
             jobTitle: item.jobTitle || '',
@@ -101,8 +101,9 @@ export default function MessagesTabScreen() {
       accessible={true}
       accessibilityRole="button"
       accessibilityLabel={`Open conversation with ${item.name}`}
+      testID={`conversation-${item.id}`}
     >
-      <View style={styles.avatar}>
+      <View style={styles.avatar} pointerEvents="none">
         {item.avatar ? (
           <Image source={{ uri: item.avatar }} style={styles.avatarImage} />
         ) : (
@@ -112,7 +113,7 @@ export default function MessagesTabScreen() {
         )}
       </View>
 
-      <View style={styles.conversationContent}>
+      <View style={styles.conversationContent} pointerEvents="none">
         <View style={styles.conversationHeader}>
           <Text style={styles.conversationName}>{item.name}</Text>
           <Text style={styles.timestamp}>{item.timestamp}</Text>
@@ -279,6 +280,7 @@ const styles = StyleSheet.create({
     gap: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    minHeight: 88,
   },
   conversationPressed: {
     backgroundColor: '#E5E7EB',
