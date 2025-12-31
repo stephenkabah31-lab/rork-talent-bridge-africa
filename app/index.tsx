@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Globe, TrendingUp } from 'lucide-react-native';
@@ -109,13 +108,8 @@ function WelcomeScreen() {
           ]}
         >
           <View style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/icon.png')}
-              style={styles.logoImage}
-              contentFit="contain"
-            />
-            <Text style={styles.logo}>TalentBridge</Text>
-            <Text style={styles.tagline}>Africa&apos;s Professional Network</Text>
+            <Text style={styles.logo}>Hire Me Africa</Text>
+            <Text style={styles.tagline}>Connecting Africa&apos;s Talent</Text>
           </View>
 
           <View style={styles.featuresContainer}>
@@ -211,11 +205,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginTop: 40,
-  },
-  logoImage: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
   },
   logo: {
     fontSize: 48,
