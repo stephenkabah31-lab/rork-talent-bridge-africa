@@ -52,6 +52,8 @@ export default function LoginScreen() {
         fullName: userType === 'professional' ? 'Professional User' : undefined,
         companyName: userType === 'company' ? 'Company Name' : undefined,
         agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
+        profession: userType === 'professional' ? 'Professional' : undefined,
+        industry: userType === 'company' ? 'Company' : (userType === 'recruiter' ? 'Recruiter' : undefined),
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(user));
