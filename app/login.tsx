@@ -43,14 +43,19 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     setTimeout(async () => {
+      console.log('Logging in as:', userType);
       const user = {
         id: Date.now().toString(),
         email,
-        name: 'User',
+        name: email.split('@')[0],
         userType: userType,
+        fullName: userType === 'professional' ? 'Professional User' : undefined,
+        companyName: userType === 'company' ? 'Company Name' : undefined,
+        agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(user));
+      console.log('User saved:', JSON.stringify(user, null, 2));
       setIsLoading(false);
       router.replace('/(tabs)/home' as any);
     }, 1000);
