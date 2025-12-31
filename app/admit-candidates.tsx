@@ -41,6 +41,24 @@ export default function AdmitCandidatesScreen() {
   const participantName = params.participantName as string;
   const jobTitle = params.jobTitle as string;
 
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
+  React.useEffect(() => {
+    if (user && user.userType !== 'recruiter' && user.userType !== 'company') {
+      Alert.alert(
+        'Access Restricted',
+        'Only recruiters can admit candidates to calls.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+    }
+  }, [user, router]);
+
   const { data: waitingCandidates = [] } = useQuery<WaitingRoomData[]>({
     queryKey: ['waitingRoom', callId],
     queryFn: async () => {
@@ -124,31 +142,15 @@ export default function AdmitCandidatesScreen() {
     if (waitingCandidates.length > 0) {
       Alert.alert(
         'Candidates Waiting',
-        'There are candidates still waiting. Do you want to start the call anyway?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Start Call',
-            onPress: () => {
-              router.push({
-                pathname: '/active-call',
-                params: {
-                  callId,
-                  candidateName: participantName,
-                  callType,
-                  jobTitle: jobTitle || '',
-                },
-              });
-            },
-          },
-        ]
+        'There are candidates still waiting. Please admit them first or remove them from the waiting room.',
+        [{ text: 'OK', style: 'cancel' }]
       );
     } else {
-      router.push({
+      router.replace({
         pathname: '/active-call',
         params: {
           callId,
-          candidateName: participantName,
+          candidateName: user?.name || 'Recruiter',
           callType,
           jobTitle: jobTitle || '',
         },

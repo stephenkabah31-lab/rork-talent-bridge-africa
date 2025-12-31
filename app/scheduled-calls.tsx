@@ -89,16 +89,39 @@ export default function ScheduledCallsScreen() {
     );
   };
 
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
   const handleJoinCall = (call: ScheduledCall) => {
-    router.push({
-      pathname: '/active-call' as any,
-      params: {
-        callId: call.id,
-        candidateName: call.candidateName,
-        callType: call.callType,
-        jobTitle: call.jobTitle || '',
-      },
-    });
+    const isRecruiter = user?.userType === 'recruiter' || user?.userType === 'company';
+    
+    if (isRecruiter) {
+      router.push({
+        pathname: '/admit-candidates' as any,
+        params: {
+          callId: call.id,
+          callType: call.callType,
+          participantName: call.candidateName,
+          jobTitle: call.jobTitle || '',
+        },
+      });
+    } else {
+      router.push({
+        pathname: '/waiting-room' as any,
+        params: {
+          callId: call.id,
+          candidateName: user?.name || 'Candidate',
+          callType: call.callType,
+          jobTitle: call.jobTitle || '',
+          participantName: call.candidateName,
+        },
+      });
+    }
   };
 
   const scheduledCalls = calls.filter((call) => call.status === 'scheduled');
