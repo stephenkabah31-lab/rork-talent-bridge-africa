@@ -50,7 +50,7 @@ export default function AdmitCandidatesScreen() {
   });
 
   React.useEffect(() => {
-    if (user && user.userType !== 'recruiter' && user.userType !== 'company') {
+    if (user && user.type !== 'recruiter' && user.type !== 'company') {
       Alert.alert(
         'Access Restricted',
         'Only recruiters can admit candidates to calls.',
