@@ -108,7 +108,7 @@ function WelcomeScreen() {
           ]}
         >
           <View style={styles.logoContainer}>
-            <Text style={styles.logo}>Hire Me Africa</Text>
+            <Text style={styles.logo}>Talent Bridge</Text>
             <Text style={styles.tagline}>Connecting Africa&apos;s Talent</Text>
           </View>
 
