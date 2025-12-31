@@ -21,6 +21,7 @@ function RootLayoutNav() {
       },
     }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="user-type" options={{ title: 'Select Account Type' }} />
       <Stack.Screen name="signup-professional" options={{ title: 'Professional Sign Up' }} />
       <Stack.Screen name="signup-recruiter" options={{ title: 'Recruiter Sign Up' }} />
