@@ -155,7 +155,13 @@ export default function ManageApplicationsScreen() {
             styles.backButton,
             pressed && styles.backButtonPressed,
           ]}
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/jobs');
+            }
+          }}
         >
           <ArrowLeft color={Colors.text} size={24} />
         </Pressable>

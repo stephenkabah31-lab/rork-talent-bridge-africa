@@ -35,15 +35,6 @@ export default function MessagesScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const jobTitle = params.jobTitle as string;
-
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hi! I saw your application and would love to discuss the opportunity.',
-      isFromMe: false,
-      timestamp: '10:30 AM',
-    },
-  ]);
   const [inputText, setInputText] = useState('');
 
   const { data: user } = useQuery<UserData>({
@@ -53,6 +44,19 @@ export default function MessagesScreen() {
       return stored ? JSON.parse(stored) : null;
     },
   });
+
+  const isRecruiter = user?.userType === 'recruiter' || user?.userType === 'company';
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: isRecruiter 
+        ? 'Hi! I saw your application and would love to discuss the opportunity.'
+        : 'Thank you for your interest. I\'d be happy to discuss the role.',
+      isFromMe: isRecruiter,
+      timestamp: '10:30 AM',
+    },
+  ]);
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
