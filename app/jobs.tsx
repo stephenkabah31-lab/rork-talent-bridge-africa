@@ -374,7 +374,7 @@ export default function JobsScreen() {
                       View Applications ({getApplicationCount(job.id)})
                     </Text>
                   </Pressable>
-                ) : (
+                ) : user?.userType === 'professional' ? (
                   <>
                     <Pressable
                       style={({ pressed }) => [
@@ -416,7 +416,7 @@ export default function JobsScreen() {
                       </Text>
                     </Pressable>
                   </>
-                )}
+                ) : null}
               </View>
             </View>
           ))}
