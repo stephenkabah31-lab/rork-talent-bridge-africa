@@ -241,6 +241,14 @@ export default function SignupProfessionalScreen() {
               <Text style={styles.footerText}>
                 By signing up, you agree to our Terms of Service and Privacy Policy
               </Text>
+              <Pressable
+                style={styles.signInLink}
+                onPress={() => router.push('/login')}
+              >
+                <Text style={styles.signInLinkText}>
+                  Already have an account? <Text style={styles.signInLinkBold}>Sign In</Text>
+                </Text>
+              </Pressable>
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -346,11 +354,24 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: 24,
     alignItems: 'center',
+    gap: 16,
   },
   footerText: {
     fontSize: 12,
     color: Colors.light,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  signInLink: {
+    paddingVertical: 8,
+  },
+  signInLinkText: {
+    fontSize: 14,
+    color: Colors.light,
+    textAlign: 'center',
+  },
+  signInLinkBold: {
+    fontWeight: '700',
+    color: Colors.white,
   },
 });
