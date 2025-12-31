@@ -97,6 +97,10 @@ export default function MessagesTabScreen() {
           },
         });
       }}
+      android_ripple={{ color: '#E5E7EB' }}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`Open conversation with ${item.name}`}
     >
       <View style={styles.avatar}>
         {item.avatar ? (
