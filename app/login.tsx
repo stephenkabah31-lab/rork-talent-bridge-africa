@@ -48,7 +48,7 @@ export default function LoginScreen() {
         id: Date.now().toString(),
         email,
         name: email.split('@')[0],
-        userType: userType,
+        type: userType,
         fullName: userType === 'professional' ? 'Professional User' : undefined,
         companyName: userType === 'company' ? 'Company Name' : undefined,
         agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
