@@ -15,6 +15,7 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
+  MessageCircle,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -111,6 +112,16 @@ export default function ManageApplicationsScreen() {
         candidateName: application.fullName,
         jobTitle: application.jobTitle,
         candidateEmail: application.email,
+      },
+    });
+  };
+
+  const handleMessageCandidate = (application: Application) => {
+    router.push({
+      pathname: '/messages',
+      params: {
+        candidateName: application.fullName,
+        jobTitle: application.jobTitle,
       },
     });
   };
@@ -328,25 +339,40 @@ export default function ManageApplicationsScreen() {
                   </Pressable>
                 </View>
 
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.scheduleButton,
-                    pressed && styles.buttonPressed,
-                  ]}
-                  onPress={() => handleScheduleInterview(application)}
-                >
-                  <LinearGradient
-                    colors={[Colors.secondary, '#10B981']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.gradientButton}
+                <View style={styles.bottomActions}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.messageButton,
+                      pressed && styles.buttonPressed,
+                    ]}
+                    onPress={() => handleMessageCandidate(application)}
                   >
-                    <Calendar color={Colors.white} size={20} />
-                    <Text style={styles.scheduleButtonText}>
-                      Schedule Interview
+                    <MessageCircle color={Colors.primary} size={20} />
+                    <Text style={styles.messageButtonText}>
+                      Message
                     </Text>
-                  </LinearGradient>
-                </Pressable>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.scheduleButton,
+                      pressed && styles.buttonPressed,
+                    ]}
+                    onPress={() => handleScheduleInterview(application)}
+                  >
+                    <LinearGradient
+                      colors={[Colors.secondary, '#10B981']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.gradientButton}
+                    >
+                      <Calendar color={Colors.white} size={20} />
+                      <Text style={styles.scheduleButtonText}>
+                        Schedule Interview
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                </View>
               </View>
             );
           })}
@@ -573,7 +599,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#EF4444',
   },
+  bottomActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  messageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.white,
+  },
+  messageButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
   scheduleButton: {
+    flex: 1,
     borderRadius: 12,
     overflow: 'hidden',
   },
