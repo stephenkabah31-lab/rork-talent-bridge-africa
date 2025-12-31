@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "../create-context";
 
 interface User {
@@ -14,44 +15,117 @@ interface User {
   isPremium?: boolean;
 }
 
-const mockUsers: Record<string, User> = {};
+const mockUsers: Record<string, User & { password: string }> = {};
+const MAX_LOGIN_ATTEMPTS = 5;
+const loginAttempts: Record<string, { count: number; lastAttempt: number }> = {};
+
+function hashPassword(password: string): string {
+  return `hashed_${password}`;
+}
+
+function verifyPassword(password: string, hashedPassword: string): boolean {
+  return hashedPassword === `hashed_${password}`;
+}
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const attempt = loginAttempts[identifier];
+  
+  if (!attempt) {
+    loginAttempts[identifier] = { count: 1, lastAttempt: now };
+    return true;
+  }
+  
+  const timeSinceLastAttempt = now - attempt.lastAttempt;
+  if (timeSinceLastAttempt > 15 * 60 * 1000) {
+    loginAttempts[identifier] = { count: 1, lastAttempt: now };
+    return true;
+  }
+  
+  if (attempt.count >= MAX_LOGIN_ATTEMPTS) {
+    return false;
+  }
+  
+  attempt.count++;
+  attempt.lastAttempt = now;
+  return true;
+}
 
 export const authRouter = createTRPCRouter({
   login: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
-        password: z.string().min(6),
+        email: z.string().email().max(255),
+        password: z.string().min(6).max(100),
         userType: z.enum(["professional", "recruiter", "company"]),
       })
     )
     .mutation(({ input }) => {
-      console.log(`Login attempt for ${input.email} as ${input.userType}`);
+      if (!checkRateLimit(input.email)) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Too many login attempts. Please try again later.',
+        });
+      }
 
-      const user: User = {
-        id: Date.now().toString(),
-        email: input.email,
-        name: input.email.split("@")[0],
-        type: input.userType,
-      };
+      const existingUser = Object.values(mockUsers).find(
+        u => u.email.toLowerCase() === input.email.toLowerCase()
+      );
 
-      mockUsers[user.id] = user;
+      if (!existingUser) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid credentials',
+        });
+      }
+
+      if (!verifyPassword(input.password, existingUser.password)) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid credentials',
+        });
+      }
+
+      if (existingUser.type !== input.userType) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid credentials',
+        });
+      }
+
+      const { password, ...userWithoutPassword } = existingUser;
+
+      console.log(`Successful login for ${input.email}`);
 
       return {
         success: true,
-        user,
-        token: `token_${user.id}`,
+        user: userWithoutPassword,
+        token: `token_${userWithoutPassword.id}`,
       };
     }),
 
   adminLogin: publicProcedure
     .input(
       z.object({
-        username: z.string(),
-        password: z.string(),
+        username: z.string().min(1).max(100),
+        password: z.string().min(6).max(100),
       })
     )
     .mutation(({ input }) => {
+      if (!checkRateLimit(`admin_${input.username}`)) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Too many login attempts. Please try again later.',
+        });
+      }
+
+      if (input.username !== 'admin' || input.password !== 'admin123') {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid credentials',
+        });
+      }
+
       console.log(`Admin login attempt for ${input.username}`);
 
       return {
@@ -67,7 +141,14 @@ export const authRouter = createTRPCRouter({
       })
     )
     .mutation(({ input }) => {
-      console.log(`Admin verification with code ${input.code}`);
+      if (input.code !== '123456') {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid verification code',
+        });
+      }
+
+      console.log(`Admin verification successful`);
 
       const adminUser = {
         id: "admin_" + Date.now(),
@@ -87,21 +168,32 @@ export const authRouter = createTRPCRouter({
   signup: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
-        password: z.string().min(6),
-        fullName: z.string().optional(),
-        companyName: z.string().optional(),
-        phoneNumber: z.string().optional(),
-        country: z.string().optional(),
+        email: z.string().email().max(255),
+        password: z.string().min(8).max(100).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+        fullName: z.string().min(1).max(100).optional(),
+        companyName: z.string().min(1).max(100).optional(),
+        phoneNumber: z.string().max(20).optional(),
+        country: z.string().max(100).optional(),
         userType: z.enum(["professional", "recruiter", "company"]),
       })
     )
     .mutation(({ input }) => {
-      console.log(`Signup for ${input.email} as ${input.userType}`);
+      const existingUser = Object.values(mockUsers).find(
+        u => u.email.toLowerCase() === input.email.toLowerCase()
+      );
+
+      if (existingUser) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User with this email already exists',
+        });
+      }
+
+      const hashedPassword = hashPassword(input.password);
 
       const user: User = {
         id: Date.now().toString(),
-        email: input.email,
+        email: input.email.toLowerCase(),
         name: input.fullName || input.companyName || input.email.split("@")[0],
         type: input.userType,
         fullName: input.fullName,
@@ -110,7 +202,9 @@ export const authRouter = createTRPCRouter({
         country: input.country,
       };
 
-      mockUsers[user.id] = user;
+      mockUsers[user.id] = { ...user, password: hashedPassword };
+
+      console.log(`User registered: ${input.email}`);
 
       return {
         success: true,
@@ -122,7 +216,10 @@ export const authRouter = createTRPCRouter({
   getCurrentUser: publicProcedure
     .input(z.object({ userId: z.string() }))
     .query(({ input }) => {
-      const user = mockUsers[input.userId];
-      return user || null;
+      const userData = mockUsers[input.userId];
+      if (!userData) return null;
+      
+      const { password, ...user } = userData;
+      return user;
     }),
 });

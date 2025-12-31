@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureStorage } from '@/lib/secure-storage';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
@@ -35,32 +36,55 @@ export default function LoginScreen() {
       return;
     }
 
-    if (!email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Invalid Password', 'Password must be at least 6 characters');
       return;
     }
 
     setIsLoading(true);
 
-    setTimeout(async () => {
-      console.log('Logging in as:', userType);
-      const user = {
-        id: Date.now().toString(),
-        email,
-        name: email.split('@')[0],
-        type: userType,
-        fullName: userType === 'professional' ? 'Professional User' : undefined,
-        companyName: userType === 'company' ? 'Company Name' : undefined,
-        agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
-        profession: userType === 'professional' ? 'Professional' : undefined,
-        industry: userType === 'company' ? 'Company' : (userType === 'recruiter' ? 'Recruiter' : undefined),
-      };
+    try {
+      setTimeout(async () => {
+        try {
+          console.log('Logging in as:', userType);
+          const user = {
+            id: Date.now().toString(),
+            email: email.toLowerCase().trim(),
+            name: email.split('@')[0],
+            type: userType,
+            fullName: userType === 'professional' ? 'Professional User' : undefined,
+            companyName: userType === 'company' ? 'Company Name' : undefined,
+            agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
+            profession: userType === 'professional' ? 'Professional' : undefined,
+            industry: userType === 'company' ? 'Company' : (userType === 'recruiter' ? 'Recruiter' : undefined),
+          };
 
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      console.log('User saved:', JSON.stringify(user, null, 2));
+          const token = `token_${user.id}`;
+          
+          await secureStorage.setAuthToken(token);
+          await secureStorage.setUserData(user);
+          await AsyncStorage.setItem('user', JSON.stringify(user));
+          
+          console.log('User authenticated successfully');
+          setIsLoading(false);
+          router.replace('/(tabs)/home' as any);
+        } catch (error) {
+          console.error('Login error:', error);
+          setIsLoading(false);
+          Alert.alert('Error', 'Failed to login. Please try again.');
+        }
+      }, 1000);
+    } catch (error) {
+      console.error('Login error:', error);
       setIsLoading(false);
-      router.replace('/(tabs)/home' as any);
-    }, 1000);
+      Alert.alert('Error', 'An error occurred. Please try again.');
+    }
   };
 
   return (

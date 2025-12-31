@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { createTRPCRouter, publicProcedure } from "../create-context";
+import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 
 interface Post {
   id: string;
@@ -94,7 +95,7 @@ export const postsRouter = createTRPCRouter({
       };
     }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         content: z.string().min(1),
@@ -133,18 +134,28 @@ export const postsRouter = createTRPCRouter({
       };
     }),
 
-  like: publicProcedure
+  like: protectedProcedure
     .input(
       z.object({
         postId: z.string(),
         userId: z.string(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       const post = mockPosts.find((p) => p.id === input.postId);
 
       if (!post) {
-        throw new Error("Post not found");
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Post not found',
+        });
+      }
+
+      if (input.userId !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
       }
 
       const isLiked = post.likedBy.includes(input.userId);
@@ -166,22 +177,28 @@ export const postsRouter = createTRPCRouter({
       };
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(
       z.object({
         postId: z.string(),
         userId: z.string(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       const postIndex = mockPosts.findIndex((p) => p.id === input.postId);
 
       if (postIndex === -1) {
-        throw new Error("Post not found");
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Post not found',
+        });
       }
 
-      if (mockPosts[postIndex].authorId !== input.userId) {
-        throw new Error("Unauthorized");
+      if (mockPosts[postIndex].authorId !== input.userId || input.userId !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
       }
 
       mockPosts.splice(postIndex, 1);

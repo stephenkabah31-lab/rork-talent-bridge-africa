@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { createTRPCRouter, publicProcedure } from "../create-context";
+import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 
 interface User {
   id: string;
@@ -99,7 +100,7 @@ export const usersRouter = createTRPCRouter({
       return users;
     }),
 
-  updateProfile: publicProcedure
+  updateProfile: protectedProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -112,11 +113,21 @@ export const usersRouter = createTRPCRouter({
         country: z.string().optional(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       const user = mockUsers[input.userId];
 
       if (!user) {
-        throw new Error("User not found");
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        });
+      }
+
+      if (input.userId !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
       }
 
       Object.assign(user, {
@@ -137,14 +148,21 @@ export const usersRouter = createTRPCRouter({
       };
     }),
 
-  connect: publicProcedure
+  connect: protectedProcedure
     .input(
       z.object({
         userId: z.string(),
         targetUserId: z.string(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
+      if (input.userId !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
+      }
+
       const existingConnection = mockConnections.find(
         (c) =>
           (c.userId === input.userId && c.connectedUserId === input.targetUserId) ||
@@ -152,7 +170,10 @@ export const usersRouter = createTRPCRouter({
       );
 
       if (existingConnection) {
-        throw new Error("Connection already exists");
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Connection already exists',
+        });
       }
 
       const connection: Connection = {
@@ -193,13 +214,23 @@ export const usersRouter = createTRPCRouter({
       return connectedUsers;
     }),
 
-  acceptConnection: publicProcedure
+  acceptConnection: protectedProcedure
     .input(z.object({ connectionId: z.string() }))
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       const connection = mockConnections.find((c) => c.id === input.connectionId);
 
       if (!connection) {
-        throw new Error("Connection not found");
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Connection not found',
+        });
+      }
+
+      if (connection.connectedUserId !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
       }
 
       connection.status = "accepted";

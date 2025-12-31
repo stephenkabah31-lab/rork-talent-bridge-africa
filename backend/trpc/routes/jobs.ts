@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { createTRPCRouter, publicProcedure } from "../create-context";
+import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 
 interface Job {
   id: string;
@@ -99,7 +100,7 @@ export const jobsRouter = createTRPCRouter({
       return job || null;
     }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         title: z.string().min(1),
@@ -131,7 +132,7 @@ export const jobsRouter = createTRPCRouter({
       };
     }),
 
-  apply: publicProcedure
+  apply: protectedProcedure
     .input(
       z.object({
         jobId: z.string(),
@@ -140,11 +141,21 @@ export const jobsRouter = createTRPCRouter({
         resume: z.string().optional(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       const job = mockJobs.find((j) => j.id === input.jobId);
 
       if (!job) {
-        throw new Error("Job not found");
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Job not found',
+        });
+      }
+
+      if (input.userId !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
       }
 
       const existingApplication = mockApplications.find(
@@ -152,7 +163,10 @@ export const jobsRouter = createTRPCRouter({
       );
 
       if (existingApplication) {
-        throw new Error("Already applied to this job");
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Already applied to this job',
+        });
       }
 
       const application: Application = {
@@ -197,18 +211,29 @@ export const jobsRouter = createTRPCRouter({
       return applications;
     }),
 
-  updateApplicationStatus: publicProcedure
+  updateApplicationStatus: protectedProcedure
     .input(
       z.object({
         applicationId: z.string(),
         status: z.enum(["pending", "reviewing", "shortlisted", "accepted", "rejected"]),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       const application = mockApplications.find((app) => app.id === input.applicationId);
 
       if (!application) {
-        throw new Error("Application not found");
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Application not found',
+        });
+      }
+
+      const job = mockJobs.find((j) => j.id === application.jobId);
+      if (job && job.postedBy !== ctx.user?.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Unauthorized action',
+        });
       }
 
       application.status = input.status;
