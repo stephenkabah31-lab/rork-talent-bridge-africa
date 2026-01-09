@@ -227,10 +227,16 @@ export default function CallsTabScreen() {
           </View>
           
           {item.status === 'scheduled' && user?.userType === 'professional' && (
-            <View style={styles.startCallButton}>
+            <Pressable 
+              style={({ pressed }) => [
+                styles.startCallButton,
+                pressed && styles.startCallButtonPressed,
+              ]}
+              onPress={() => handleJoinCall(item)}
+            >
               <Play color={Colors.white} size={16} fill={Colors.white} />
-              <Text style={styles.startCallButtonText}>Start Call</Text>
-            </View>
+              <Text style={styles.startCallButtonText}>Join & Wait</Text>
+            </Pressable>
           )}
           
           {item.status === 'scheduled' && (user?.userType === 'recruiter' || user?.userType === 'company') && (
@@ -459,13 +465,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     backgroundColor: Colors.success,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 20,
+    shadowColor: Colors.success,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   startCallButtonPressed: {
     opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.96 }],
   },
   startCallButtonText: {
     fontSize: 13,
