@@ -8,6 +8,7 @@ import {
   Calendar,
   PhoneOff,
   ChevronRight,
+  Play,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -153,17 +154,7 @@ export default function CallsTabScreen() {
   };
 
   const renderCall = ({ item }: { item: Call }) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.callItem,
-        pressed && styles.callItemPressed,
-      ]}
-      onPress={() => {
-        if (item.status === 'scheduled') {
-          handleJoinCall(item);
-        }
-      }}
-    >
+    <View style={styles.callItem}>
       <View style={[styles.callIcon, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
         {item.type === 'video' ? (
           <Video color={getStatusColor(item.status)} size={24} />
@@ -191,17 +182,41 @@ export default function CallsTabScreen() {
             </>
           )}
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          </Text>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            </Text>
+          </View>
+          
+          {item.status === 'scheduled' && user?.userType === 'professional' && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.startCallButton,
+                pressed && styles.startCallButtonPressed,
+              ]}
+              onPress={() => handleJoinCall(item)}
+            >
+              <Play color={Colors.white} size={16} fill={Colors.white} />
+              <Text style={styles.startCallButtonText}>Start Call</Text>
+            </Pressable>
+          )}
+          
+          {item.status === 'scheduled' && (user?.userType === 'recruiter' || user?.userType === 'company') && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.manageCallButton,
+                pressed && styles.manageCallButtonPressed,
+              ]}
+              onPress={() => handleJoinCall(item)}
+            >
+              <Text style={styles.manageCallButtonText}>Manage</Text>
+              <ChevronRight color={Colors.primary} size={16} />
+            </Pressable>
+          )}
         </View>
       </View>
-
-      {item.status === 'scheduled' && (
-        <ChevronRight color={Colors.textLight} size={20} />
-      )}
-    </Pressable>
+    </View>
   );
 
   return (
@@ -407,6 +422,50 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  startCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.success,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  startCallButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  startCallButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  manageCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.light,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  manageCallButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  manageCallButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
   },
   emptyState: {
     flex: 1,
