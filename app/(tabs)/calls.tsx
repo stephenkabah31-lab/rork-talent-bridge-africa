@@ -134,12 +134,16 @@ export default function CallsTabScreen() {
   const handleJoinCall = (call: Call) => {
     if (call.status !== 'scheduled') return;
 
-    if (user?.userType === 'professional') {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to join calls.');
+      return;
+    }
+
+    if (user.userType === 'recruiter' || user.userType === 'company') {
       router.push({
-        pathname: '/waiting-room',
+        pathname: '/admit-candidates' as any,
         params: {
           callId: call.id,
-          candidateName: user?.fullName || 'Candidate',
           callType: call.type,
           participantName: call.name,
           jobTitle: call.jobTitle || '',
@@ -147,9 +151,10 @@ export default function CallsTabScreen() {
       });
     } else {
       router.push({
-        pathname: '/admit-candidates' as any,
+        pathname: '/waiting-room',
         params: {
           callId: call.id,
+          candidateName: user?.fullName || user?.name || 'Candidate',
           callType: call.type,
           participantName: call.name,
           jobTitle: call.jobTitle || '',
@@ -226,7 +231,7 @@ export default function CallsTabScreen() {
             </Text>
           </View>
           
-          {item.status === 'scheduled' && user?.userType === 'professional' && (
+          {item.status === 'scheduled' && user?.userType !== 'recruiter' && user?.userType !== 'company' && (
             <Pressable 
               style={({ pressed }) => [
                 styles.startCallButton,
