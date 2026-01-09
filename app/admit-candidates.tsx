@@ -49,15 +49,7 @@ export default function AdmitCandidatesScreen() {
     },
   });
 
-  React.useEffect(() => {
-    if (user && user.userType !== 'recruiter' && user.userType !== 'company') {
-      Alert.alert(
-        'Access Restricted',
-        'Only recruiters can admit candidates to calls.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    }
-  }, [user, router]);
+
 
   const { data: waitingCandidates = [] } = useQuery<WaitingRoomData[]>({
     queryKey: ['waitingRoom', callId],

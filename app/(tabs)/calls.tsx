@@ -122,9 +122,8 @@ export default function CallsTabScreen() {
     },
   });
 
-  const userCalls = user?.userType === 'professional' 
-    ? MOCK_PROFESSIONAL_CALLS 
-    : MOCK_RECRUITER_CALLS;
+  const isRecruiter = user?.userType === 'recruiter' || user?.userType === 'company';
+  const userCalls = isRecruiter ? MOCK_RECRUITER_CALLS : MOCK_PROFESSIONAL_CALLS;
 
   const filteredCalls = userCalls.filter((call) => {
     if (filter === 'all') return true;
@@ -132,14 +131,17 @@ export default function CallsTabScreen() {
   });
 
   const handleJoinCall = (call: Call) => {
-    if (call.status !== 'scheduled') return;
-
-    if (!user) {
-      Alert.alert('Error', 'Please log in to join calls.');
+    console.log('handleJoinCall called', { call, user });
+    
+    if (call.status !== 'scheduled') {
+      console.log('Call is not scheduled, returning');
       return;
     }
 
-    if (user.userType === 'recruiter' || user.userType === 'company') {
+    console.log('User type check:', { userType: user?.userType, isRecruiter });
+
+    if (isRecruiter) {
+      console.log('Navigating to admit-candidates');
       router.push({
         pathname: '/admit-candidates' as any,
         params: {
@@ -150,6 +152,7 @@ export default function CallsTabScreen() {
         },
       });
     } else {
+      console.log('Navigating to waiting-room for professional');
       router.push({
         pathname: '/waiting-room',
         params: {
@@ -164,7 +167,7 @@ export default function CallsTabScreen() {
   };
 
   const handleScheduleCall = () => {
-    if (user?.userType === 'recruiter' || user?.userType === 'company') {
+    if (isRecruiter) {
       router.push('/schedule-call');
     } else {
       Alert.alert(
@@ -231,20 +234,23 @@ export default function CallsTabScreen() {
             </Text>
           </View>
           
-          {item.status === 'scheduled' && user?.userType !== 'recruiter' && user?.userType !== 'company' && (
+          {item.status === 'scheduled' && !isRecruiter && (
             <Pressable 
               style={({ pressed }) => [
                 styles.startCallButton,
                 pressed && styles.startCallButtonPressed,
               ]}
-              onPress={() => handleJoinCall(item)}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleJoinCall(item);
+              }}
             >
               <Play color={Colors.white} size={16} fill={Colors.white} />
               <Text style={styles.startCallButtonText}>Join & Wait</Text>
             </Pressable>
           )}
           
-          {item.status === 'scheduled' && (user?.userType === 'recruiter' || user?.userType === 'company') && (
+          {item.status === 'scheduled' && isRecruiter && (
             <View style={styles.manageCallButton}>
               <Text style={styles.manageCallButtonText}>Manage</Text>
               <ChevronRight color={Colors.primary} size={16} />
@@ -259,7 +265,7 @@ export default function CallsTabScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Calls</Text>
-        {(user?.userType === 'recruiter' || user?.userType === 'company') && (
+        {isRecruiter && (
           <Pressable
             style={({ pressed }) => [
               styles.scheduleButton,
