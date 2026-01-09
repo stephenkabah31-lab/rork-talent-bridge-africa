@@ -98,7 +98,7 @@ export default function WaitingRoomScreen() {
         (e) => e.callId === callId && e.candidateName === candidateName
       );
 
-      return entry;
+      return entry ?? null;
     },
     refetchInterval: 2000,
   });
