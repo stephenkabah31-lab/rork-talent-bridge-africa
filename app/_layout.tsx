@@ -42,6 +42,14 @@ function RootLayoutNav() {
       <Stack.Screen name="jobs" options={{ title: 'Jobs' }} />
       <Stack.Screen name="terms" options={{ title: 'Terms of Service' }} />
       <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
+      <Stack.Screen name="schedule-call" options={{ title: 'Schedule Call' }} />
+      <Stack.Screen name="scheduled-calls" options={{ title: 'Scheduled Calls' }} />
+      <Stack.Screen name="waiting-room" options={{ headerShown: false }} />
+      <Stack.Screen name="active-call" options={{ headerShown: false }} />
+      <Stack.Screen name="admit-candidates" options={{ headerShown: false }} />
+      <Stack.Screen name="manage-applications" options={{ title: 'Manage Applications' }} />
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen name="admin-dashboard" options={{ title: 'Admin Dashboard' }} />
     </Stack>
   );
 }
