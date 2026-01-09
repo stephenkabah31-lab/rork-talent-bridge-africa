@@ -32,9 +32,11 @@ interface Call {
   time: string;
   duration?: string;
   jobTitle?: string;
+  candidateId?: string;
+  recruiterId?: string;
 }
 
-const MOCK_CALLS: Call[] = [
+const MOCK_RECRUITER_CALLS: Call[] = [
   {
     id: '1',
     name: 'Amara Okafor',
@@ -43,6 +45,8 @@ const MOCK_CALLS: Call[] = [
     date: 'Today',
     time: '2:00 PM',
     jobTitle: 'Interview - Senior Software Engineer',
+    candidateId: 'candidate_1',
+    recruiterId: 'recruiter_1',
   },
   {
     id: '2',
@@ -52,6 +56,8 @@ const MOCK_CALLS: Call[] = [
     date: 'Tomorrow',
     time: '10:30 AM',
     jobTitle: 'Initial Screening - Product Manager',
+    candidateId: 'candidate_2',
+    recruiterId: 'recruiter_1',
   },
   {
     id: '3',
@@ -62,25 +68,45 @@ const MOCK_CALLS: Call[] = [
     time: '3:00 PM',
     duration: '45 min',
     jobTitle: 'Design Review - UI/UX Designer',
+    candidateId: 'candidate_3',
+    recruiterId: 'recruiter_1',
   },
+];
+
+const MOCK_PROFESSIONAL_CALLS: Call[] = [
   {
     id: '4',
     name: 'AfriTech Solutions',
+    type: 'video',
+    status: 'scheduled',
+    date: 'Today',
+    time: '3:00 PM',
+    jobTitle: 'Technical Interview - Software Engineer',
+    candidateId: 'current_user',
+    recruiterId: 'recruiter_2',
+  },
+  {
+    id: '5',
+    name: 'Tech Corp',
     type: 'video',
     status: 'completed',
     date: '2 days ago',
     time: '11:00 AM',
     duration: '30 min',
-    jobTitle: 'Technical Interview',
+    jobTitle: 'Initial Screening',
+    candidateId: 'current_user',
+    recruiterId: 'recruiter_3',
   },
   {
-    id: '5',
-    name: 'Tech Corp',
+    id: '6',
+    name: 'StartUp Hub',
     type: 'audio',
     status: 'missed',
     date: '3 days ago',
     time: '4:00 PM',
     jobTitle: 'Follow-up Call',
+    candidateId: 'current_user',
+    recruiterId: 'recruiter_4',
   },
 ];
 
@@ -96,7 +122,11 @@ export default function CallsTabScreen() {
     },
   });
 
-  const filteredCalls = MOCK_CALLS.filter((call) => {
+  const userCalls = user?.userType === 'professional' 
+    ? MOCK_PROFESSIONAL_CALLS 
+    : MOCK_RECRUITER_CALLS;
+
+  const filteredCalls = userCalls.filter((call) => {
     if (filter === 'all') return true;
     return call.status === filter;
   });
@@ -154,7 +184,14 @@ export default function CallsTabScreen() {
   };
 
   const renderCall = ({ item }: { item: Call }) => (
-    <View style={styles.callItem}>
+    <Pressable 
+      style={({ pressed }) => [
+        styles.callItem,
+        pressed && item.status === 'scheduled' && styles.callItemPressed,
+      ]}
+      onPress={() => handleJoinCall(item)}
+      disabled={item.status !== 'scheduled'}
+    >
       <View style={[styles.callIcon, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
         {item.type === 'video' ? (
           <Video color={getStatusColor(item.status)} size={24} />
@@ -190,33 +227,21 @@ export default function CallsTabScreen() {
           </View>
           
           {item.status === 'scheduled' && user?.userType === 'professional' && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.startCallButton,
-                pressed && styles.startCallButtonPressed,
-              ]}
-              onPress={() => handleJoinCall(item)}
-            >
+            <View style={styles.startCallButton}>
               <Play color={Colors.white} size={16} fill={Colors.white} />
               <Text style={styles.startCallButtonText}>Start Call</Text>
-            </Pressable>
+            </View>
           )}
           
           {item.status === 'scheduled' && (user?.userType === 'recruiter' || user?.userType === 'company') && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.manageCallButton,
-                pressed && styles.manageCallButtonPressed,
-              ]}
-              onPress={() => handleJoinCall(item)}
-            >
+            <View style={styles.manageCallButton}>
               <Text style={styles.manageCallButtonText}>Manage</Text>
               <ChevronRight color={Colors.primary} size={16} />
-            </Pressable>
+            </View>
           )}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 
   return (
