@@ -50,6 +50,7 @@ function RootLayoutNav() {
       <Stack.Screen name="manage-applications" options={{ title: 'Manage Applications' }} />
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       <Stack.Screen name="admin-dashboard" options={{ title: 'Admin Dashboard' }} />
+      <Stack.Screen name="admin-detail" options={{ title: 'Details' }} />
     </Stack>
   );
 }

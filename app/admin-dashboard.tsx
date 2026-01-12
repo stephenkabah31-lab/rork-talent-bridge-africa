@@ -1,30 +1,30 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import {
   Activity,
   Briefcase,
   Building2,
   CheckCircle,
+  ChevronRight,
   Clock,
-  Eye,
-  FileText,
   Mail,
   MapPin,
-  Phone,
+  Search,
   Shield,
   TrendingUp,
   User,
   Users,
+  X,
   XCircle,
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -205,6 +205,9 @@ export default function AdminDashboardScreen() {
   const [recruiters, setRecruiters] = useState<RecruiterApplication[]>([]);
   const [companies, setCompanies] = useState<CompanyApplication[]>([]);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
+  
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
   useEffect(() => {
     loadData();
@@ -235,63 +238,71 @@ export default function AdminDashboardScreen() {
     }
   };
 
-  const handleApproveApplication = async (
-    type: 'professional' | 'recruiter' | 'company',
-    id: string,
-    action: 'approved' | 'rejected'
-  ) => {
-    const actionText = action === 'approved' ? 'approve' : 'reject';
-    
-    Alert.alert(
-      `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Application`,
-      `Are you sure you want to ${actionText} this application?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: action === 'approved' ? 'Approve' : 'Reject',
-          style: action === 'approved' ? 'default' : 'destructive',
-          onPress: async () => {
-            try {
-              let updated;
-              let key;
-
-              if (type === 'professional') {
-                updated = professionals.map(p => p.id === id ? { ...p, status: action } : p);
-                setProfessionals(updated);
-                key = 'professionalApplications';
-              } else if (type === 'recruiter') {
-                updated = recruiters.map(r => r.id === id ? { ...r, status: action } : r);
-                setRecruiters(updated);
-                key = 'recruiterApplications';
-              } else {
-                updated = companies.map(c => c.id === id ? { ...c, status: action } : c);
-                setCompanies(updated);
-                key = 'companyApplications';
-              }
-
-              await AsyncStorage.setItem(key, JSON.stringify(updated));
-              Alert.alert('Success', `Application has been ${action}.`);
-            } catch (error) {
-              console.error('Error updating application:', error);
-              Alert.alert('Error', 'Failed to update application status');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleJobStatus = async (jobId: string, status: 'active' | 'closed' | 'flagged') => {
-    try {
-      const updated = jobs.map(j => j.id === jobId ? { ...j, status } : j);
-      setJobs(updated);
-      await AsyncStorage.setItem('jobPostings', JSON.stringify(updated));
-      Alert.alert('Success', `Job status updated to ${status}.`);
-    } catch (error) {
-      console.error('Error updating job status:', error);
-      Alert.alert('Error', 'Failed to update job status');
+  const filteredProfessionals = useMemo(() => {
+    let filtered = professionals;
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(p => p.status === statusFilter);
     }
-  };
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(query) ||
+        p.email.toLowerCase().includes(query) ||
+        p.title.toLowerCase().includes(query) ||
+        p.location.toLowerCase().includes(query)
+      );
+    }
+    return filtered;
+  }, [professionals, searchQuery, statusFilter]);
+
+  const filteredRecruiters = useMemo(() => {
+    let filtered = recruiters;
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(r => r.status === statusFilter);
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(r => 
+        r.name.toLowerCase().includes(query) ||
+        r.email.toLowerCase().includes(query) ||
+        r.company.toLowerCase().includes(query) ||
+        r.location.toLowerCase().includes(query)
+      );
+    }
+    return filtered;
+  }, [recruiters, searchQuery, statusFilter]);
+
+  const filteredCompanies = useMemo(() => {
+    let filtered = companies;
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(c => c.status === statusFilter);
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.companyName.toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        c.contactPerson.toLowerCase().includes(query) ||
+        c.location.toLowerCase().includes(query) ||
+        c.industry.toLowerCase().includes(query)
+      );
+    }
+    return filtered;
+  }, [companies, searchQuery, statusFilter]);
+
+  const filteredJobs = useMemo(() => {
+    let filtered = jobs;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(j => 
+        j.title.toLowerCase().includes(query) ||
+        j.company.toLowerCase().includes(query) ||
+        j.location.toLowerCase().includes(query) ||
+        j.postedBy.toLowerCase().includes(query)
+      );
+    }
+    return filtered;
+  }, [jobs, searchQuery]);
 
   const pendingProfessionals = professionals.filter(p => p.status === 'pending').length;
   const pendingRecruiters = recruiters.filter(r => r.status === 'pending').length;
@@ -299,6 +310,53 @@ export default function AdminDashboardScreen() {
   const totalUsers = professionals.length + recruiters.length + companies.length;
   const activeJobs = jobs.filter(j => j.status === 'active').length;
   const totalApplicants = jobs.reduce((sum, job) => sum + job.applicants, 0);
+
+  const renderSearchBar = () => (
+    <View style={styles.searchContainer}>
+      <View style={styles.searchInputWrapper}>
+        <Search color={Colors.textLight} size={20} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          placeholderTextColor={Colors.textLight}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <Pressable onPress={() => setSearchQuery('')}>
+            <X color={Colors.textLight} size={20} />
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
+
+  const renderFilterBar = () => (
+    <View style={styles.filterContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {['all', 'pending', 'approved', 'rejected'].map((filter) => (
+          <Pressable
+            key={filter}
+            style={({ pressed }) => [
+              styles.filterButton,
+              statusFilter === filter && styles.filterButtonActive,
+              pressed && styles.filterButtonPressed,
+            ]}
+            onPress={() => setStatusFilter(filter as typeof statusFilter)}
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                statusFilter === filter && styles.filterButtonTextActive,
+              ]}
+            >
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
 
   const renderOverview = () => (
     <View style={styles.overviewContainer}>
@@ -419,91 +477,67 @@ export default function AdminDashboardScreen() {
     <View style={styles.listContainer}>
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Professional Applications</Text>
-        <Text style={styles.listSubtitle}>{pendingProfessionals} pending review</Text>
+        <Text style={styles.listSubtitle}>{filteredProfessionals.length} of {professionals.length}</Text>
       </View>
 
-      {professionals.map((professional) => (
-        <View key={professional.id} style={styles.applicationCard}>
-          <View style={styles.applicationHeader}>
-            <View style={styles.applicationIcon}>
-              <User color={Colors.primary} size={24} />
-            </View>
-            <View style={styles.applicationHeaderText}>
-              <Text style={styles.applicationName}>{professional.name}</Text>
-              <Text style={styles.applicationTitle}>{professional.title}</Text>
-            </View>
-            {professional.status === 'pending' ? (
-              <Clock color="#F59E0B" size={20} />
-            ) : professional.status === 'approved' ? (
-              <CheckCircle color={Colors.success} size={20} />
-            ) : (
-              <XCircle color={Colors.error} size={20} />
-            )}
-          </View>
+      {renderSearchBar()}
+      {renderFilterBar()}
 
-          <View style={styles.applicationDetails}>
-            <View style={styles.detailRow}>
-              <Mail color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{professional.email}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Phone color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{professional.phone}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <MapPin color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{professional.location}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Briefcase color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{professional.experience} experience</Text>
-            </View>
-          </View>
-
-          <View style={styles.skillsContainer}>
-            {professional.skills.map((skill, idx) => (
-              <View key={idx} style={styles.skillBadge}>
-                <Text style={styles.skillText}>{skill}</Text>
-              </View>
-            ))}
-          </View>
-
-          {professional.status === 'pending' && (
-            <View style={styles.actionsContainer}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  styles.rejectButton,
-                  pressed && styles.actionButtonPressed,
-                ]}
-                onPress={() => handleApproveApplication('professional', professional.id, 'rejected')}
-              >
-                <XCircle color={Colors.white} size={18} />
-                <Text style={styles.actionButtonText}>Reject</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  styles.approveButton,
-                  pressed && styles.actionButtonPressed,
-                ]}
-                onPress={() => handleApproveApplication('professional', professional.id, 'approved')}
-              >
-                <CheckCircle color={Colors.white} size={18} />
-                <Text style={styles.actionButtonText}>Approve</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {professional.status !== 'pending' && (
-            <View style={styles.statusBadge}>
-              <Text style={[styles.statusText, { color: professional.status === 'approved' ? Colors.success : Colors.error }]}>
-                {professional.status.charAt(0).toUpperCase() + professional.status.slice(1)}
-              </Text>
-            </View>
-          )}
+      {filteredProfessionals.length === 0 ? (
+        <View style={styles.emptyState}>
+          <User color={Colors.textLight} size={48} />
+          <Text style={styles.emptyStateText}>No professionals found</Text>
+          <Text style={styles.emptyStateSubtext}>Try adjusting your search or filters</Text>
         </View>
-      ))}
+      ) : (
+        filteredProfessionals.map((professional) => (
+          <Pressable
+            key={professional.id}
+            style={({ pressed }) => [
+              styles.applicationCard,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={() => {
+              router.push({
+                pathname: '/admin-detail' as any,
+                params: { type: 'professional', id: professional.id },
+              });
+            }}
+          >
+            <View style={styles.applicationHeader}>
+              <View style={styles.applicationIcon}>
+                <User color={Colors.primary} size={24} />
+              </View>
+              <View style={styles.applicationHeaderText}>
+                <Text style={styles.applicationName}>{professional.name}</Text>
+                <Text style={styles.applicationTitle}>{professional.title}</Text>
+              </View>
+              {professional.status === 'pending' ? (
+                <Clock color="#F59E0B" size={20} />
+              ) : professional.status === 'approved' ? (
+                <CheckCircle color={Colors.success} size={20} />
+              ) : (
+                <XCircle color={Colors.error} size={20} />
+              )}
+            </View>
+
+            <View style={styles.applicationDetails}>
+              <View style={styles.detailRow}>
+                <Mail color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{professional.email}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{professional.location}</Text>
+              </View>
+            </View>
+
+            <View style={styles.chevronContainer}>
+              <ChevronRight color={Colors.textLight} size={20} />
+            </View>
+          </Pressable>
+        ))
+      )}
     </View>
   );
 
@@ -511,79 +545,67 @@ export default function AdminDashboardScreen() {
     <View style={styles.listContainer}>
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Recruiter Applications</Text>
-        <Text style={styles.listSubtitle}>{pendingRecruiters} pending review</Text>
+        <Text style={styles.listSubtitle}>{filteredRecruiters.length} of {recruiters.length}</Text>
       </View>
 
-      {recruiters.map((recruiter) => (
-        <View key={recruiter.id} style={styles.applicationCard}>
-          <View style={styles.applicationHeader}>
-            <View style={styles.applicationIcon}>
-              <Users color={Colors.success} size={24} />
-            </View>
-            <View style={styles.applicationHeaderText}>
-              <Text style={styles.applicationName}>{recruiter.name}</Text>
-              <Text style={styles.applicationTitle}>{recruiter.company}</Text>
-            </View>
-            {recruiter.status === 'pending' ? (
-              <Clock color="#F59E0B" size={20} />
-            ) : recruiter.status === 'approved' ? (
-              <CheckCircle color={Colors.success} size={20} />
-            ) : (
-              <XCircle color={Colors.error} size={20} />
-            )}
-          </View>
+      {renderSearchBar()}
+      {renderFilterBar()}
 
-          <View style={styles.applicationDetails}>
-            <View style={styles.detailRow}>
-              <Mail color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{recruiter.email}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Phone color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{recruiter.phone}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <MapPin color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{recruiter.location}</Text>
-            </View>
-          </View>
-
-          {recruiter.status === 'pending' && (
-            <View style={styles.actionsContainer}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  styles.rejectButton,
-                  pressed && styles.actionButtonPressed,
-                ]}
-                onPress={() => handleApproveApplication('recruiter', recruiter.id, 'rejected')}
-              >
-                <XCircle color={Colors.white} size={18} />
-                <Text style={styles.actionButtonText}>Reject</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  styles.approveButton,
-                  pressed && styles.actionButtonPressed,
-                ]}
-                onPress={() => handleApproveApplication('recruiter', recruiter.id, 'approved')}
-              >
-                <CheckCircle color={Colors.white} size={18} />
-                <Text style={styles.actionButtonText}>Approve</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {recruiter.status !== 'pending' && (
-            <View style={styles.statusBadge}>
-              <Text style={[styles.statusText, { color: recruiter.status === 'approved' ? Colors.success : Colors.error }]}>
-                {recruiter.status.charAt(0).toUpperCase() + recruiter.status.slice(1)}
-              </Text>
-            </View>
-          )}
+      {filteredRecruiters.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Users color={Colors.textLight} size={48} />
+          <Text style={styles.emptyStateText}>No recruiters found</Text>
+          <Text style={styles.emptyStateSubtext}>Try adjusting your search or filters</Text>
         </View>
-      ))}
+      ) : (
+        filteredRecruiters.map((recruiter) => (
+          <Pressable
+            key={recruiter.id}
+            style={({ pressed }) => [
+              styles.applicationCard,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={() => {
+              router.push({
+                pathname: '/admin-detail' as any,
+                params: { type: 'recruiter', id: recruiter.id },
+              });
+            }}
+          >
+            <View style={styles.applicationHeader}>
+              <View style={styles.applicationIcon}>
+                <Users color={Colors.success} size={24} />
+              </View>
+              <View style={styles.applicationHeaderText}>
+                <Text style={styles.applicationName}>{recruiter.name}</Text>
+                <Text style={styles.applicationTitle}>{recruiter.company}</Text>
+              </View>
+              {recruiter.status === 'pending' ? (
+                <Clock color="#F59E0B" size={20} />
+              ) : recruiter.status === 'approved' ? (
+                <CheckCircle color={Colors.success} size={20} />
+              ) : (
+                <XCircle color={Colors.error} size={20} />
+              )}
+            </View>
+
+            <View style={styles.applicationDetails}>
+              <View style={styles.detailRow}>
+                <Mail color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{recruiter.email}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{recruiter.location}</Text>
+              </View>
+            </View>
+
+            <View style={styles.chevronContainer}>
+              <ChevronRight color={Colors.textLight} size={20} />
+            </View>
+          </Pressable>
+        ))
+      )}
     </View>
   );
 
@@ -591,87 +613,67 @@ export default function AdminDashboardScreen() {
     <View style={styles.listContainer}>
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Company Applications</Text>
-        <Text style={styles.listSubtitle}>{pendingCompanies} pending review</Text>
+        <Text style={styles.listSubtitle}>{filteredCompanies.length} of {companies.length}</Text>
       </View>
 
-      {companies.map((company) => (
-        <View key={company.id} style={styles.applicationCard}>
-          <View style={styles.applicationHeader}>
-            <View style={styles.applicationIcon}>
-              <Building2 color="#F59E0B" size={24} />
-            </View>
-            <View style={styles.applicationHeaderText}>
-              <Text style={styles.applicationName}>{company.companyName}</Text>
-              <Text style={styles.applicationTitle}>{company.industry}</Text>
-            </View>
-            {company.status === 'pending' ? (
-              <Clock color="#F59E0B" size={20} />
-            ) : company.status === 'approved' ? (
-              <CheckCircle color={Colors.success} size={20} />
-            ) : (
-              <XCircle color={Colors.error} size={20} />
-            )}
-          </View>
+      {renderSearchBar()}
+      {renderFilterBar()}
 
-          <View style={styles.applicationDetails}>
-            <View style={styles.detailRow}>
-              <User color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{company.contactPerson}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Mail color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{company.email}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Phone color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{company.phone}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <MapPin color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{company.location}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <FileText color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>Reg: {company.registrationNumber}</Text>
-            </View>
-          </View>
-
-          {company.status === 'pending' && (
-            <View style={styles.actionsContainer}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  styles.rejectButton,
-                  pressed && styles.actionButtonPressed,
-                ]}
-                onPress={() => handleApproveApplication('company', company.id, 'rejected')}
-              >
-                <XCircle color={Colors.white} size={18} />
-                <Text style={styles.actionButtonText}>Reject</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  styles.approveButton,
-                  pressed && styles.actionButtonPressed,
-                ]}
-                onPress={() => handleApproveApplication('company', company.id, 'approved')}
-              >
-                <CheckCircle color={Colors.white} size={18} />
-                <Text style={styles.actionButtonText}>Approve</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {company.status !== 'pending' && (
-            <View style={styles.statusBadge}>
-              <Text style={[styles.statusText, { color: company.status === 'approved' ? Colors.success : Colors.error }]}>
-                {company.status.charAt(0).toUpperCase() + company.status.slice(1)}
-              </Text>
-            </View>
-          )}
+      {filteredCompanies.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Building2 color={Colors.textLight} size={48} />
+          <Text style={styles.emptyStateText}>No companies found</Text>
+          <Text style={styles.emptyStateSubtext}>Try adjusting your search or filters</Text>
         </View>
-      ))}
+      ) : (
+        filteredCompanies.map((company) => (
+          <Pressable
+            key={company.id}
+            style={({ pressed }) => [
+              styles.applicationCard,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={() => {
+              router.push({
+                pathname: '/admin-detail' as any,
+                params: { type: 'company', id: company.id },
+              });
+            }}
+          >
+            <View style={styles.applicationHeader}>
+              <View style={styles.applicationIcon}>
+                <Building2 color="#F59E0B" size={24} />
+              </View>
+              <View style={styles.applicationHeaderText}>
+                <Text style={styles.applicationName}>{company.companyName}</Text>
+                <Text style={styles.applicationTitle}>{company.industry}</Text>
+              </View>
+              {company.status === 'pending' ? (
+                <Clock color="#F59E0B" size={20} />
+              ) : company.status === 'approved' ? (
+                <CheckCircle color={Colors.success} size={20} />
+              ) : (
+                <XCircle color={Colors.error} size={20} />
+              )}
+            </View>
+
+            <View style={styles.applicationDetails}>
+              <View style={styles.detailRow}>
+                <Mail color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{company.email}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{company.location}</Text>
+              </View>
+            </View>
+
+            <View style={styles.chevronContainer}>
+              <ChevronRight color={Colors.textLight} size={20} />
+            </View>
+          </Pressable>
+        ))
+      )}
     </View>
   );
 
@@ -679,66 +681,70 @@ export default function AdminDashboardScreen() {
     <View style={styles.listContainer}>
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Job Postings</Text>
-        <Text style={styles.listSubtitle}>{activeJobs} active listings</Text>
+        <Text style={styles.listSubtitle}>{filteredJobs.length} of {jobs.length}</Text>
       </View>
 
-      {jobs.map((job) => (
-        <View key={job.id} style={styles.applicationCard}>
-          <View style={styles.applicationHeader}>
-            <View style={styles.applicationIcon}>
-              <Briefcase color="#8B5CF6" size={24} />
-            </View>
-            <View style={styles.applicationHeaderText}>
-              <Text style={styles.applicationName}>{job.title}</Text>
-              <Text style={styles.applicationTitle}>{job.company}</Text>
-            </View>
-          </View>
+      {renderSearchBar()}
 
-          <View style={styles.applicationDetails}>
-            <View style={styles.detailRow}>
-              <MapPin color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{job.location}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Clock color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{job.type}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <User color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>Posted by: {job.postedBy}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Users color={Colors.textLight} size={16} />
-              <Text style={styles.detailText}>{job.applicants} applicants</Text>
-            </View>
-          </View>
-
-          <View style={styles.jobActions}>
-            <View style={[styles.statusBadgeInline, { backgroundColor: job.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : job.status === 'closed' ? 'rgba(107, 114, 128, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
-              <Text style={[styles.statusTextInline, { color: job.status === 'active' ? Colors.success : job.status === 'closed' ? Colors.textLight : Colors.error }]}>
-                {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-              </Text>
-            </View>
-
-            <View style={styles.jobActionButtons}>
-              <Pressable
-                style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
-                onPress={() => Alert.alert('View Job', `Viewing details for: ${job.title}`)}
-              >
-                <Eye color={Colors.primary} size={18} />
-              </Pressable>
-              {job.status === 'active' && (
-                <Pressable
-                  style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
-                  onPress={() => handleJobStatus(job.id, 'closed')}
-                >
-                  <XCircle color={Colors.error} size={18} />
-                </Pressable>
-              )}
-            </View>
-          </View>
+      {filteredJobs.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Briefcase color={Colors.textLight} size={48} />
+          <Text style={styles.emptyStateText}>No jobs found</Text>
+          <Text style={styles.emptyStateSubtext}>Try adjusting your search</Text>
         </View>
-      ))}
+      ) : (
+        filteredJobs.map((job) => (
+          <Pressable
+            key={job.id}
+            style={({ pressed }) => [
+              styles.applicationCard,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={() => {
+              router.push({
+                pathname: '/admin-detail' as any,
+                params: { type: 'job', id: job.id },
+              });
+            }}
+          >
+            <View style={styles.applicationHeader}>
+              <View style={styles.applicationIcon}>
+                <Briefcase color="#8B5CF6" size={24} />
+              </View>
+              <View style={styles.applicationHeaderText}>
+                <Text style={styles.applicationName}>{job.title}</Text>
+                <Text style={styles.applicationTitle}>{job.company}</Text>
+              </View>
+              <View style={[styles.statusBadgeInline, { 
+                backgroundColor: job.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 
+                               job.status === 'closed' ? 'rgba(107, 114, 128, 0.15)' : 'rgba(239, 68, 68, 0.15)' 
+              }]}>
+                <Text style={[styles.statusTextInline, { 
+                  color: job.status === 'active' ? Colors.success : 
+                         job.status === 'closed' ? Colors.textLight : Colors.error 
+                }]}>
+                  {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.applicationDetails}>
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{job.location}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Users color={Colors.textLight} size={16} />
+                <Text style={styles.detailText}>{job.applicants} applicants</Text>
+              </View>
+            </View>
+
+            <View style={styles.chevronContainer}>
+              <ChevronRight color={Colors.textLight} size={20} />
+            </View>
+          </Pressable>
+        ))
+      )}
     </View>
   );
 
@@ -830,7 +836,11 @@ export default function AdminDashboardScreen() {
                     activeTab === tab.key && styles.tabActive,
                     pressed && styles.tabPressed,
                   ]}
-                  onPress={() => setActiveTab(tab.key as TabType)}
+                  onPress={() => {
+                    setActiveTab(tab.key as TabType);
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                  }}
                 >
                   <Icon
                     color={activeTab === tab.key ? Colors.white : Colors.textLight}
@@ -896,7 +906,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: Colors.white,
   },
   subtitle: {
@@ -932,7 +942,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: Colors.textLight,
   },
   tabTextActive: {
@@ -981,7 +991,7 @@ const styles = StyleSheet.create({
   },
   statNumberLarge: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: Colors.white,
   },
   statLabelLarge: {
@@ -991,7 +1001,7 @@ const styles = StyleSheet.create({
   },
   statNumberSmall: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: Colors.white,
   },
   statLabelSmall: {
@@ -1004,7 +1014,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: Colors.white,
     marginBottom: 12,
   },
@@ -1034,7 +1044,7 @@ const styles = StyleSheet.create({
   },
   quickActionTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: Colors.white,
   },
   quickActionSubtitle: {
@@ -1050,7 +1060,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: Colors.white,
   },
   cardPressed: {
@@ -1065,13 +1075,59 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: Colors.white,
   },
   listSubtitle: {
     fontSize: 13,
     color: Colors.light,
     marginTop: 4,
+  },
+  searchContainer: {
+    marginBottom: 12,
+  },
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.white,
+  },
+  filterContainer: {
+    marginBottom: 16,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
+  },
+  filterButtonPressed: {
+    opacity: 0.7,
+  },
+  filterButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textLight,
+  },
+  filterButtonTextActive: {
+    color: Colors.white,
   },
   applicationCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1100,7 +1156,7 @@ const styles = StyleSheet.create({
   },
   applicationName: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: Colors.white,
   },
   applicationTitle: {
@@ -1110,7 +1166,6 @@ const styles = StyleSheet.create({
   },
   applicationDetails: {
     gap: 10,
-    marginBottom: 14,
   },
   detailRow: {
     flexDirection: 'row',
@@ -1122,96 +1177,19 @@ const styles = StyleSheet.create({
     color: Colors.white,
     flex: 1,
   },
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 14,
-  },
-  skillBadge: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-  },
-  skillText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#93C5FD',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  approveButton: {
-    backgroundColor: Colors.success,
-  },
-  rejectButton: {
-    backgroundColor: Colors.error,
-  },
-  actionButtonPressed: {
-    opacity: 0.8,
-  },
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  statusBadge: {
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 10,
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  jobActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
+  chevronContainer: {
+    position: 'absolute',
+    top: 18,
+    right: 18,
   },
   statusBadgeInline: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   statusTextInline: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  jobActionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  iconButtonPressed: {
-    opacity: 0.7,
+    fontSize: 12,
+    fontWeight: '700' as const,
   },
   userStatsGrid: {
     flexDirection: 'row',
@@ -1230,7 +1208,7 @@ const styles = StyleSheet.create({
   },
   userStatNumber: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: Colors.white,
   },
   userStatLabel: {
@@ -1246,7 +1224,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: Colors.white,
   },
   emptyStateSubtext: {
