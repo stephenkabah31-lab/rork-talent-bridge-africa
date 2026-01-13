@@ -31,7 +31,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
 
-type TabType = 'overview' | 'professionals' | 'recruiters' | 'companies' | 'jobs' | 'users';
+type ViewType = 'departments' | 'user-management' | 'job-management' | 'analytics' | 'system';
+type SubViewType = 'professionals' | 'recruiters' | 'companies' | 'jobs' | 'applications' | 'overview';
 
 interface ProfessionalApplication {
   id: string;
@@ -200,7 +201,8 @@ const MOCK_JOBS: JobPosting[] = [
 ];
 
 export default function AdminDashboardScreen() {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [currentView, setCurrentView] = useState<ViewType>('departments');
+  const [currentSubView, setCurrentSubView] = useState<SubViewType | null>(null);
   const [professionals, setProfessionals] = useState<ProfessionalApplication[]>([]);
   const [recruiters, setRecruiters] = useState<RecruiterApplication[]>([]);
   const [companies, setCompanies] = useState<CompanyApplication[]>([]);
@@ -358,8 +360,228 @@ export default function AdminDashboardScreen() {
     </View>
   );
 
-  const renderOverview = () => (
+  const renderDepartments = () => (
+    <View style={styles.departmentsContainer}>
+      <Text style={styles.departmentsTitle}>Departments</Text>
+      <Text style={styles.departmentsSubtitle}>Select a department to manage</Text>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.departmentCard,
+          { borderLeftColor: '#3B82F6', borderLeftWidth: 4 },
+          pressed && styles.cardPressed,
+        ]}
+        onPress={() => setCurrentView('user-management')}
+      >
+        <View style={styles.departmentIconWrapper}>
+          <View style={[styles.departmentIcon, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+            <Users color="#3B82F6" size={32} />
+          </View>
+        </View>
+        <View style={styles.departmentContent}>
+          <Text style={styles.departmentTitle}>User Management</Text>
+          <Text style={styles.departmentDescription}>Manage professionals, recruiters, and companies</Text>
+          <View style={styles.departmentStats}>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>{totalUsers}</Text>
+              <Text style={styles.departmentStatLabel}>Total Users</Text>
+            </View>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>{pendingProfessionals + pendingRecruiters + pendingCompanies}</Text>
+              <Text style={styles.departmentStatLabel}>Pending</Text>
+            </View>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.departmentCard,
+          { borderLeftColor: '#10B981', borderLeftWidth: 4 },
+          pressed && styles.cardPressed,
+        ]}
+        onPress={() => setCurrentView('job-management')}
+      >
+        <View style={styles.departmentIconWrapper}>
+          <View style={[styles.departmentIcon, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+            <Briefcase color="#10B981" size={32} />
+          </View>
+        </View>
+        <View style={styles.departmentContent}>
+          <Text style={styles.departmentTitle}>Job Management</Text>
+          <Text style={styles.departmentDescription}>Oversee job postings and applications</Text>
+          <View style={styles.departmentStats}>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>{jobs.length}</Text>
+              <Text style={styles.departmentStatLabel}>Total Jobs</Text>
+            </View>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>{activeJobs}</Text>
+              <Text style={styles.departmentStatLabel}>Active</Text>
+            </View>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.departmentCard,
+          { borderLeftColor: '#F59E0B', borderLeftWidth: 4 },
+          pressed && styles.cardPressed,
+        ]}
+        onPress={() => setCurrentView('analytics')}
+      >
+        <View style={styles.departmentIconWrapper}>
+          <View style={[styles.departmentIcon, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+            <TrendingUp color="#F59E0B" size={32} />
+          </View>
+        </View>
+        <View style={styles.departmentContent}>
+          <Text style={styles.departmentTitle}>Analytics & Reports</Text>
+          <Text style={styles.departmentDescription}>View platform metrics and insights</Text>
+          <View style={styles.departmentStats}>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>{totalApplicants}</Text>
+              <Text style={styles.departmentStatLabel}>Applicants</Text>
+            </View>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>{professionals.filter(p => p.status === 'approved').length}</Text>
+              <Text style={styles.departmentStatLabel}>Approved</Text>
+            </View>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.departmentCard,
+          { borderLeftColor: '#8B5CF6', borderLeftWidth: 4 },
+          pressed && styles.cardPressed,
+        ]}
+        onPress={() => setCurrentView('system')}
+      >
+        <View style={styles.departmentIconWrapper}>
+          <View style={[styles.departmentIcon, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+            <Shield color="#8B5CF6" size={32} />
+          </View>
+        </View>
+        <View style={styles.departmentContent}>
+          <Text style={styles.departmentTitle}>System & Settings</Text>
+          <Text style={styles.departmentDescription}>Platform configuration and security</Text>
+          <View style={styles.departmentStats}>
+            <View style={styles.departmentStatItem}>
+              <Text style={styles.departmentStatNumber}>•</Text>
+              <Text style={styles.departmentStatLabel}>Configure</Text>
+            </View>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+    </View>
+  );
+
+  const renderUserManagement = () => (
+    <View style={styles.subDepartmentContainer}>
+      <Text style={styles.subDepartmentTitle}>User Management</Text>
+      <Text style={styles.subDepartmentSubtitle}>Select a user type to manage</Text>
+
+      <Pressable
+        style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
+        onPress={() => setCurrentSubView('professionals')}
+      >
+        <View style={styles.quickActionLeft}>
+          <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+            <User color="#3B82F6" size={24} />
+          </View>
+          <View>
+            <Text style={styles.quickActionTitle}>Professionals</Text>
+            <Text style={styles.quickActionSubtitle}>{professionals.length} total • {pendingProfessionals} pending</Text>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
+        onPress={() => setCurrentSubView('recruiters')}
+      >
+        <View style={styles.quickActionLeft}>
+          <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+            <Users color="#10B981" size={24} />
+          </View>
+          <View>
+            <Text style={styles.quickActionTitle}>Recruiters</Text>
+            <Text style={styles.quickActionSubtitle}>{recruiters.length} total • {pendingRecruiters} pending</Text>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
+        onPress={() => setCurrentSubView('companies')}
+      >
+        <View style={styles.quickActionLeft}>
+          <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+            <Building2 color="#F59E0B" size={24} />
+          </View>
+          <View>
+            <Text style={styles.quickActionTitle}>Companies</Text>
+            <Text style={styles.quickActionSubtitle}>{companies.length} total • {pendingCompanies} pending</Text>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+    </View>
+  );
+
+  const renderJobManagement = () => (
+    <View style={styles.subDepartmentContainer}>
+      <Text style={styles.subDepartmentTitle}>Job Management</Text>
+      <Text style={styles.subDepartmentSubtitle}>Manage job postings and applications</Text>
+
+      <Pressable
+        style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
+        onPress={() => setCurrentSubView('jobs')}
+      >
+        <View style={styles.quickActionLeft}>
+          <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+            <Briefcase color="#8B5CF6" size={24} />
+          </View>
+          <View>
+            <Text style={styles.quickActionTitle}>All Job Postings</Text>
+            <Text style={styles.quickActionSubtitle}>{jobs.length} total • {activeJobs} active</Text>
+          </View>
+        </View>
+        <ChevronRight color={Colors.textLight} size={24} />
+      </Pressable>
+
+      <View style={styles.statsGrid}>
+        <View style={styles.statCardSmall}>
+          <Activity color="#10B981" size={20} />
+          <Text style={styles.statNumberSmall}>{activeJobs}</Text>
+          <Text style={styles.statLabelSmall}>Active</Text>
+        </View>
+        <View style={styles.statCardSmall}>
+          <Clock color="#6B7280" size={20} />
+          <Text style={styles.statNumberSmall}>{jobs.filter(j => j.status === 'closed').length}</Text>
+          <Text style={styles.statLabelSmall}>Closed</Text>
+        </View>
+        <View style={styles.statCardSmall}>
+          <Shield color="#EF4444" size={20} />
+          <Text style={styles.statNumberSmall}>{jobs.filter(j => j.status === 'flagged').length}</Text>
+          <Text style={styles.statLabelSmall}>Flagged</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderAnalytics = () => (
     <View style={styles.overviewContainer}>
+      <Text style={styles.sectionTitle}>Analytics Dashboard</Text>
       <View style={styles.statsGrid}>
         <View style={styles.statCardLarge}>
           <View style={styles.statIcon}>
@@ -395,80 +617,38 @@ export default function AdminDashboardScreen() {
         </View>
       </View>
 
-      <View style={styles.quickActionsSection}>
-        <Text style={styles.sectionTitle}>Pending Applications</Text>
-        
-        <Pressable
-          style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
-          onPress={() => setActiveTab('professionals')}
-        >
-          <View style={styles.quickActionLeft}>
-            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-              <User color="#3B82F6" size={24} />
-            </View>
-            <View>
-              <Text style={styles.quickActionTitle}>Professional Applications</Text>
-              <Text style={styles.quickActionSubtitle}>{pendingProfessionals} pending review</Text>
-            </View>
+      <View style={styles.infoSection}>
+        <Text style={styles.sectionTitle}>User Breakdown</Text>
+        <View style={styles.userStatsGrid}>
+          <View style={styles.userStatCard}>
+            <User color="#3B82F6" size={24} />
+            <Text style={styles.userStatNumber}>{professionals.filter(p => p.status === 'approved').length}</Text>
+            <Text style={styles.userStatLabel}>Professionals</Text>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{pendingProfessionals}</Text>
+          <View style={styles.userStatCard}>
+            <Users color="#10B981" size={24} />
+            <Text style={styles.userStatNumber}>{recruiters.filter(r => r.status === 'approved').length}</Text>
+            <Text style={styles.userStatLabel}>Recruiters</Text>
           </View>
-        </Pressable>
+          <View style={styles.userStatCard}>
+            <Building2 color="#F59E0B" size={24} />
+            <Text style={styles.userStatNumber}>{companies.filter(c => c.status === 'approved').length}</Text>
+            <Text style={styles.userStatLabel}>Companies</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
 
-        <Pressable
-          style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
-          onPress={() => setActiveTab('recruiters')}
-        >
-          <View style={styles.quickActionLeft}>
-            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-              <Users color="#10B981" size={24} />
-            </View>
-            <View>
-              <Text style={styles.quickActionTitle}>Recruiter Applications</Text>
-              <Text style={styles.quickActionSubtitle}>{pendingRecruiters} pending review</Text>
-            </View>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{pendingRecruiters}</Text>
-          </View>
-        </Pressable>
+  const renderSystem = () => (
+    <View style={styles.listContainer}>
+      <Text style={styles.listTitle}>System & Settings</Text>
+      <Text style={styles.listSubtitle}>Platform configuration and security</Text>
 
-        <Pressable
-          style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
-          onPress={() => setActiveTab('companies')}
-        >
-          <View style={styles.quickActionLeft}>
-            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-              <Building2 color="#F59E0B" size={24} />
-            </View>
-            <View>
-              <Text style={styles.quickActionTitle}>Company Applications</Text>
-              <Text style={styles.quickActionSubtitle}>{pendingCompanies} pending review</Text>
-            </View>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{pendingCompanies}</Text>
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.quickActionCard, pressed && styles.cardPressed]}
-          onPress={() => setActiveTab('jobs')}
-        >
-          <View style={styles.quickActionLeft}>
-            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-              <Briefcase color="#8B5CF6" size={24} />
-            </View>
-            <View>
-              <Text style={styles.quickActionTitle}>Job Postings</Text>
-              <Text style={styles.quickActionSubtitle}>{activeJobs} active listings</Text>
-            </View>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{activeJobs}</Text>
-          </View>
-        </Pressable>
+      <View style={styles.emptyState}>
+        <Shield color={Colors.textLight} size={48} />
+        <Text style={styles.emptyStateText}>System Configuration</Text>
+        <Text style={styles.emptyStateSubtext}>Manage platform settings, security, and configurations</Text>
       </View>
     </View>
   );
@@ -748,38 +928,7 @@ export default function AdminDashboardScreen() {
     </View>
   );
 
-  const renderUsers = () => (
-    <View style={styles.listContainer}>
-      <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>User Management</Text>
-        <Text style={styles.listSubtitle}>All registered users</Text>
-      </View>
 
-      <View style={styles.userStatsGrid}>
-        <View style={styles.userStatCard}>
-          <User color="#3B82F6" size={24} />
-          <Text style={styles.userStatNumber}>{professionals.filter(p => p.status === 'approved').length}</Text>
-          <Text style={styles.userStatLabel}>Professionals</Text>
-        </View>
-        <View style={styles.userStatCard}>
-          <Users color="#10B981" size={24} />
-          <Text style={styles.userStatNumber}>{recruiters.filter(r => r.status === 'approved').length}</Text>
-          <Text style={styles.userStatLabel}>Recruiters</Text>
-        </View>
-        <View style={styles.userStatCard}>
-          <Building2 color="#F59E0B" size={24} />
-          <Text style={styles.userStatNumber}>{companies.filter(c => c.status === 'approved').length}</Text>
-          <Text style={styles.userStatLabel}>Companies</Text>
-        </View>
-      </View>
-
-      <View style={styles.emptyState}>
-        <Shield color={Colors.textLight} size={48} />
-        <Text style={styles.emptyStateText}>User management features</Text>
-        <Text style={styles.emptyStateSubtext}>View, suspend, or manage user accounts</Text>
-      </View>
-    </View>
-  );
 
   return (
     <>
@@ -813,63 +962,41 @@ export default function AdminDashboardScreen() {
             </View>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.tabsScroll}
-            contentContainerStyle={styles.tabsContainer}
-          >
-            {[
-              { key: 'overview', label: 'Overview', icon: Activity },
-              { key: 'professionals', label: 'Professionals', icon: User },
-              { key: 'recruiters', label: 'Recruiters', icon: Users },
-              { key: 'companies', label: 'Companies', icon: Building2 },
-              { key: 'jobs', label: 'Jobs', icon: Briefcase },
-              { key: 'users', label: 'Users', icon: Shield },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <Pressable
-                  key={tab.key}
-                  style={({ pressed }) => [
-                    styles.tab,
-                    activeTab === tab.key && styles.tabActive,
-                    pressed && styles.tabPressed,
-                  ]}
-                  onPress={() => {
-                    setActiveTab(tab.key as TabType);
-                    setSearchQuery('');
-                    setStatusFilter('all');
-                  }}
-                >
-                  <Icon
-                    color={activeTab === tab.key ? Colors.white : Colors.textLight}
-                    size={18}
-                  />
-                  <Text
-                    style={[
-                      styles.tabText,
-                      activeTab === tab.key && styles.tabTextActive,
-                    ]}
-                  >
-                    {tab.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          {currentView !== 'departments' && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.backButton,
+                pressed && styles.backButtonPressed,
+              ]}
+              onPress={() => {
+                if (currentSubView) {
+                  setCurrentSubView(null);
+                } else {
+                  setCurrentView('departments');
+                }
+                setSearchQuery('');
+                setStatusFilter('all');
+              }}
+            >
+              <ChevronRight color={Colors.white} size={20} style={{ transform: [{ rotate: '180deg' }] }} />
+              <Text style={styles.backButtonText}>Back</Text>
+            </Pressable>
+          )}
 
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {activeTab === 'overview' && renderOverview()}
-            {activeTab === 'professionals' && renderProfessionals()}
-            {activeTab === 'recruiters' && renderRecruiters()}
-            {activeTab === 'companies' && renderCompanies()}
-            {activeTab === 'jobs' && renderJobs()}
-            {activeTab === 'users' && renderUsers()}
+            {currentView === 'departments' && renderDepartments()}
+            {currentView === 'user-management' && !currentSubView && renderUserManagement()}
+            {currentView === 'user-management' && currentSubView === 'professionals' && renderProfessionals()}
+            {currentView === 'user-management' && currentSubView === 'recruiters' && renderRecruiters()}
+            {currentView === 'user-management' && currentSubView === 'companies' && renderCompanies()}
+            {currentView === 'job-management' && !currentSubView && renderJobManagement()}
+            {currentView === 'job-management' && currentSubView === 'jobs' && renderJobs()}
+            {currentView === 'analytics' && renderAnalytics()}
+            {currentView === 'system' && renderSystem()}
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -914,39 +1041,113 @@ const styles = StyleSheet.create({
     color: Colors.light,
     marginTop: 2,
   },
-  tabsScroll: {
-    maxHeight: 56,
-  },
-  tabsContainer: {
-    paddingHorizontal: 24,
-    gap: 8,
-    paddingVertical: 8,
-  },
-  tab: {
+  backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginHorizontal: 24,
+    marginVertical: 8,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  tabActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  tabPressed: {
+  backButtonPressed: {
     opacity: 0.7,
   },
-  tabText: {
-    fontSize: 14,
+  backButtonText: {
+    fontSize: 15,
     fontWeight: '600' as const,
+    color: Colors.white,
+  },
+  departmentsContainer: {
+    gap: 16,
+  },
+  departmentsTitle: {
+    fontSize: 24,
+    fontWeight: '800' as const,
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  departmentsSubtitle: {
+    fontSize: 14,
+    color: Colors.light,
+    marginBottom: 8,
+  },
+  departmentCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
+  departmentIconWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  departmentIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  departmentContent: {
+    flex: 1,
+  },
+  departmentTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  departmentDescription: {
+    fontSize: 13,
+    color: Colors.light,
+    marginBottom: 12,
+  },
+  departmentStats: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  departmentStatItem: {
+    gap: 2,
+  },
+  departmentStatNumber: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: Colors.white,
+  },
+  departmentStatLabel: {
+    fontSize: 11,
     color: Colors.textLight,
   },
-  tabTextActive: {
+  subDepartmentContainer: {
+    gap: 16,
+  },
+  subDepartmentTitle: {
+    fontSize: 22,
+    fontWeight: '800' as const,
     color: Colors.white,
+  },
+  subDepartmentSubtitle: {
+    fontSize: 14,
+    color: Colors.light,
+    marginBottom: 8,
+  },
+  infoSection: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   scrollView: {
     flex: 1,
