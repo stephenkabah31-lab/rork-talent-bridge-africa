@@ -240,14 +240,14 @@ function JobCard({
           {daysAgo <= 0 ? "Today" : `${daysAgo}d ago`}
         </span>
       </div>
-      <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-[#0A66C2] transition-colors">
+      <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-[#D97706] transition-colors">
         {title}
       </h4>
       <p className="text-sm text-gray-500 mb-3">
         {company} &middot; {location}
       </p>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs bg-blue-50 text-[#0A66C2] px-2 py-0.5 rounded-md font-medium">
+        <span className="text-xs bg-amber-50 text-[#D97706] px-2 py-0.5 rounded-md font-medium">
           {type}
         </span>
         {salary && (
@@ -258,7 +258,7 @@ function JobCard({
       </div>
       <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
         <span>{applicants} applicants</span>
-        <span className="text-[#0A66C2] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-[#D97706] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
           View &rarr;
         </span>
       </div>
@@ -343,7 +343,7 @@ function CapabilityCard({
 
 // ── Brand colors for company avatars ────────────────────────────────
 const brandColors = [
-  "#0A66C2", "#059669", "#D97706", "#7C3AED", "#DC2626",
+  "#D97706", "#059669", "#D97706", "#7C3AED", "#DC2626",
   "#0891B2", "#4F46E5", "#EA580C", "#9333EA", "#059669",
 ];
 
@@ -379,13 +379,13 @@ export default function Landing() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-[#0A66C2] flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-              <span className="text-white font-bold text-base leading-none">
-                in
+            <div className="w-9 h-9 rounded-full bg-[#D97706] flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+              <span className="text-white font-bold text-sm leading-none">
+                tb
               </span>
             </div>
             <span className="text-xl font-semibold text-gray-900 tracking-tight">
-              Talent<span className="text-[#0A66C2]">Bridge</span>
+              Talent<span className="text-[#D97706]">Bridge</span>
             </span>
           </Link>
 
@@ -433,7 +433,7 @@ export default function Landing() {
             </Link>
             <Button
               onClick={() => navigate("/signup")}
-              className="rounded-full bg-[#0A66C2] hover:bg-[#004182] text-sm font-semibold px-5 shadow-sm"
+              className="rounded-full bg-[#D97706] hover:bg-[#9A3412] text-sm font-semibold px-5 shadow-sm"
             >
               Join Now
             </Button>
@@ -444,17 +444,17 @@ export default function Landing() {
       {/* ═══════════════════════════════════════════════════════════
           HERO — Comprehensive value proposition
           ═══════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-[#F0F7FF] to-white">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-[#FFF7ED] to-white">
         {/* Background pattern */}
         <div
           className="absolute inset-0 opacity-[0.04] pointer-events-none"
           style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, #0A66C2 1px, transparent 0)`,
+            backgroundImage: `radial-gradient(circle at 1px 1px, #D97706 1px, transparent 0)`,
             backgroundSize: "40px 40px",
           }}
         />
         {/* Decorative blobs */}
-        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-[#0A66C2]/5 blur-3xl pointer-events-none" />
+        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-[#D97706]/5 blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-28">
@@ -462,7 +462,7 @@ export default function Landing() {
             {/* Left column */}
             <div className="space-y-8">
               <div className="space-y-5">
-                <div className="inline-flex items-center gap-2 bg-[#0A66C2]/5 text-[#0A66C2] rounded-full px-4 py-1.5 text-sm font-medium">
+                <div className="inline-flex items-center gap-2 bg-[#D97706]/5 text-[#D97706] rounded-full px-4 py-1.5 text-sm font-medium">
                   <Sparkles className="w-4 h-4" />
                   <span>Africa's Leading Professional Network</span>
                 </div>
@@ -470,10 +470,10 @@ export default function Landing() {
                 <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-light text-gray-900 leading-[1.08] tracking-tight">
                   Where Africa's
                   <br />
-                  <span className="font-semibold text-[#0A66C2] relative">
+                  <span className="font-semibold text-[#D97706] relative">
                     talent meets
                     <svg
-                      className="absolute -bottom-1 left-0 w-full h-2 text-[#0A66C2]/20"
+                      className="absolute -bottom-1 left-0 w-full h-2 text-[#D97706]/20"
                       viewBox="0 0 200 8"
                       preserveAspectRatio="none"
                     >
@@ -510,7 +510,7 @@ export default function Landing() {
                       key={item.label}
                       className="inline-flex items-center gap-1.5 bg-white border border-gray-200 rounded-full px-3 py-1.5 text-xs text-gray-600"
                     >
-                      <item.icon className="w-3.5 h-3.5 text-[#0A66C2]" />
+                      <item.icon className="w-3.5 h-3.5 text-[#D97706]" />
                       {item.label}
                     </span>
                   ))}
@@ -522,7 +522,7 @@ export default function Landing() {
                 <Button
                   onClick={() => navigate("/signup")}
                   size="lg"
-                  className="rounded-full bg-[#0A66C2] hover:bg-[#004182] font-semibold px-8 h-12 text-base shadow-lg shadow-[#0A66C2]/20 hover:shadow-xl hover:shadow-[#0A66C2]/25 transition-all"
+                  className="rounded-full bg-[#D97706] hover:bg-[#9A3412] font-semibold px-8 h-12 text-base shadow-lg shadow-[#D97706]/20 hover:shadow-xl hover:shadow-[#D97706]/25 transition-all"
                 >
                   Get Started Free <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
@@ -544,13 +544,13 @@ export default function Landing() {
 
             {/* Right column: Visual illustration */}
             <div className="hidden lg:block relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-[#0A66C2]/5 via-[#0A66C2]/3 to-transparent" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-[#D97706]/5 via-[#D97706]/3 to-transparent" />
 
               <div className="relative h-[420px]">
                 {/* Profile card */}
                 <div className="absolute top-0 left-4 bg-white rounded-2xl p-5 shadow-xl border border-gray-100 w-64 animate-float-slow z-20">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0A66C2] to-blue-400 flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D97706] to-blue-400 flex items-center justify-center text-white font-bold text-lg">
                       KO
                     </div>
                     <div>
@@ -561,7 +561,7 @@ export default function Landing() {
                     </div>
                   </div>
                   <div className="flex gap-2 mb-3">
-                    <span className="text-xs bg-blue-50 text-[#0A66C2] px-2 py-1 rounded-md font-medium">
+                    <span className="text-xs bg-amber-50 text-[#D97706] px-2 py-1 rounded-md font-medium">
                       React
                     </span>
                     <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-md font-medium">
@@ -587,7 +587,7 @@ export default function Landing() {
                   </div>
                   {/* Connection badge */}
                   <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
-                    <Users className="w-3.5 h-3.5 text-[#0A66C2]" />
+                    <Users className="w-3.5 h-3.5 text-[#D97706]" />
                     <span>500+ connections</span>
                   </div>
                 </div>
@@ -612,7 +612,7 @@ export default function Landing() {
                     <span className="text-xs font-semibold text-gray-900">
                       $45K - $65K
                     </span>
-                    <span className="text-xs text-[#0A66C2] font-medium">
+                    <span className="text-xs text-[#D97706] font-medium">
                       Apply &rarr;
                     </span>
                   </div>
@@ -630,7 +630,7 @@ export default function Landing() {
                     </div>
                   </div>
                   <div className="flex -space-x-2">
-                    {["#0A66C2", "#059669", "#D97706", "#7C3AED"].map(
+                    {["#D97706", "#059669", "#D97706", "#7C3AED"].map(
                       (c, i) => (
                         <div
                           key={i}
@@ -648,7 +648,7 @@ export default function Landing() {
                 </div>
 
                 {/* Decorative dots */}
-                <div className="absolute top-8 right-12 w-3 h-3 rounded-full bg-[#0A66C2]/20 animate-pulse" />
+                <div className="absolute top-8 right-12 w-3 h-3 rounded-full bg-[#D97706]/20 animate-pulse" />
                 <div
                   className="absolute bottom-16 left-2 w-2 h-2 rounded-full bg-emerald-400 animate-ping"
                   style={{ animationDuration: "3s" }}
@@ -677,7 +677,7 @@ export default function Landing() {
               suffix="+"
               label="Active Jobs"
               icon={Briefcase}
-              color="#0A66C2"
+              color="#D97706"
             />
             <StatCard
               value={liveStats.totalCompanies}
@@ -729,7 +729,7 @@ export default function Landing() {
               icon={Target}
               title="For Professionals"
               desc="Showcase your skills, connect with recruiters, and land your dream role at a top company across Africa."
-              color="#0A66C2"
+              color="#D97706"
               steps={[
                 "Create a rich profile with your skills and experience",
                 "Browse live job listings with smart matching",
@@ -786,7 +786,7 @@ export default function Landing() {
               icon={MessageSquare}
               title="Professional Feed"
               desc="Share updates, articles, and achievements. Engage with posts from peers and companies across your network."
-              color="#0A66C2"
+              color="#D97706"
             />
             <CapabilityCard
               icon={MessageCircle}
@@ -925,7 +925,7 @@ export default function Landing() {
                     backgroundColor: brandColors[i % brandColors.length],
                   }}
                 />
-                <p className="font-semibold text-sm text-gray-900 group-hover:text-[#0A66C2] transition-colors">
+                <p className="font-semibold text-sm text-gray-900 group-hover:text-[#D97706] transition-colors">
                   {cat.name}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">{cat.count}</p>
@@ -956,7 +956,7 @@ export default function Landing() {
             <div className="space-y-8">
               <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 leading-tight">
                 Why professionals choose{" "}
-                <span className="text-[#0A66C2]">TalentBridge</span>
+                <span className="text-[#D97706]">TalentBridge</span>
               </h2>
               <div className="space-y-5">
                 {[
@@ -964,7 +964,7 @@ export default function Landing() {
                     icon: Zap,
                     title: "AI-Powered Matching",
                     desc: "Our smart algorithm learns from your profile and preferences to surface roles that truly fit your skills, experience, and career goals.",
-                    color: "#0A66C2",
+                    color: "#D97706",
                   },
                   {
                     icon: MessageCircle,
@@ -1021,7 +1021,7 @@ export default function Landing() {
                 name="Amina Diallo"
                 role="Senior Product Manager"
                 company="Cellulant"
-                color="#0A66C2"
+                color="#D97706"
               />
               <Testimonial
                 quote="We filled 12 engineering positions in 3 months using TalentBridge. The quality of candidates was outstanding compared to other platforms we've used. The smart matching saves us hours every week."
@@ -1052,7 +1052,7 @@ export default function Landing() {
       {/* ═══════════════════════════════════════════════════════════
           ACTIVE JOBS BY TYPE — Quick filter section
           ═══════════════════════════════════════════════════════════ */}
-      <section className="py-16 lg:py-20 bg-gradient-to-br from-[#0A66C2] to-[#004182] relative overflow-hidden">
+      <section className="py-16 lg:py-20 bg-gradient-to-br from-[#D97706] to-[#9A3412] relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-white blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-white blur-3xl" />
@@ -1123,7 +1123,7 @@ export default function Landing() {
             <Button
               onClick={() => navigate("/signup")}
               size="lg"
-              className="rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white font-semibold px-8 h-12 shadow-lg w-full sm:w-auto"
+              className="rounded-full bg-[#D97706] hover:bg-[#9A3412] text-white font-semibold px-8 h-12 shadow-lg w-full sm:w-auto"
             >
               Get Started Free
             </Button>
@@ -1147,11 +1147,11 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               <Link to="/" className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-md bg-[#0A66C2] flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">in</span>
+                <div className="w-8 h-8 rounded-full bg-[#D97706] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">tb</span>
                 </div>
                 <span className="text-lg font-semibold text-gray-900">
-                  Talent<span className="text-[#0A66C2]">Bridge</span>
+                  Talent<span className="text-[#D97706]">Bridge</span>
                 </span>
               </Link>
               <p className="text-sm text-gray-500 leading-relaxed">
@@ -1175,7 +1175,7 @@ export default function Landing() {
                   <li key={item}>
                     <Link
                       to="/jobs"
-                      className="text-sm text-gray-500 hover:text-[#0A66C2] transition-colors"
+                      className="text-sm text-gray-500 hover:text-[#D97706] transition-colors"
                     >
                       {item}
                     </Link>
@@ -1199,7 +1199,7 @@ export default function Landing() {
                   <li key={item}>
                     <Link
                       to="/post-job"
-                      className="text-sm text-gray-500 hover:text-[#0A66C2] transition-colors"
+                      className="text-sm text-gray-500 hover:text-[#D97706] transition-colors"
                     >
                       {item}
                     </Link>
@@ -1229,7 +1229,7 @@ export default function Landing() {
                             ? "/terms"
                             : "/jobs"
                       }
-                      className="text-sm text-gray-500 hover:text-[#0A66C2] transition-colors"
+                      className="text-sm text-gray-500 hover:text-[#D97706] transition-colors"
                     >
                       {item}
                     </Link>
