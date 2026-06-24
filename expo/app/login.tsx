@@ -50,40 +50,31 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      setTimeout(async () => {
-        try {
-          console.log('Logging in as:', userType);
-          const user = {
-            id: Date.now().toString(),
-            email: email.toLowerCase().trim(),
-            name: email.split('@')[0],
-            type: userType,
-            fullName: userType === 'professional' ? 'Professional User' : undefined,
-            companyName: userType === 'company' ? 'Company Name' : undefined,
-            agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
-            profession: userType === 'professional' ? 'Professional' : undefined,
-            industry: userType === 'company' ? 'Company' : (userType === 'recruiter' ? 'Recruiter' : undefined),
-          };
+      const user = {
+        id: Date.now().toString(),
+        email: email.toLowerCase().trim(),
+        name: email.split('@')[0],
+        type: userType,
+        fullName: userType === 'professional' ? 'Professional User' : undefined,
+        companyName: userType === 'company' ? 'Company Name' : undefined,
+        agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
+        profession: userType === 'professional' ? 'Professional' : undefined,
+        industry: userType === 'company' ? 'Company' : (userType === 'recruiter' ? 'Recruiter' : undefined),
+      };
 
-          const token = `token_${user.id}`;
-          
-          await secureStorage.setAuthToken(token);
-          await secureStorage.setUserData(user);
-          await AsyncStorage.setItem('user', JSON.stringify(user));
-          
-          console.log('User authenticated successfully');
-          setIsLoading(false);
-          router.replace('/(tabs)/home' as any);
-        } catch (error) {
-          console.error('Login error:', error);
-          setIsLoading(false);
-          Alert.alert('Error', 'Failed to login. Please try again.');
-        }
-      }, 1000);
+      const token = `token_${user.id}`;
+
+      await secureStorage.setAuthToken(token);
+      await secureStorage.setUserData(user);
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+
+      console.log('User authenticated successfully as:', userType);
+      router.replace('/(tabs)/home' as any);
     } catch (error) {
       console.error('Login error:', error);
+      Alert.alert('Error', 'Failed to login. Please try again.');
+    } finally {
       setIsLoading(false);
-      Alert.alert('Error', 'An error occurred. Please try again.');
     }
   };
 
