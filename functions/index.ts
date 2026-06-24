@@ -1,5 +1,5 @@
 // TalentBridge API Worker — handles tRPC queries and REST auth mutations.
-// v3 — auto-seeds DB on first request, DB-backed admin auth, messages, notifications, calls routes
+// v5 — auto-seeds DB with upsert, DB-backed admin auth, messages, notifications, calls routes
 
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createClient } from "@supabase/supabase-js";
@@ -160,28 +160,40 @@ async function handleLogin(req: Request, env: Record<string, string>): Promise<R
 }
 
 async function handleAdminLogin(req: Request, env: Record<string, string>): Promise<Response> {
+  console.log("[admin-login] Starting admin login handler");
   const body = await req.json();
   const { username, password } = body as Record<string, string>;
+  console.log(`[admin-login] Attempt for username: ${username}`);
 
   if (!username || !password) {
+    console.log("[admin-login] Missing username or password");
     return json({ success: false, message: "Username and password are required" }, 400);
   }
 
   const supabase = getSupabase(env);
   const email = `${username}@talentbridge.com`;
-  const { data: adminRow } = await supabase
+  console.log(`[admin-login] Looking up email: ${email}`);
+  
+  const { data: adminRow, error: lookupError } = await supabase
     .from("auth_users")
     .select("*")
     .eq("email", email)
     .eq("is_admin", true)
     .maybeSingle();
 
+  if (lookupError) {
+    console.error("[admin-login] Supabase lookup error:", lookupError);
+    return json({ success: false, message: "Server error during authentication" }, 500);
+  }
+
   if (!adminRow) {
+    console.log(`[admin-login] No admin found for ${email}`);
     return json({ success: false, message: "Invalid credentials" }, 401);
   }
 
   const hashedInput = hashPassword(password);
   if (hashedInput !== (adminRow.password as string)) {
+    console.log("[admin-login] Password mismatch");
     return json({ success: false, message: "Invalid credentials" }, 401);
   }
 
@@ -194,6 +206,7 @@ async function handleAdminLogin(req: Request, env: Record<string, string>): Prom
     isPremium: false,
   };
 
+  console.log(`[admin-login] Success for ${username}`);
   return json({
     success: true,
     user: adminUser,

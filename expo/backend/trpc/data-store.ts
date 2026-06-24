@@ -449,13 +449,10 @@ export async function seedDatabase(): Promise<void> {
     console.error("[data-store] Seed error (non-fatal):", err);
   }
 
-  // Always seed admin users so admin login works from the start
+  // Always ensure admin users exist so admin login works
   try {
-    const { count: userCount } = await supabase
-      .from("auth_users")
-      .select("*", { count: "exact", head: true });
-    if (!userCount || userCount === 0) {
-      await supabase.from("auth_users").insert({
+    const adminUsers = [
+      {
         id: "admin-seed-001",
         email: "admin@talentbridge.com",
         password: "hashed_admin123",
@@ -463,8 +460,8 @@ export async function seedDatabase(): Promise<void> {
         type: "admin",
         is_admin: true,
         is_premium: false,
-      });
-      await supabase.from("auth_users").insert({
+      },
+      {
         id: "admin-seed-002",
         email: "bridge.gh@talentbridge.com",
         password: "hashed_bridge123",
@@ -472,9 +469,17 @@ export async function seedDatabase(): Promise<void> {
         type: "admin",
         is_admin: true,
         is_premium: false,
-      });
-      console.log("[data-store] Seeded admin users");
+      },
+    ];
+    for (const admin of adminUsers) {
+      const { error: upsertErr } = await supabase
+        .from("auth_users")
+        .upsert(admin, { onConflict: "id" });
+      if (upsertErr) {
+        console.error(`[data-store] Admin upsert error for ${admin.email}:`, upsertErr);
+      }
     }
+    console.log("[data-store] Ensured admin users exist");
   } catch (adminErr) {
     console.error("[data-store] Admin seed error:", adminErr);
   }
