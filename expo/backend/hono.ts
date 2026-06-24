@@ -29,8 +29,17 @@ app.use("*", cors({
   maxAge: 86400,
 }));
 
+// Mount tRPC — handles both batched (exact /api/trpc) and non-batched (/api/trpc/*) requests
 app.use(
-  "/trpc/*",
+  "/api/trpc/*",
+  trpcServer({
+    endpoint: "/api/trpc",
+    router: appRouter,
+    createContext,
+  }),
+);
+app.use(
+  "/api/trpc",
   trpcServer({
     endpoint: "/api/trpc",
     router: appRouter,

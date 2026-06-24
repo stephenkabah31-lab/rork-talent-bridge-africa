@@ -19,6 +19,15 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+function getBaseUrl(): string {
+  const url = import.meta.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  if (!url) {
+    console.error("EXPO_PUBLIC_RORK_API_BASE_URL is not set");
+    throw new Error("Backend URL not configured");
+  }
+  return url;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -42,17 +51,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyLogin = useCallback(
     async (username: string, password: string): Promise<boolean> => {
       try {
-        const res = await fetch(
-          `${import.meta.env.EXPO_PUBLIC_RORK_API_BASE_URL}/api/trpc/auth.adminLogin`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-          },
-        );
+        const baseUrl = getBaseUrl();
+        const res = await fetch(`${baseUrl}/api/trpc/auth.adminLogin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        if (!res.ok) {
+          console.error("Admin login HTTP error:", res.status, res.statusText);
+          return false;
+        }
         const json = await res.json();
+        if (json?.error) {
+          console.error("Admin login tRPC error:", json.error.message);
+          return false;
+        }
         return json?.result?.data?.success === true;
-      } catch {
+      } catch (err) {
+        console.error("Admin login request failed:", err);
         return false;
       }
     },
@@ -60,19 +76,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const login = useCallback(
-    async (username: string, password: string, code: string) => {
-      const res = await fetch(
-        `${import.meta.env.EXO_PUBLIC_RORK_API_BASE_URL}/api/trpc/auth.adminVerify`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
-        },
-      );
+    async (_username: string, _password: string, code: string) => {
+      const baseUrl = getBaseUrl();
+      const res = await fetch(`${baseUrl}/api/trpc/auth.adminVerify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (!res.ok) {
+        throw new Error(`Verification failed (${res.status})`);
+      }
       const json = await res.json();
 
-      if (!json?.result?.data?.success) {
-        throw new Error("Invalid verification code");
+      if (json?.error || !json?.result?.data?.success) {
+        throw new Error(json?.error?.message ?? "Invalid verification code");
       }
 
       const adminUser: AdminUser = {
