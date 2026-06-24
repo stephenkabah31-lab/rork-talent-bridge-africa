@@ -1,11 +1,13 @@
 import { Shield, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { type FormEvent, useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
 
 export default function AdminLogin() {
   const { user, adminLogin } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +53,7 @@ export default function AdminLogin() {
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
             TalentBridge
           </h1>
-          <p className="text-lg text-orange-200/80 font-light">Admin Portal</p>
+          <p className="text-lg text-orange-200/80 font-light">{t("admin.dashboard")}</p>
           <div className="mt-10 flex items-center justify-center gap-2 text-white/50 text-sm">
             <Lock className="w-4 h-4" />
             <span>Encrypted & secure connection</span>
@@ -67,7 +69,7 @@ export default function AdminLogin() {
               to="/login"
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to sign in
+              <ArrowLeft className="w-4 h-4" /> {t("auth.login")}
             </Link>
           </div>
 
@@ -78,8 +80,8 @@ export default function AdminLogin() {
             <span className="text-xl font-bold text-gray-900">TalentBridge</span>
           </div>
 
-          <h2 className="text-3xl font-semibold text-gray-900 mb-1">Admin Sign In</h2>
-          <p className="text-gray-500 mb-8">Secure login for administrators</p>
+          <h2 className="text-3xl font-semibold text-gray-900 mb-1">{t("auth.adminLogin")}</h2>
+          <p className="text-gray-500 mb-8">{t("settings.securityDesc")}</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -130,7 +132,7 @@ export default function AdminLogin() {
               disabled={isLoading || !username || !password}
               className="w-full py-3 rounded-full bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? t("auth.loggingIn") : t("auth.signIn")}
             </button>
           </form>
 

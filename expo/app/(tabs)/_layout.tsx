@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Home, MessageCircle, Phone, Bell, User } from 'lucide-react-native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/colors';
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -28,35 +30,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          title: t('nav.home'),
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Messages',
+          title: t('nav.messages'),
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="calls"
         options={{
-          title: 'Calls',
+          title: t('nav.calls'),
           tabBarIcon: ({ color, size }) => <Phone color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
-          title: 'Notifications',
+          title: t('nav.notifications'),
           tabBarIcon: ({ color, size }) => <Bell color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="me"
         options={{
-          title: 'Me',
+          title: t('nav.profile'),
           tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
         }}
       />

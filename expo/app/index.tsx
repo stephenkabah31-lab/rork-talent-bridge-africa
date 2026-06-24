@@ -5,6 +5,7 @@ import { Globe, TrendingUp } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/colors';
 
@@ -48,6 +49,7 @@ export default function IndexRedirect() {
 
 function WelcomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -109,16 +111,16 @@ function WelcomeScreen() {
         >
           <View style={styles.logoContainer}>
             <Text style={styles.logo}>Talent Bridge</Text>
-            <Text style={styles.tagline}>Connecting Africa&apos;s Talent</Text>
+            <Text style={styles.tagline}>{t('home.tagline')}</Text>
           </View>
 
           <View style={styles.featuresContainer}>
             <View style={styles.feature}>
               <Globe color={Colors.primary} size={28} />
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Pan-African Network</Text>
+                <Text style={styles.featureTitle}>{t('nav.network')}</Text>
                 <Text style={styles.featureDescription}>
-                  Connecting professionals across Africa
+                  {t('landing.forProfessionalsDesc').slice(0, 60)}...
                 </Text>
               </View>
             </View>
@@ -126,9 +128,9 @@ function WelcomeScreen() {
             <View style={styles.feature}>
               <TrendingUp color={Colors.secondary} size={28} />
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Career Growth</Text>
+                <Text style={styles.featureTitle}>{t('home.getHired')}</Text>
                 <Text style={styles.featureDescription}>
-                  Unlock opportunities and advance your career
+                  {t('home.tagline')}
                 </Text>
               </View>
             </View>
@@ -148,7 +150,7 @@ function WelcomeScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.gradientButton}
               >
-                <Text style={styles.primaryButtonText}>Get Started</Text>
+                <Text style={styles.primaryButtonText}>{t('auth.joinNow')}</Text>
               </LinearGradient>
             </Pressable>
 
@@ -159,16 +161,16 @@ function WelcomeScreen() {
               ]}
               onPress={() => router.push('/login')}
             >
-              <Text style={styles.secondaryButtonText}>Sign In</Text>
+              <Text style={styles.secondaryButtonText}>{t('auth.signIn')}</Text>
             </Pressable>
           </View>
 
           <View style={styles.footerContainer}>
             <Text style={styles.footer}>
-              Empowering African professionals
+              {t('home.welcome')}
             </Text>
             <Text style={styles.footerLegal}>
-              By continuing, you agree to our Terms & Privacy Policy
+              {t('auth.termsAgreement')}
             </Text>
           </View>
         </Animated.View>

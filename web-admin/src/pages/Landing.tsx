@@ -9,10 +9,12 @@ import {
   Users,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-white">
@@ -33,7 +35,7 @@ export default function Landing() {
               to="/login"
               className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden sm:inline"
             >
-              Sign In
+              {t("landing.signIn")}
             </Link>
             <Link
               to="/admin-login"
@@ -97,10 +99,10 @@ export default function Landing() {
       <section className="py-20 lg:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 text-center mb-4">
-            Built for everyone
+            {t("landing.howItWorks")}
           </h2>
           <p className="text-lg text-gray-500 text-center max-w-xl mx-auto mb-14">
-            Whether you're job hunting, recruiting, or growing a team — we've got you covered.
+            {t("landing.heroSubtitle")}
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">

@@ -15,6 +15,7 @@ import {
   User,
   Mail,
   Phone,
+  Check,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -26,14 +27,19 @@ import {
   Text,
   View,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/colors';
+import { LANGUAGES } from '@/lib/i18n';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -47,6 +53,18 @@ export default function SettingsScreen() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [profileVisibility, setProfileVisibility] = useState(true);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+
+  const currentLanguage = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
+
+  const handleLanguageChange = (code: string) => {
+    i18n.changeLanguage(code);
+    setLanguageModalVisible(false);
+    Alert.alert(
+      t('common.done'),
+      t('settings.languageChanged'),
+    );
+  };
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -60,15 +78,15 @@ export default function SettingsScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      t('auth.logout'),
+      t('auth.logoutConfirm'),
       [
         {
-          text: 'Cancel',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Logout',
+          text: t('auth.logout'),
           style: 'destructive',
           onPress: () => logoutMutation.mutate(),
         },
@@ -81,24 +99,24 @@ export default function SettingsScreen() {
     {
       id: '1',
       icon: User,
-      label: 'Account Information',
-      description: 'Update your personal details',
+      label: t('settings.accountInfo'),
+      description: t('settings.updatePersonalDetails'),
       route: '/profile',
       color: Colors.primary,
     },
     {
       id: '2',
       icon: Mail,
-      label: 'Email & Password',
-      description: 'Manage your login credentials',
+      label: t('settings.emailPassword'),
+      description: t('settings.manageLoginCredentials'),
       route: null,
       color: Colors.secondary,
     },
     {
       id: '3',
       icon: Phone,
-      label: 'Phone Number',
-      description: 'Update your contact number',
+      label: t('settings.phoneNumberSetting'),
+      description: t('settings.updateContactNumber'),
       route: null,
       color: Colors.accent,
     },
@@ -108,24 +126,24 @@ export default function SettingsScreen() {
     {
       id: '1',
       icon: Lock,
-      label: 'Privacy',
-      description: 'Control who can see your profile',
+      label: t('settings.privacySetting'),
+      description: t('settings.privacySettingDesc'),
       route: null,
       color: Colors.primary,
     },
     {
       id: '2',
       icon: Eye,
-      label: 'Data & Analytics',
-      description: 'Manage data collection preferences',
+      label: t('settings.dataAnalytics'),
+      description: t('settings.dataAnalyticsDesc'),
       route: null,
       color: Colors.secondary,
     },
     {
       id: '3',
       icon: Shield,
-      label: 'Security',
-      description: 'Two-factor authentication & more',
+      label: t('settings.security'),
+      description: t('settings.securityDesc'),
       route: null,
       color: Colors.accent,
     },
@@ -135,15 +153,16 @@ export default function SettingsScreen() {
     {
       id: '1',
       icon: Globe,
-      label: 'Language',
-      description: 'English',
+      label: t('settings.languageSetting'),
+      description: currentLanguage.native,
       route: null,
       color: Colors.primary,
+      isLanguage: true,
     },
     {
       id: '2',
       icon: HelpCircle,
-      label: 'Help & Support',
+      label: t('nav.help'),
       description: 'Get help with your account',
       route: null,
       color: Colors.secondary,
@@ -151,16 +170,16 @@ export default function SettingsScreen() {
     {
       id: '3',
       icon: FileText,
-      label: 'Terms of Service',
-      description: 'View our terms and conditions',
+      label: t('settings.termsOfService'),
+      description: t('settings.termsDesc'),
       route: '/terms',
       color: Colors.accent,
     },
     {
       id: '4',
       icon: Shield,
-      label: 'Privacy Policy',
-      description: 'View our privacy policy',
+      label: t('settings.privacyPolicy'),
+      description: t('settings.privacyPolicyDesc'),
       route: '/privacy',
       color: Colors.primary,
     },
@@ -169,12 +188,12 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <Text style={styles.sectionTitle}>{t('settings.account').toUpperCase()}</Text>
           {accountSettings.map((item) => (
             <Pressable
               key={item.id}
@@ -186,7 +205,7 @@ export default function SettingsScreen() {
                 if (item.route) {
                   router.push(item.route as any);
                 } else {
-                  Alert.alert('Coming Soon', 'This feature is under development');
+                  Alert.alert(t('common.comingSoon'), t('common.underDevelopment'));
                 }
               }}
             >
@@ -205,7 +224,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+          <Text style={styles.sectionTitle}>{t('settings.notifications').toUpperCase()}</Text>
           <View style={styles.settingItem}>
             <View
               style={[styles.settingIcon, { backgroundColor: `${Colors.primary}20` }]}
@@ -213,9 +232,9 @@ export default function SettingsScreen() {
               <Bell color={Colors.primary} size={20} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingLabel}>Push Notifications</Text>
+              <Text style={styles.settingLabel}>{t('settings.pushNotifications')}</Text>
               <Text style={styles.settingDescription}>
-                Receive notifications on your device
+                {t('settings.pushNotificationsDesc')}
               </Text>
             </View>
             <Switch
@@ -233,9 +252,9 @@ export default function SettingsScreen() {
               <Mail color={Colors.secondary} size={20} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingLabel}>Email Notifications</Text>
+              <Text style={styles.settingLabel}>{t('settings.emailNotifications')}</Text>
               <Text style={styles.settingDescription}>
-                Receive updates via email
+                {t('settings.emailNotificationsDesc')}
               </Text>
             </View>
             <Switch
@@ -248,7 +267,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PRIVACY & SECURITY</Text>
+          <Text style={styles.sectionTitle}>{t('settings.privacySecurity').toUpperCase()}</Text>
           {privacySettings.map((item) => (
             <Pressable
               key={item.id}
@@ -260,7 +279,7 @@ export default function SettingsScreen() {
                 if (item.route) {
                   router.push(item.route as any);
                 } else {
-                  Alert.alert('Coming Soon', 'This feature is under development');
+                  Alert.alert(t('common.comingSoon'), t('common.underDevelopment'));
                 }
               }}
             >
@@ -284,9 +303,9 @@ export default function SettingsScreen() {
               <Eye color={Colors.accent} size={20} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingLabel}>Profile Visibility</Text>
+              <Text style={styles.settingLabel}>{t('settings.profileVisibility')}</Text>
               <Text style={styles.settingDescription}>
-                Make your profile visible to recruiters
+                {t('settings.profileVisibilityDesc')}
               </Text>
             </View>
             <Switch
@@ -299,7 +318,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>APP SETTINGS</Text>
+          <Text style={styles.sectionTitle}>{t('settings.appSettings').toUpperCase()}</Text>
           <View style={styles.settingItem}>
             <View
               style={[styles.settingIcon, { backgroundColor: `${Colors.dark}20` }]}
@@ -307,8 +326,8 @@ export default function SettingsScreen() {
               <Moon color={Colors.dark} size={20} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingLabel}>Dark Mode</Text>
-              <Text style={styles.settingDescription}>Coming soon</Text>
+              <Text style={styles.settingLabel}>{t('settings.darkMode')}</Text>
+              <Text style={styles.settingDescription}>{t('common.comingSoon')}</Text>
             </View>
             <Switch
               value={darkMode}
@@ -327,10 +346,12 @@ export default function SettingsScreen() {
                 pressed && styles.settingItemPressed,
               ]}
               onPress={() => {
-                if (item.route) {
+                if ((item as any).isLanguage) {
+                  setLanguageModalVisible(true);
+                } else if (item.route) {
                   router.push(item.route as any);
                 } else {
-                  Alert.alert('Coming Soon', 'This feature is under development');
+                  Alert.alert(t('common.comingSoon'), t('common.underDevelopment'));
                 }
               }}
             >
@@ -349,7 +370,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACCOUNT ACTIONS</Text>
+          <Text style={styles.sectionTitle}>{t('settings.accountActions').toUpperCase()}</Text>
           <Pressable
             style={({ pressed }) => [
               styles.settingItem,
@@ -370,23 +391,66 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.settingContent}>
               <Text style={[styles.settingLabel, styles.logoutText]}>
-                {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                {logoutMutation.isPending ? t('auth.loggingOut') : t('auth.logout')}
               </Text>
               <Text style={styles.settingDescription}>
-                Sign out of your account
+                {t('settings.signOut')}
               </Text>
             </View>
           </Pressable>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>TalentBridge v1.0.0</Text>
+          <Text style={styles.footerText}>{t('settings.version')}</Text>
           <Text style={styles.footerText}>
-            User ID: {user?.id || 'Not available'}
+            {t('settings.userId')}: {user?.id || t('common.none')}
           </Text>
-          <Text style={styles.footerText}>© 2025 TalentBridge</Text>
+          <Text style={styles.footerText}>{t('settings.copyright')}</Text>
         </View>
       </ScrollView>
+
+      {/* Language Picker Modal */}
+      <Modal
+        visible={languageModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setLanguageModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalContainer} edges={['bottom']}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{t('settings.chooseLanguage')}</Text>
+            <Pressable
+              onPress={() => setLanguageModalVisible(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseText}>{t('common.close')}</Text>
+            </Pressable>
+          </View>
+          <FlatList
+            data={LANGUAGES}
+            keyExtractor={(item) => item.code}
+            renderItem={({ item }) => {
+              const isActive = i18n.language === item.code;
+              return (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.languageItem,
+                    pressed && styles.settingItemPressed,
+                  ]}
+                  onPress={() => handleLanguageChange(item.code)}
+                >
+                  <View style={styles.languageInfo}>
+                    <Text style={styles.languageNative}>{item.native}</Text>
+                    <Text style={styles.languageLabel}>{item.label}</Text>
+                  </View>
+                  {isActive && <Check color={Colors.primary} size={22} />}
+                </Pressable>
+              );
+            }}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -470,5 +534,58 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     color: Colors.textLight,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.light,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  modalCloseButton: {
+    padding: 8,
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: Colors.white,
+  },
+  languageInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  languageNative: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  languageLabel: {
+    fontSize: 13,
+    color: Colors.textLight,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginLeft: 20,
   },
 });

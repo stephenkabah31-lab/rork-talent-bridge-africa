@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/colors';
 import { trpc } from '@/lib/trpc';
@@ -25,6 +26,7 @@ type UserType = 'professional' | 'recruiter' | 'company';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -132,8 +134,8 @@ export default function LoginScreen() {
                 style={styles.logo}
                 contentFit="contain"
               />
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to continue to TalentBridge</Text>
+              <Text style={styles.title}>{t('home.welcome')}</Text>
+              <Text style={styles.subtitle}>{t('auth.login')}</Text>
             </View>
 
             <View style={styles.userTypeSelector}>
@@ -177,7 +179,7 @@ export default function LoginScreen() {
                     userType === 'recruiter' && styles.typeButtonTextActive,
                   ]}
                 >
-                  Recruiter
+                  {t('auth.iamRecruiter')}
                 </Text>
               </Pressable>
 
@@ -199,19 +201,19 @@ export default function LoginScreen() {
                     userType === 'company' && styles.typeButtonTextActive,
                   ]}
                 >
-                  Company
+                  {t('auth.iamCompany')}
                 </Text>
               </Pressable>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>{t('auth.email')}</Text>
                 <View style={styles.inputContainer}>
                   <Mail color={Colors.textLight} size={20} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.email')}
                     placeholderTextColor={Colors.textLight}
                     value={email}
                     onChangeText={setEmail}
@@ -223,12 +225,12 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <View style={styles.inputContainer}>
                   <Lock color={Colors.textLight} size={20} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.password')}
                     placeholderTextColor={Colors.textLight}
                     value={password}
                     onChangeText={setPassword}
@@ -264,14 +266,14 @@ export default function LoginScreen() {
                   style={styles.gradientButton}
                 >
                   <Text style={styles.submitButtonText}>
-                    {isLoading ? 'Signing In...' : 'Sign In'}
+                    {isLoading ? t('auth.loggingIn') : t('auth.signIn')}
                   </Text>
                 </LinearGradient>
               </Pressable>
 
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
+                <Text style={styles.dividerText}>{t('common.or').toUpperCase()}</Text>
                 <View style={styles.dividerLine} />
               </View>
 
@@ -282,7 +284,7 @@ export default function LoginScreen() {
                 ]}
                 onPress={() => router.push('/user-type')}
               >
-                <Text style={styles.secondaryButtonText}>Create New Account</Text>
+                <Text style={styles.secondaryButtonText}>{t('auth.createAccount')}</Text>
               </Pressable>
             </View>
 
@@ -291,7 +293,7 @@ export default function LoginScreen() {
               onPress={() => router.push('/admin-login')}
             >
               <Lock color={Colors.textLight} size={14} />
-              <Text style={styles.adminLinkText}>Admin Access</Text>
+              <Text style={styles.adminLinkText}>{t('auth.adminLogin')}</Text>
             </Pressable>
           </ScrollView>
         </SafeAreaView>

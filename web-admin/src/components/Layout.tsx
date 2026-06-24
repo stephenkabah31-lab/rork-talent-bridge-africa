@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = user?.isAdmin === true;
@@ -56,7 +58,7 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
                 <span className="font-bold text-gray-900">TalentBridge</span>
                 <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-0.5 rounded">
-                  Admin
+                  {t("nav.admin")}
                 </span>
               </Link>
             </div>
@@ -74,14 +76,14 @@ export default function Layout({ children }: LayoutProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <Shield className="w-4 h-4 mr-2" /> Dashboard
+                    <Shield className="w-4 h-4 mr-2" /> {t("nav.dashboard")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="text-red-600"
                   >
-                    <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                    <LogOut className="w-4 h-4 mr-2" /> {t("auth.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -98,25 +100,25 @@ export default function Layout({ children }: LayoutProps) {
     {
       to: "/feed",
       icon: Home,
-      label: "Home",
+      label: t("nav.home"),
       active: location.pathname === "/feed",
     },
     {
       to: "/network",
       icon: Users,
-      label: "Network",
+      label: t("nav.network"),
       active: location.pathname.startsWith("/network"),
     },
     {
       to: "/jobs",
       icon: Briefcase,
-      label: "Jobs",
+      label: t("nav.jobs"),
       active: location.pathname.startsWith("/jobs"),
     },
     {
       to: "/messages",
       icon: MessageSquare,
-      label: "Messages",
+      label: t("nav.messages"),
       active: location.pathname.startsWith("/messages"),
     },
   ];
