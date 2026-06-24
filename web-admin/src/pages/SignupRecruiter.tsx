@@ -16,6 +16,7 @@ export default function SignupRecruiter() {
     phoneNumber: "",
     country: "",
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,6 +37,10 @@ export default function SignupRecruiter() {
       }
       if (form.password !== form.confirmPassword) {
         setError("Passwords do not match");
+        return;
+      }
+      if (!acceptedTerms) {
+        setError("You must accept the Terms of Service to continue");
         return;
       }
       setIsLoading(true);
@@ -190,10 +195,30 @@ export default function SignupRecruiter() {
             </div>
           )}
 
+          {/* Terms Checkbox */}
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-1 w-4 h-4 rounded border-gray-300 text-[#D97706] focus:ring-[#D97706]"
+            />
+            <span className="text-sm text-gray-600">
+              I accept the{" "}
+              <Link to="/terms" className="text-[#D97706] hover:underline font-medium">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="text-[#D97706] hover:underline font-medium">
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+
           <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold"
+            disabled={isLoading || !acceptedTerms}
+            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold disabled:opacity-50"
           >
             {isLoading ? "Creating account..." : "Agree & Join"}
           </Button>

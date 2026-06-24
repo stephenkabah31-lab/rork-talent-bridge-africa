@@ -540,6 +540,23 @@ export async function getAllCompanyApplications(): Promise<CompanyApplication[]>
   return data.map(dbCompanyToApp);
 }
 
+export async function createProfessionalApplication(
+  app: ProfessionalApplication,
+): Promise<void> {
+  await supabase.from("professional_applications").insert({
+    id: app.id,
+    name: app.name,
+    email: app.email,
+    phone: app.phone,
+    location: app.location,
+    title: app.title,
+    experience: app.experience,
+    skills: app.skills,
+    status: app.status,
+    created_at: app.createdAt,
+  });
+}
+
 export async function updateProfessionalStatus(
   id: string,
   status: "approved" | "rejected",
@@ -553,6 +570,21 @@ export async function updateProfessionalStatus(
   return data ? dbProToApp(data) : undefined;
 }
 
+export async function createRecruiterApplication(
+  app: RecruiterApplication,
+): Promise<void> {
+  await supabase.from("recruiter_applications").insert({
+    id: app.id,
+    name: app.name,
+    email: app.email,
+    phone: app.phone,
+    company: app.company,
+    location: app.location,
+    status: app.status,
+    created_at: app.createdAt,
+  });
+}
+
 export async function updateRecruiterStatus(
   id: string,
   status: "approved" | "rejected",
@@ -564,6 +596,24 @@ export async function updateRecruiterStatus(
     .select()
     .single();
   return data ? dbRecruiterToApp(data) : undefined;
+}
+
+export async function createCompanyApplication(
+  app: CompanyApplication,
+): Promise<void> {
+  await supabase.from("company_applications").insert({
+    id: app.id,
+    company_name: app.companyName,
+    contact_person: app.contactPerson,
+    email: app.email,
+    phone: app.phone,
+    location: app.location,
+    industry: app.industry,
+    website: app.website,
+    registration_number: app.registrationNumber,
+    status: app.status,
+    created_at: app.createdAt,
+  });
 }
 
 export async function updateCompanyStatus(

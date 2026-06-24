@@ -5,6 +5,9 @@ import {
   createAuthUser,
   getAuthUserByEmail,
   getAuthUser,
+  createProfessionalApplication,
+  createRecruiterApplication,
+  createCompanyApplication,
 } from "../data-store";
 import { supabase } from "../../../lib/supabase";
 
@@ -165,6 +168,9 @@ export const authRouter = createTRPCRouter({
         phoneNumber: z.string().max(20).optional(),
         country: z.string().max(100).optional(),
         userType: z.enum(["professional", "recruiter", "company"]),
+        acceptedTerms: z.boolean().refine((v) => v === true, {
+          message: "You must accept the Terms of Service",
+        }),
       }),
     )
     .mutation(async ({ input }) => {
@@ -179,8 +185,9 @@ export const authRouter = createTRPCRouter({
 
       const hashedPassword = hashPassword(input.password);
 
+      const userId = Date.now().toString();
       const user = {
-        id: Date.now().toString(),
+        id: userId,
         email: input.email.toLowerCase(),
         name: input.fullName || input.companyName || input.email.split("@")[0],
         type: input.userType,
@@ -193,7 +200,54 @@ export const authRouter = createTRPCRouter({
 
       await createAuthUser(user);
 
-      console.log(`User registered: ${input.email}`);
+      // Auto-approve: create application entry with "approved" status
+      const now = new Date().toISOString();
+      try {
+        if (input.userType === "professional") {
+          await createProfessionalApplication({
+            id: `pro-${userId}`,
+            name: input.fullName || input.email.split("@")[0],
+            email: input.email.toLowerCase(),
+            phone: input.phoneNumber || "",
+            location: input.country || "",
+            title: "",
+            experience: "",
+            skills: [],
+            status: "approved",
+            createdAt: now,
+          });
+        } else if (input.userType === "recruiter") {
+          await createRecruiterApplication({
+            id: `rec-${userId}`,
+            name: input.fullName || input.email.split("@")[0],
+            email: input.email.toLowerCase(),
+            phone: input.phoneNumber || "",
+            company: input.companyName || "",
+            location: input.country || "",
+            status: "approved",
+            createdAt: now,
+          });
+        } else if (input.userType === "company") {
+          await createCompanyApplication({
+            id: `com-${userId}`,
+            companyName: input.companyName || input.fullName || "",
+            contactPerson: input.fullName || "",
+            email: input.email.toLowerCase(),
+            phone: input.phoneNumber || "",
+            location: input.country || "",
+            industry: "",
+            website: "",
+            registrationNumber: "",
+            status: "approved",
+            createdAt: now,
+          });
+        }
+      } catch (appErr) {
+        console.error("[auth] Failed to create application entry:", appErr);
+        // Non-fatal: the auth user was created successfully
+      }
+
+      console.log(`User registered (auto-approved): ${input.email} as ${input.userType}`);
 
       const { password, ...userWithoutPassword } = user;
 

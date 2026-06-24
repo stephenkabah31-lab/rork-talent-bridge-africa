@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
+import { trpc } from '@/lib/trpc';
 
 type UserType = 'professional' | 'recruiter' | 'company';
 
@@ -29,6 +30,8 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<UserType>('professional');
+
+  const loginMutation = trpc.auth.login.useMutation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -51,7 +54,6 @@ export default function LoginScreen() {
         await secureStorage.setAuthToken(token);
         await secureStorage.setUserData(adminUser);
         await AsyncStorage.setItem('user', JSON.stringify(adminUser));
-        console.log('Dev admin authenticated');
         router.replace('/admin-dashboard' as any);
       } catch (error) {
         console.error('Dev admin login error:', error);
@@ -76,29 +78,22 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      const user = {
-        id: Date.now().toString(),
+      const result = await loginMutation.mutateAsync({
         email: email.toLowerCase().trim(),
-        name: email.split('@')[0],
-        type: userType,
-        fullName: userType === 'professional' ? 'Professional User' : undefined,
-        companyName: userType === 'company' ? 'Company Name' : undefined,
-        agencyName: userType === 'recruiter' ? 'Agency Name' : undefined,
-        profession: userType === 'professional' ? 'Professional' : undefined,
-        industry: userType === 'company' ? 'Company' : (userType === 'recruiter' ? 'Recruiter' : undefined),
-      };
+        password,
+        userType,
+      });
 
-      const token = `token_${user.id}`;
-
-      await secureStorage.setAuthToken(token);
-      await secureStorage.setUserData(user);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-
-      console.log('User authenticated successfully as:', userType);
-      router.replace('/(tabs)/home' as any);
-    } catch (error) {
+      if (result.success && result.user) {
+        await secureStorage.setAuthToken(result.token);
+        await secureStorage.setUserData(result.user);
+        await AsyncStorage.setItem('user', JSON.stringify(result.user));
+        router.replace('/(tabs)/home' as any);
+      }
+    } catch (error: any) {
+      const message = error?.message || error?.shape?.message || 'Invalid credentials. Please try again.';
+      Alert.alert('Login Failed', message);
       console.error('Login error:', error);
-      Alert.alert('Error', 'Failed to login. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -112,9 +107,7 @@ export default function LoginScreen() {
           headerTransparent: true,
           headerTitle: '',
           headerTintColor: Colors.white,
-          headerStyle: {
-            backgroundColor: 'transparent',
-          },
+          headerStyle: { backgroundColor: 'transparent' },
         }}
       />
       <KeyboardAvoidingView
@@ -126,7 +119,6 @@ export default function LoginScreen() {
           locations={[0, 0.6, 1]}
           style={StyleSheet.absoluteFillObject}
         />
-
         <SafeAreaView style={styles.safeArea} edges={['bottom']}>
           <ScrollView
             style={styles.scrollView}
@@ -309,171 +301,57 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 100,
-    paddingBottom: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: Colors.white,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: Colors.light,
-    textAlign: 'center',
-  },
-  form: {
-    gap: 24,
-    marginBottom: 32,
-  },
-  inputGroup: {
-    gap: 10,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.white,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 100, paddingBottom: 40 },
+  header: { alignItems: 'center', marginBottom: 40 },
+  logo: { width: 100, height: 100, marginBottom: 24 },
+  title: { fontSize: 32, fontWeight: '800', color: Colors.white, marginBottom: 8 },
+  subtitle: { fontSize: 15, color: Colors.light, textAlign: 'center' },
+  form: { gap: 24, marginBottom: 32 },
+  inputGroup: { gap: 10 },
+  label: { fontSize: 15, fontWeight: '600', color: Colors.white },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 14,
+    paddingHorizontal: 16, paddingVertical: 16, gap: 12,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: Colors.white,
-  },
-  eyeButton: {
-    padding: 4,
-  },
+  input: { flex: 1, fontSize: 16, color: Colors.white },
+  eyeButton: { padding: 4 },
   submitButton: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginTop: 8,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    borderRadius: 14, overflow: 'hidden', marginTop: 8,
+    shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
-  gradientButton: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginVertical: 8,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  dividerText: {
-    fontSize: 13,
-    color: Colors.light,
-    fontWeight: '600',
-  },
+  gradientButton: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
+  submitButtonText: { fontSize: 17, fontWeight: '700', color: Colors.white },
+  buttonPressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+  buttonDisabled: { opacity: 0.6 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 8 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+  dividerText: { fontSize: 13, color: Colors.light, fontWeight: '600' },
   secondaryButton: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: Colors.white,
+    paddingVertical: 18, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 14, borderWidth: 2, borderColor: Colors.white,
     backgroundColor: 'transparent',
   },
-  secondaryButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: Colors.white,
-  },
+  secondaryButtonText: { fontSize: 17, fontWeight: '700', color: Colors.white },
   adminLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 16,
-    marginTop: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 16, marginTop: 16,
   },
-  adminLinkText: {
-    fontSize: 13,
-    color: Colors.textLight,
-    fontWeight: '600',
-  },
-  userTypeSelector: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 24,
-  },
+  adminLinkText: { fontSize: 13, color: Colors.textLight, fontWeight: '600' },
+  userTypeSelector: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   typeButton: {
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    gap: 6,
+    flex: 1, flexDirection: 'column', alignItems: 'center',
+    paddingVertical: 12, paddingHorizontal: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 12,
+    borderWidth: 2, borderColor: 'rgba(255, 255, 255, 0.2)', gap: 6,
   },
-  typeButtonActive: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.white,
-  },
-  typeButtonPressed: {
-    opacity: 0.8,
-  },
-  typeButtonText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textLight,
-  },
-  typeButtonTextActive: {
-    color: Colors.dark,
-  },
+  typeButtonActive: { backgroundColor: Colors.white, borderColor: Colors.white },
+  typeButtonPressed: { opacity: 0.8 },
+  typeButtonText: { fontSize: 11, fontWeight: '600', color: Colors.textLight },
+  typeButtonTextActive: { color: Colors.dark },
 });

@@ -15,6 +15,7 @@ export default function SignupProfessional() {
     phoneNumber: "",
     country: "",
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,6 +37,10 @@ export default function SignupProfessional() {
       }
       if (form.password !== form.confirmPassword) {
         setError("Passwords do not match");
+        return;
+      }
+      if (!acceptedTerms) {
+        setError("You must accept the Terms of Service to continue");
         return;
       }
 
@@ -180,25 +185,33 @@ export default function SignupProfessional() {
             </div>
           )}
 
+          {/* Terms Checkbox */}
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-1 w-4 h-4 rounded border-gray-300 text-[#D97706] focus:ring-[#D97706]"
+            />
+            <span className="text-sm text-gray-600">
+              I accept the{" "}
+              <Link to="/terms" className="text-[#D97706] hover:underline font-medium">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="text-[#D97706] hover:underline font-medium">
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+
           <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold"
+            disabled={isLoading || !acceptedTerms}
+            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold disabled:opacity-50"
           >
             {isLoading ? "Creating account..." : "Agree & Join"}
           </Button>
-
-          <p className="text-xs text-gray-400 text-center mt-4">
-            By clicking Agree & Join, you agree to the TalentBridge{" "}
-            <Link to="/terms" className="text-[#D97706] hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link to="/privacy" className="text-[#D97706] hover:underline">
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </form>
       </div>
     </div>
