@@ -89,6 +89,30 @@ export const adminRouter = createTRPCRouter({
       return { success: true, application: app };
     }),
 
+  // ── Unified status update (for web admin) ──────────────────
+  updateStatus: publicProcedure
+    .input(
+      z.object({
+        type: z.enum(["professional", "recruiter", "company"]),
+        id: z.string(),
+        status: z.enum(["approved", "rejected"]),
+      }),
+    )
+    .mutation(({ input }) => {
+      let app;
+      if (input.type === "professional") {
+        app = updateProfessionalStatus(input.id, input.status);
+      } else if (input.type === "recruiter") {
+        app = updateRecruiterStatus(input.id, input.status);
+      } else {
+        app = updateCompanyStatus(input.id, input.status);
+      }
+      if (!app) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Item not found" });
+      }
+      return { success: true, application: app };
+    }),
+
   // ── Jobs ───────────────────────────────────────────────────
   getJobs: publicProcedure.query(() => {
     return getAllJobs();
