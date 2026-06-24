@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   Briefcase,
@@ -8,11 +8,17 @@ import {
   DollarSign,
   Flag,
   Headphones,
+  Landmark,
   LogOut,
   Megaphone,
+  Plus,
+  Receipt,
+  Save,
   Search,
   Settings,
   Shield,
+  Smartphone,
+  Trash2,
   TrendingUp,
   UserCheck,
   Users,
@@ -52,12 +58,35 @@ interface DepartmentCard {
   bgColor: string;
 }
 
+const AFRICAN_CURRENCIES_FIN = [
+  { code: "GHS", symbol: "₵", rate: 15.5, label: "Ghana (GHS)" },
+  { code: "NGN", symbol: "₦", rate: 1550, label: "Nigeria (NGN)" },
+  { code: "KES", symbol: "KSh", rate: 130, label: "Kenya (KES)" },
+  { code: "ZAR", symbol: "R", rate: 18.5, label: "South Africa (ZAR)" },
+  { code: "UGX", symbol: "USh", rate: 3700, label: "Uganda (UGX)" },
+  { code: "TZS", symbol: "TSh", rate: 2600, label: "Tanzania (TZS)" },
+  { code: "RWF", symbol: "RF", rate: 1350, label: "Rwanda (RWF)" },
+  { code: "USD", symbol: "$", rate: 1, label: "US Dollar (USD)" },
+];
+
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [dept, setDept] = useState<Department>("overview");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const queryClient = useQueryClient();
+
+  const [finCurrency, setFinCurrency] = useState<{ code: string; symbol: string; rate: number; label: string }>({
+    code: "GHS", symbol: "₵", rate: 15.5, label: "Ghana (GHS)",
+  });
+
+  const [paymentConfig, setPaymentConfig] = useState({
+    operationalAccount: { bankName: "", accountNumber: "", accountHolder: "", branchCode: "", swiftCode: "" },
+    profitAccount: { bankName: "", accountNumber: "", accountHolder: "", branchCode: "", swiftCode: "" },
+    mobileMoneyAccounts: [] as { provider: string; number: string; accountName: string }[],
+  });
+  const [configDirty, setConfigDirty] = useState(false);
 
   const { data: professionals = [] } = useQuery<ProfessionalApplication[]>({
     queryKey: ["admin", "professionals"],
@@ -81,6 +110,43 @@ export default function AdminDashboard() {
     queryKey: ["admin", "jobs"],
     queryFn: () => trpcClient.admin.getJobs.query(),
     staleTime: 30000,
+  });
+
+  const { data: paymentConfigData } = useQuery({
+    queryKey: ["admin", "payment-config"],
+    queryFn: async () => {
+      const cfg = await (trpcClient as any).payments.getConfig.query();
+      setPaymentConfig({
+        operationalAccount: cfg.operationalAccount ?? { bankName: "", accountNumber: "", accountHolder: "", branchCode: "", swiftCode: "" },
+        profitAccount: cfg.profitAccount ?? { bankName: "", accountNumber: "", accountHolder: "", branchCode: "", swiftCode: "" },
+        mobileMoneyAccounts: cfg.mobileMoneyAccounts ?? [],
+      });
+      return cfg;
+    },
+    staleTime: 60000,
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ["admin", "transactions"],
+    queryFn: () => (trpcClient as any).payments.getTransactions.query({ limit: 50 }),
+    staleTime: 30000,
+  });
+
+  const saveConfigMutation = useMutation({
+    mutationFn: (config: typeof paymentConfig) =>
+      (trpcClient as any).payments.saveConfig.mutate(config),
+    onSuccess: () => {
+      setConfigDirty(false);
+      queryClient.invalidateQueries({ queryKey: ["admin", "payment-config"] });
+    },
+  });
+
+  const updateTxMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      (trpcClient as any).payments.updateStatus.mutate({ id, status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "transactions"] });
+    },
   });
 
   const pendingCount =
@@ -1244,108 +1310,371 @@ export default function AdminDashboard() {
           {/* ── FINANCIALS ──────────────────────────────────────── */}
           {dept === "financials" && (
             <div className="space-y-6">
-              {sectionLabel("Financials")}
+              {/* Currency selector */}
+              <div className="flex items-center justify-between">
+                {sectionLabel("Financials")}
+                <select
+                  value={finCurrency.code}
+                  onChange={(e) => {
+                    const cur = AFRICAN_CURRENCIES_FIN.find((c) => c.code === e.target.value);
+                    if (cur) setFinCurrency(cur);
+                  }}
+                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#D97706]"
+                >
+                  {AFRICAN_CURRENCIES_FIN.map((c) => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
 
+              {/* Revenue stats in local currency */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
-                  label="Monthly Revenue"
-                  value={`$${premiumEstimate.toLocaleString()}`}
+                  label="Est. Monthly Revenue"
+                  value={`${finCurrency.symbol}${Math.round((premiumEstimate + activeJobs * 15) * finCurrency.rate).toLocaleString()}`}
                   icon={<DollarSign className="w-5 h-5" />}
                   color="text-teal-600"
                   bg="bg-teal-50"
                 />
                 <StatCard
-                  label="Premium Subscribers"
-                  value={companies.filter((c) => c.status === "approved").length}
+                  label="Subscriptions"
+                  value={`${finCurrency.symbol}${Math.round(premiumEstimate * finCurrency.rate).toLocaleString()}`}
                   icon={<Building2 className="w-5 h-5" />}
                   color="text-amber-600"
                   bg="bg-amber-50"
                 />
                 <StatCard
-                  label="Active Plans"
-                  value="Pro Plan"
-                  icon={<CheckCircle className="w-5 h-5" />}
+                  label="Job Fees (est.)"
+                  value={`${finCurrency.symbol}${Math.round(activeJobs * 15 * finCurrency.rate).toLocaleString()}`}
+                  icon={<Briefcase className="w-5 h-5" />}
                   color="text-emerald-600"
                   bg="bg-emerald-50"
                 />
                 <StatCard
-                  label="Pending Payouts"
-                  value="$0"
-                  icon={<Clock className="w-5 h-5" />}
-                  color="text-rose-600"
-                  bg="bg-rose-50"
+                  label="Completed Txns"
+                  value={(Array.isArray(transactions) ? transactions.filter((t: any) => t.status === "completed").length : 0)}
+                  icon={<Receipt className="w-5 h-5" />}
+                  color="text-violet-600"
+                  bg="bg-violet-50"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Revenue breakdown */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    Revenue Breakdown
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-600">Company Subscriptions</span>
-                        <span className="text-sm font-bold text-gray-900">
-                          ${premiumEstimate.toLocaleString()}
-                        </span>
+              {/* Payment Accounts — Operational & Profit */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Payment Accounts</h3>
+                <p className="text-sm text-gray-500 mb-6">Configure bank accounts for receiving payments</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Operational Account */}
+                  <div className="p-5 rounded-xl bg-teal-50/50 border border-teal-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                        <Landmark className="w-4 h-4 text-teal-600" />
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-teal-500 h-2 rounded-full" style={{ width: `${premiumEstimate > 0 ? 70 : 0}%` }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-600">Job Posting Fees</span>
-                        <span className="text-sm font-bold text-gray-900">
-                          ${(activeJobs * 15).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${activeJobs > 0 ? 20 : 0}%` }} />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm">Operational Account</h4>
+                        <p className="text-xs text-gray-500">Day-to-day operations</p>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-600">Featured Listings</span>
-                        <span className="text-sm font-bold text-gray-900">$0</span>
+                    <div className="space-y-3">
+                      {[
+                        { key: "bankName", label: "Bank Name", placeholder: "e.g. GCB Bank" },
+                        { key: "accountNumber", label: "Account Number", placeholder: "Account number" },
+                        { key: "accountHolder", label: "Account Holder", placeholder: "Account holder name" },
+                        { key: "branchCode", label: "Branch Code (optional)", placeholder: "Branch/sort code" },
+                        { key: "swiftCode", label: "SWIFT Code (optional)", placeholder: "SWIFT/BIC" },
+                      ].map((f) => (
+                        <div key={f.key}>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
+                          <input
+                            type="text"
+                            placeholder={f.placeholder}
+                            value={(paymentConfig.operationalAccount as any)[f.key] ?? ""}
+                            onChange={(e) => {
+                              setPaymentConfig((prev) => ({
+                                ...prev,
+                                operationalAccount: { ...prev.operationalAccount, [f.key]: e.target.value },
+                              }));
+                              setConfigDirty(true);
+                            }}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Profit Account */}
+                  <div className="p-5 rounded-xl bg-amber-50/50 border border-amber-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                        <Landmark className="w-4 h-4 text-amber-600" />
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-violet-500 h-2 rounded-full" style={{ width: "0%" }} />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm">Profit Account</h4>
+                        <p className="text-xs text-gray-500">Revenue & savings</p>
                       </div>
+                    </div>
+                    <div className="space-y-3">
+                      {[
+                        { key: "bankName", label: "Bank Name", placeholder: "e.g. Ecobank" },
+                        { key: "accountNumber", label: "Account Number", placeholder: "Account number" },
+                        { key: "accountHolder", label: "Account Holder", placeholder: "Account holder name" },
+                        { key: "branchCode", label: "Branch Code (optional)", placeholder: "Branch/sort code" },
+                        { key: "swiftCode", label: "SWIFT Code (optional)", placeholder: "SWIFT/BIC" },
+                      ].map((f) => (
+                        <div key={f.key}>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
+                          <input
+                            type="text"
+                            placeholder={f.placeholder}
+                            value={(paymentConfig.profitAccount as any)[f.key] ?? ""}
+                            onChange={(e) => {
+                              setPaymentConfig((prev) => ({
+                                ...prev,
+                                profitAccount: { ...prev.profitAccount, [f.key]: e.target.value },
+                              }));
+                              setConfigDirty(true);
+                            }}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Transactions */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    Recent Transactions
-                  </h3>
-                  <div className="text-center py-8 text-gray-400">
-                    <DollarSign className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                    <p className="font-medium text-gray-500">No transactions yet</p>
-                    <p className="text-sm mt-1">
-                      Transactions will appear once payments are processed
-                    </p>
+                {/* Mobile Money Accounts */}
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm">Mobile Money Accounts</h4>
+                      <p className="text-xs text-gray-500">For MTN, Vodafone, AirtelTigo payments</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPaymentConfig((prev) => ({
+                          ...prev,
+                          mobileMoneyAccounts: [...prev.mobileMoneyAccounts, { provider: "", number: "", accountName: "" }],
+                        }));
+                        setConfigDirty(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#D97706] text-white text-xs font-medium hover:bg-[#B45309] transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add
+                    </button>
                   </div>
+                  {paymentConfig.mobileMoneyAccounts.length === 0 ? (
+                    <p className="text-sm text-gray-400 py-4 text-center">No mobile money accounts configured</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {paymentConfig.mobileMoneyAccounts.map((mm, idx) => (
+                        <div key={idx} className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                          <div className="w-8 h-8 rounded-lg bg-[#D97706]/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <Smartphone className="w-4 h-4 text-[#D97706]" />
+                          </div>
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Provider</label>
+                              <select
+                                value={mm.provider}
+                                onChange={(e) => {
+                                  setPaymentConfig((prev) => {
+                                    const updated = [...prev.mobileMoneyAccounts];
+                                    updated[idx] = { ...updated[idx], provider: e.target.value };
+                                    return { ...prev, mobileMoneyAccounts: updated };
+                                  });
+                                  setConfigDirty(true);
+                                }}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
+                              >
+                                <option value="">Select...</option>
+                                <option value="MTN">MTN Mobile Money</option>
+                                <option value="Vodafone">Vodafone Cash</option>
+                                <option value="AirtelTigo">AirtelTigo Money</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Number</label>
+                              <input
+                                type="text"
+                                placeholder="024 XXX XXXX"
+                                value={mm.number}
+                                onChange={(e) => {
+                                  setPaymentConfig((prev) => {
+                                    const updated = [...prev.mobileMoneyAccounts];
+                                    updated[idx] = { ...updated[idx], number: e.target.value };
+                                    return { ...prev, mobileMoneyAccounts: updated };
+                                  });
+                                  setConfigDirty(true);
+                                }}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
+                              />
+                            </div>
+                            <div className="flex items-end gap-2">
+                              <div className="flex-1">
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Account Name</label>
+                                <input
+                                  type="text"
+                                  placeholder="Name"
+                                  value={mm.accountName}
+                                  onChange={(e) => {
+                                    setPaymentConfig((prev) => {
+                                      const updated = [...prev.mobileMoneyAccounts];
+                                      updated[idx] = { ...updated[idx], accountName: e.target.value };
+                                      return { ...prev, mobileMoneyAccounts: updated };
+                                    });
+                                    setConfigDirty(true);
+                                  }}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
+                                />
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setPaymentConfig((prev) => ({
+                                    ...prev,
+                                    mobileMoneyAccounts: prev.mobileMoneyAccounts.filter((_, i) => i !== idx),
+                                  }));
+                                  setConfigDirty(true);
+                                }}
+                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* Save button */}
+                {configDirty && (
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => saveConfigMutation.mutate(paymentConfig)}
+                      disabled={saveConfigMutation.isPending}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                    >
+                      <Save className="w-4 h-4" />
+                      {saveConfigMutation.isPending ? "Saving..." : "Save Payment Accounts"}
+                    </button>
+                  </div>
+                )}
+                {saveConfigMutation.isSuccess && !configDirty && (
+                  <p className="mt-2 text-sm text-emerald-600 text-right">Accounts saved successfully</p>
+                )}
               </div>
 
-              {/* Subscription plans */}
+              {/* Transaction Log */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Transaction Log</h3>
+                    <p className="text-sm text-gray-500 mt-1">All payment transactions across the platform</p>
+                  </div>
+                </div>
+                {(Array.isArray(transactions) ? transactions : []).length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <Receipt className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium text-gray-500">No transactions yet</p>
+                    <p className="text-sm mt-1">Transactions will appear once users subscribe</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Method</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(Array.isArray(transactions) ? transactions : []).map((tx: any) => (
+                          <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-gray-900 text-sm">{tx.userName || tx.userEmail}</p>
+                              <p className="text-xs text-gray-500">{tx.userEmail}</p>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{tx.planName}</td>
+                            <td className="px-4 py-3">
+                              <p className="text-sm font-medium text-gray-900">{tx.amountLocal}</p>
+                              <p className="text-xs text-gray-400">${tx.amountUSD} USD</p>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                {tx.paymentMethod === "mobile_money" ? <Smartphone className="w-3 h-3" /> : tx.paymentMethod === "bank_transfer" ? <Landmark className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
+                                {tx.paymentMethod === "mobile_money" ? "Mobile Money" : tx.paymentMethod === "bank_transfer" ? "Bank Transfer" : "Debit Card"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              {tx.status === "pending" && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                  <Clock className="w-3 h-3" />Pending
+                                </span>
+                              )}
+                              {tx.status === "completed" && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <CheckCircle className="w-3 h-3" />Completed
+                                </span>
+                              )}
+                              {tx.status === "failed" && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                                  <XCircle className="w-3 h-3" />Failed
+                                </span>
+                              )}
+                              {tx.status === "refunded" && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                                  Refunded
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {new Date(tx.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {tx.status === "pending" && (
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    onClick={() => updateTxMutation.mutate({ id: tx.id, status: "completed" })}
+                                    className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                    title="Mark completed"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => updateTxMutation.mutate({ id: tx.id, status: "failed" })}
+                                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                                    title="Mark failed"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Subscription Plans reference */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Subscription Plans
-                </h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Subscription Plans</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl border-2 border-gray-200">
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Basic
-                    </p>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Basic</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
-                      $0
-                      <span className="text-sm font-normal text-gray-400">/mo</span>
+                      {finCurrency.symbol}0<span className="text-sm font-normal text-gray-400">/mo</span>
                     </p>
                     <ul className="mt-3 space-y-1.5 text-sm text-gray-600">
                       <li>• 1 job posting</li>
@@ -1355,17 +1684,13 @@ export default function AdminDashboard() {
                   </div>
                   <div className="p-4 rounded-xl border-2 border-[#D97706] bg-orange-50/30">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-[#D97706] uppercase tracking-wide">
-                        Pro
-                      </p>
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-[#D97706] text-white rounded-full">
-                        POPULAR
-                      </span>
+                      <p className="text-sm font-semibold text-[#D97706] uppercase tracking-wide">Pro</p>
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-[#D97706] text-white rounded-full">POPULAR</span>
                     </div>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
-                      $49
-                      <span className="text-sm font-normal text-gray-400">/mo</span>
+                      {finCurrency.symbol}{Math.round(49 * finCurrency.rate).toLocaleString()}<span className="text-sm font-normal text-gray-400">/mo</span>
                     </p>
+                    <p className="text-xs text-gray-400">≈ $49/mo</p>
                     <ul className="mt-3 space-y-1.5 text-sm text-gray-600">
                       <li>• 10 job postings</li>
                       <li>• Featured company profile</li>
@@ -1374,13 +1699,11 @@ export default function AdminDashboard() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-xl border-2 border-gray-200">
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Enterprise
-                    </p>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Enterprise</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
-                      $149
-                      <span className="text-sm font-normal text-gray-400">/mo</span>
+                      {finCurrency.symbol}{Math.round(149 * finCurrency.rate).toLocaleString()}<span className="text-sm font-normal text-gray-400">/mo</span>
                     </p>
+                    <p className="text-xs text-gray-400">≈ $149/mo</p>
                     <ul className="mt-3 space-y-1.5 text-sm text-gray-600">
                       <li>• Unlimited job postings</li>
                       <li>• Dedicated account manager</li>

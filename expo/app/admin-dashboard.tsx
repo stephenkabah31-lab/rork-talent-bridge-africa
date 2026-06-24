@@ -11,19 +11,23 @@ import {
   DollarSign,
   Flag,
   Headphones,
+  Landmark,
   Mail,
   MapPin,
   Megaphone,
+  Plus,
+  Save,
   Search,
   Settings,
   Shield,
+  Smartphone,
   TrendingUp,
   User,
   Users,
   X,
   XCircle,
 } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -35,6 +39,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
+import {
+  AFRICAN_CURRENCIES,
+  convertPrice,
+  Currency,
+} from '@/constants/currencies';
 import { trpc } from '@/lib/trpc';
 
 type DepartmentView =
@@ -54,12 +63,38 @@ export default function AdminDashboardScreen() {
   const [currentSubView, setCurrentSubView] = useState<SubViewType | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [finCurrency, setFinCurrency] = useState<Currency>(
+    AFRICAN_CURRENCIES.find((c) => c.code === 'GHS') || AFRICAN_CURRENCIES[0]
+  );
+
+  // Payment config form state
+  const [paymentConfig, setPaymentConfig] = useState({
+    operationalAccount: { bankName: '', accountNumber: '', accountHolder: '', branchCode: '', swiftCode: '' },
+    profitAccount: { bankName: '', accountNumber: '', accountHolder: '', branchCode: '', swiftCode: '' },
+    mobileMoneyAccounts: [] as { provider: string; number: string; accountName: string }[],
+  });
+  const [configDirty, setConfigDirty] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   // ── tRPC queries ───────────────────────────────────────────
   const professionalsQuery = trpc.admin.getProfessionals.useQuery();
   const recruitersQuery = trpc.admin.getRecruiters.useQuery();
   const companiesQuery = trpc.admin.getCompanies.useQuery();
   const jobsQuery = trpc.admin.getJobs.useQuery();
+  const paymentConfigQuery = (trpc as any).payments?.getConfig?.useQuery?.() ?? { data: null };
+  const transactionsQuery = (trpc as any).payments?.getTransactions?.useQuery?.({ limit: 50 }) ?? { data: [] };
+
+  // Load payment config from query
+  useEffect(() => {
+    const cfg = paymentConfigQuery?.data;
+    if (cfg && !configDirty) {
+      setPaymentConfig({
+        operationalAccount: cfg.operationalAccount ?? { bankName: '', accountNumber: '', accountHolder: '', branchCode: '', swiftCode: '' },
+        profitAccount: cfg.profitAccount ?? { bankName: '', accountNumber: '', accountHolder: '', branchCode: '', swiftCode: '' },
+        mobileMoneyAccounts: cfg.mobileMoneyAccounts ?? [],
+      });
+    }
+  }, [paymentConfigQuery?.data]);
 
   const professionals = professionalsQuery.data ?? [];
   const recruiters = recruitersQuery.data ?? [];
@@ -488,22 +523,213 @@ export default function AdminDashboardScreen() {
   );
 
   // ── Financials ────────────────────────────────────────────
-  const renderFinancials = () => (
-    <View style={styles.listContainer}>
-      <SectionTitle title="Financials" subtitle="Revenue, subscriptions, and transactions" />
+  const renderFinancials = () => {
+    const txs = (transactionsQuery?.data ?? []) as any[];
+    const completedTxns = txs.filter((t: any) => t.status === 'completed').length;
+    const convertedRevenue = premiumRevenue + activeJobs * 15;
 
-      <View style={styles.statsGrid}>
-        <StatCardSmall icon={<DollarSign color="#14B8A6" size={20} />} value={`$${premiumRevenue}`} label="Est. Revenue" color="#14B8A6" />
-        <StatCardSmall icon={<Building2 color="#F59E0B" size={20} />} value={companies.filter((c) => c.status === 'approved').length} label="Subscribers" color="#F59E0B" />
-        <StatCardSmall icon={<Briefcase color="#8B5CF6" size={20} />} value={`$${activeJobs * 15}`} label="Job Fees" color="#8B5CF6" />
+    return (
+    <View style={styles.listContainer}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <SectionTitle title="Financials" subtitle="Revenue, payments & accounts" />
+        <Pressable
+          style={({ pressed }) => [
+            styles.currencySelector,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => setShowCurrencyPicker(true)}
+        >
+          <Text style={styles.currencyText}>{finCurrency.symbol} {finCurrency.code}</Text>
+          <ChevronRight color={Colors.textLight} size={14} style={{ transform: [{ rotate: '90deg' }] }} />
+        </Pressable>
       </View>
 
+      <View style={styles.statsGrid}>
+        <StatCardSmall
+          icon={<DollarSign color="#14B8A6" size={20} />}
+          value={convertPrice(convertedRevenue, finCurrency)}
+          label="Est. Revenue"
+          color="#14B8A6"
+        />
+        <StatCardSmall
+          icon={<Building2 color="#F59E0B" size={20} />}
+          value={companies.filter((c) => c.status === 'approved').length}
+          label="Subscribers"
+          color="#F59E0B"
+        />
+        <StatCardSmall
+          icon={<Briefcase color="#8B5CF6" size={20} />}
+          value={convertPrice(activeJobs * 15, finCurrency)}
+          label="Job Fees"
+          color="#8B5CF6"
+        />
+        <StatCardSmall
+          icon={<CheckCircle color="#10B981" size={20} />}
+          value={completedTxns}
+          label="Completed"
+          color="#10B981"
+        />
+      </View>
+
+      {/* Payment Accounts — Operational & Profit */}
+      <View style={styles.infoSection}>
+        <Text style={styles.infoSectionTitle}>Operational Account</Text>
+        {['bankName', 'accountNumber', 'accountHolder'].map((key) => (
+          <View key={key} style={{ marginBottom: 10 }}>
+            <Text style={styles.inputLabelSm}>
+              {key === 'bankName' ? 'Bank Name' : key === 'accountNumber' ? 'Account Number' : 'Account Holder'}
+            </Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder={key === 'bankName' ? 'e.g. GCB Bank' : key === 'accountNumber' ? 'Account number' : 'Account holder name'}
+              placeholderTextColor={Colors.textLight}
+              value={(paymentConfig.operationalAccount as any)[key] ?? ''}
+              onChangeText={(text) => {
+                setPaymentConfig((prev) => ({
+                  ...prev,
+                  operationalAccount: { ...prev.operationalAccount, [key]: text },
+                }));
+                setConfigDirty(true);
+              }}
+            />
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.infoSection}>
+        <Text style={styles.infoSectionTitle}>Profit Account</Text>
+        {['bankName', 'accountNumber', 'accountHolder'].map((key) => (
+          <View key={key} style={{ marginBottom: 10 }}>
+            <Text style={styles.inputLabelSm}>
+              {key === 'bankName' ? 'Bank Name' : key === 'accountNumber' ? 'Account Number' : 'Account Holder'}
+            </Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder={key === 'bankName' ? 'e.g. Ecobank' : key === 'accountNumber' ? 'Account number' : 'Account holder name'}
+              placeholderTextColor={Colors.textLight}
+              value={(paymentConfig.profitAccount as any)[key] ?? ''}
+              onChangeText={(text) => {
+                setPaymentConfig((prev) => ({
+                  ...prev,
+                  profitAccount: { ...prev.profitAccount, [key]: text },
+                }));
+                setConfigDirty(true);
+              }}
+            />
+          </View>
+        ))}
+      </View>
+
+      {/* Mobile Money */}
+      <View style={styles.infoSection}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={styles.infoSectionTitle}>Mobile Money</Text>
+          <Pressable
+            style={({ pressed }) => [
+              { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={() => {
+              setPaymentConfig((prev) => ({
+                ...prev,
+                mobileMoneyAccounts: [...prev.mobileMoneyAccounts, { provider: '', number: '', accountName: '' }],
+              }));
+              setConfigDirty(true);
+            }}
+          >
+            <Plus color={Colors.white} size={16} />
+            <Text style={{ color: Colors.white, fontSize: 13, fontWeight: '600' }}>Add</Text>
+          </Pressable>
+        </View>
+        {paymentConfig.mobileMoneyAccounts.map((mm, idx) => (
+          <View key={idx} style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <Smartphone color={Colors.primary} size={16} />
+              <Text style={{ color: Colors.white, fontWeight: '600', fontSize: 14, flex: 1 }}>Account {idx + 1}</Text>
+              <Pressable
+                onPress={() => {
+                  setPaymentConfig((prev) => ({
+                    ...prev,
+                    mobileMoneyAccounts: prev.mobileMoneyAccounts.filter((_, i) => i !== idx),
+                  }));
+                  setConfigDirty(true);
+                }}
+              >
+                <X color={Colors.error} size={16} />
+              </Pressable>
+            </View>
+            <TextInput
+              style={[styles.inputFieldSm, { marginBottom: 6 }]}
+              placeholder="Provider (MTN, Vodafone, AirtelTigo)"
+              placeholderTextColor={Colors.textLight}
+              value={mm.provider}
+              onChangeText={(text) => {
+                setPaymentConfig((prev) => {
+                  const updated = [...prev.mobileMoneyAccounts];
+                  updated[idx] = { ...updated[idx], provider: text };
+                  return { ...prev, mobileMoneyAccounts: updated };
+                });
+                setConfigDirty(true);
+              }}
+            />
+            <TextInput
+              style={[styles.inputFieldSm, { marginBottom: 6 }]}
+              placeholder="Mobile Number"
+              placeholderTextColor={Colors.textLight}
+              keyboardType="phone-pad"
+              value={mm.number}
+              onChangeText={(text) => {
+                setPaymentConfig((prev) => {
+                  const updated = [...prev.mobileMoneyAccounts];
+                  updated[idx] = { ...updated[idx], number: text };
+                  return { ...prev, mobileMoneyAccounts: updated };
+                });
+                setConfigDirty(true);
+              }}
+            />
+            <TextInput
+              style={styles.inputFieldSm}
+              placeholder="Account Name"
+              placeholderTextColor={Colors.textLight}
+              value={mm.accountName}
+              onChangeText={(text) => {
+                setPaymentConfig((prev) => {
+                  const updated = [...prev.mobileMoneyAccounts];
+                  updated[idx] = { ...updated[idx], accountName: text };
+                  return { ...prev, mobileMoneyAccounts: updated };
+                });
+                setConfigDirty(true);
+              }}
+            />
+          </View>
+        ))}
+      </View>
+
+      {configDirty && (
+        <Pressable
+          style={({ pressed }) => [
+            styles.saveConfigButton,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => {
+            (trpc as any).payments?.saveConfig?.mutate?.(paymentConfig).then(() => {
+              setConfigDirty(false);
+              paymentConfigQuery?.refetch?.();
+            });
+          }}
+        >
+          <Save color={Colors.white} size={18} />
+          <Text style={styles.saveConfigText}>Save Payment Accounts</Text>
+        </Pressable>
+      )}
+
+      {/* Subscription Plans */}
       <View style={styles.infoSection}>
         <Text style={styles.infoSectionTitle}>Subscription Plans</Text>
         <View style={styles.planCard}>
           <View style={styles.planHeader}>
             <Text style={styles.planName}>Basic</Text>
-            <Text style={styles.planPrice}>$0<Text style={styles.planPeriod}>/mo</Text></Text>
+            <Text style={styles.planPrice}>{finCurrency.symbol}0<Text style={styles.planPeriod}>/mo</Text></Text>
           </View>
         </View>
         <View style={[styles.planCard, { borderColor: '#D97706', borderWidth: 2, backgroundColor: 'rgba(217,119,6,0.05)' }]}>
@@ -514,29 +740,88 @@ export default function AdminDashboardScreen() {
                 <Text style={styles.popularBadgeText}>POPULAR</Text>
               </View>
             </View>
-            <Text style={styles.planPrice}>$49<Text style={styles.planPeriod}>/mo</Text></Text>
+            <Text style={styles.planPrice}>{convertPrice(49, finCurrency)}<Text style={styles.planPeriod}>/mo</Text></Text>
           </View>
         </View>
         <View style={styles.planCard}>
           <View style={styles.planHeader}>
             <Text style={styles.planName}>Enterprise</Text>
-            <Text style={styles.planPrice}>$149<Text style={styles.planPeriod}>/mo</Text></Text>
+            <Text style={styles.planPrice}>{convertPrice(149, finCurrency)}<Text style={styles.planPeriod}>/mo</Text></Text>
           </View>
         </View>
       </View>
 
+      {/* Recent Transactions */}
       <View style={[styles.infoSection, { marginTop: 12 }]}>
         <Text style={styles.infoSectionTitle}>Recent Transactions</Text>
-        <View style={styles.emptyState}>
-          <DollarSign color={Colors.textLight} size={48} />
-          <Text style={styles.emptyStateText}>No transactions yet</Text>
-          <Text style={styles.emptyStateSubtext}>
-            Transactions will appear once payments are processed
-          </Text>
-        </View>
+        {txs.length === 0 ? (
+          <View style={styles.emptyState}>
+            <DollarSign color={Colors.textLight} size={48} />
+            <Text style={styles.emptyStateText}>No transactions yet</Text>
+            <Text style={styles.emptyStateSubtext}>Transactions will appear once payments are processed</Text>
+          </View>
+        ) : (
+          txs.map((tx: any) => (
+            <View key={tx.id} style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: Colors.white, fontWeight: '700', fontSize: 14 }}>{tx.userName || tx.userEmail}</Text>
+                  <Text style={{ color: Colors.light, fontSize: 12 }}>{tx.planName} • {tx.amountLocal}</Text>
+                  <Text style={{ color: Colors.textLight, fontSize: 11 }}>
+                    {tx.paymentMethod === 'mobile_money' ? 'Mobile Money' : tx.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Debit Card'}
+                  </Text>
+                </View>
+                <View style={[
+                  { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+                  tx.status === 'completed' ? { backgroundColor: 'rgba(16,185,129,0.2)' } :
+                  tx.status === 'pending' ? { backgroundColor: 'rgba(245,158,11,0.2)' } :
+                  { backgroundColor: 'rgba(239,68,68,0.2)' },
+                ]}>
+                  <Text style={{
+                    fontSize: 11, fontWeight: '700',
+                    color: tx.status === 'completed' ? '#10B981' : tx.status === 'pending' ? '#F59E0B' : '#EF4444',
+                  }}>
+                    {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ))
+        )}
       </View>
+
+      {/* Currency Picker Modal */}
+      {showCurrencyPicker && (
+        <View style={styles.currencyModalOverlay}>
+          <Pressable style={{ flex: 1 }} onPress={() => setShowCurrencyPicker(false)} />
+          <View style={styles.currencyModalContent}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: Colors.white, marginBottom: 16 }}>Select Currency</Text>
+            {AFRICAN_CURRENCIES.map((c) => (
+              <Pressable
+                key={c.code}
+                style={[
+                  {
+                    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                    padding: 16, borderRadius: 12, marginBottom: 8,
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                  },
+                  finCurrency.code === c.code && { backgroundColor: Colors.primary },
+                ]}
+                onPress={() => {
+                  setFinCurrency(c);
+                  setShowCurrencyPicker(false);
+                }}
+              >
+                <Text style={{ color: Colors.white, fontSize: 15, fontWeight: '600' }}>{c.country} ({c.code})</Text>
+                <Text style={{ color: finCurrency.code === c.code ? Colors.white : Colors.textLight, fontSize: 16 }}>{c.symbol}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
+  };
 
   // ── Support ───────────────────────────────────────────────
   const renderSupport = () => (
@@ -1257,4 +1542,34 @@ const styles = StyleSheet.create({
   // ── Loading ──
   loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
   loadingText: { fontSize: 16, color: Colors.white },
+
+  // ── Financials inputs ──
+  inputLabelSm: { fontSize: 12, fontWeight: '600' as const, color: Colors.textLight, marginBottom: 4 },
+  inputField: {
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: 14,
+    fontSize: 14, color: Colors.white, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  inputFieldSm: {
+    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: 10,
+    fontSize: 13, color: Colors.white, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  currencySelector: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+  },
+  currencyText: { fontSize: 14, fontWeight: '700' as const, color: Colors.white },
+  saveConfigButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#14B8A6', padding: 16, borderRadius: 16, marginTop: 8, marginBottom: 16,
+  },
+  saveConfigText: { fontSize: 15, fontWeight: '700' as const, color: Colors.white },
+  currencyModalOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end',
+  },
+  currencyModalContent: {
+    backgroundColor: Colors.darkLight, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 24, maxHeight: '60%',
+  },
 });

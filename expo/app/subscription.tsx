@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
+import { trpc } from '@/lib/trpc';
 import {
   AFRICAN_CURRENCIES,
   convertPrice,
@@ -67,7 +68,7 @@ export default function SubscriptionScreen() {
     setSelectedPaymentMethod(method);
   };
 
-  const processPayment = () => {
+  const processPayment = async () => {
     if (!selectedPaymentMethod) {
       Alert.alert('Error', 'Please select a payment method');
       return;
@@ -90,8 +91,32 @@ export default function SubscriptionScreen() {
       return;
     }
 
-    const price = userPlan ? convertPrice(userPlan.priceUSD, selectedCurrency) : '';
+    if (!userPlan || !user) {
+      Alert.alert('Error', 'No plan or user data available');
+      return;
+    }
+
+    const price = convertPrice(userPlan.priceUSD, selectedCurrency);
     setShowPaymentModal(false);
+    
+    // Record the transaction in the backend
+    try {
+      await (trpc as any).payments.createTransaction.mutate({
+        userId: (user as any).id ?? 'unknown',
+        userEmail: user.email,
+        userName: user.fullName ?? user.email,
+        planId: userPlan.id,
+        planName: userPlan.name,
+        amountUSD: userPlan.priceUSD,
+        amountLocal: price,
+        currencyCode: selectedCurrency.code,
+        paymentMethod: selectedPaymentMethod,
+        status: 'pending',
+        details: JSON.stringify(paymentDetails),
+      });
+    } catch (err) {
+      console.warn('[subscription] Failed to record transaction:', err);
+    }
     
     setTimeout(() => {
       Alert.alert(

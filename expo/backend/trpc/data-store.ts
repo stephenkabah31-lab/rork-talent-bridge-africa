@@ -932,6 +932,173 @@ export async function createScheduledCall(call: ScheduledCall): Promise<void> {
   });
 }
 
+// ── Payment Config helpers ──────────────────────────────────────
+
+export interface BankAccount {
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  branchCode?: string;
+  swiftCode?: string;
+}
+
+export interface MobileMoneyAccount {
+  provider: string; // e.g. "MTN", "Vodafone", "AirtelTigo"
+  number: string;
+  accountName: string;
+}
+
+export interface PaymentConfig {
+  id: string;
+  operationalAccount: BankAccount;
+  profitAccount: BankAccount;
+  mobileMoneyAccounts: MobileMoneyAccount[];
+  updatedAt: string;
+}
+
+export interface Transaction {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  planId: string;
+  planName: string;
+  amountUSD: number;
+  amountLocal: string;
+  currencyCode: string;
+  paymentMethod: "mobile_money" | "bank_transfer" | "debit_card";
+  status: "pending" | "completed" | "failed" | "refunded";
+  details: string; // JSON with payment-specific details
+  createdAt: string;
+}
+
+function dbPaymentConfigToApp(row: Record<string, unknown>): PaymentConfig {
+  const opAcc = (row.operational_account as Record<string, unknown>) ?? {};
+  const profitAcc = (row.profit_account as Record<string, unknown>) ?? {};
+  return {
+    id: row.id as string,
+    operationalAccount: {
+      bankName: (opAcc.bank_name as string) ?? "",
+      accountNumber: (opAcc.account_number as string) ?? "",
+      accountHolder: (opAcc.account_holder as string) ?? "",
+      branchCode: (opAcc.branch_code as string) ?? undefined,
+      swiftCode: (opAcc.swift_code as string) ?? undefined,
+    },
+    profitAccount: {
+      bankName: (profitAcc.bank_name as string) ?? "",
+      accountNumber: (profitAcc.account_number as string) ?? "",
+      accountHolder: (profitAcc.account_holder as string) ?? "",
+      branchCode: (profitAcc.branch_code as string) ?? undefined,
+      swiftCode: (profitAcc.swift_code as string) ?? undefined,
+    },
+    mobileMoneyAccounts: ((row.mobile_money_accounts as Record<string, unknown>[]) ?? []).map((m: Record<string, unknown>) => ({
+      provider: (m.provider as string) ?? "",
+      number: (m.number as string) ?? "",
+      accountName: (m.account_name as string) ?? "",
+    })),
+    updatedAt: (row.updated_at as string) ?? new Date().toISOString(),
+  };
+}
+
+function dbTransactionToApp(row: Record<string, unknown>): Transaction {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    userEmail: (row.user_email as string) ?? "",
+    userName: (row.user_name as string) ?? "",
+    planId: (row.plan_id as string) ?? "",
+    planName: (row.plan_name as string) ?? "",
+    amountUSD: (row.amount_usd as number) ?? 0,
+    amountLocal: (row.amount_local as string) ?? "",
+    currencyCode: (row.currency_code as string) ?? "USD",
+    paymentMethod: row.payment_method as Transaction["paymentMethod"],
+    status: row.status as Transaction["status"],
+    details: (row.details as string) ?? "{}",
+    createdAt: (row.created_at as string) ?? new Date().toISOString(),
+  };
+}
+
+export async function getPaymentConfig(): Promise<PaymentConfig | null> {
+  const { data } = await (supabase as any)
+    .from("payment_config")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .single();
+  return data ? dbPaymentConfigToApp(data) : null;
+}
+
+export async function savePaymentConfig(config: Omit<PaymentConfig, "id" | "updatedAt">): Promise<PaymentConfig> {
+  const id = "config-001";
+  const now = new Date().toISOString();
+  await (supabase as any).from("payment_config").upsert({
+    id,
+    operational_account: {
+      bank_name: config.operationalAccount.bankName,
+      account_number: config.operationalAccount.accountNumber,
+      account_holder: config.operationalAccount.accountHolder,
+      branch_code: config.operationalAccount.branchCode ?? null,
+      swift_code: config.operationalAccount.swiftCode ?? null,
+    },
+    profit_account: {
+      bank_name: config.profitAccount.bankName,
+      account_number: config.profitAccount.accountNumber,
+      account_holder: config.profitAccount.accountHolder,
+      branch_code: config.profitAccount.branchCode ?? null,
+      swift_code: config.profitAccount.swiftCode ?? null,
+    },
+    mobile_money_accounts: config.mobileMoneyAccounts.map((m) => ({
+      provider: m.provider,
+      number: m.number,
+      account_name: m.accountName,
+    })),
+    updated_at: now,
+  }, { onConflict: "id" });
+  return { id, ...config, updatedAt: now };
+}
+
+export async function getAllTransactions(limit = 50): Promise<Transaction[]> {
+  const { data } = await (supabase as any)
+    .from("transactions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!data) return [];
+  return data.map(dbTransactionToApp);
+}
+
+export async function createTransaction(tx: Omit<Transaction, "id" | "createdAt">): Promise<Transaction> {
+  const id = `tx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const now = new Date().toISOString();
+  await (supabase as any).from("transactions").insert({
+    id,
+    user_id: tx.userId,
+    user_email: tx.userEmail,
+    user_name: tx.userName,
+    plan_id: tx.planId,
+    plan_name: tx.planName,
+    amount_usd: tx.amountUSD,
+    amount_local: tx.amountLocal,
+    currency_code: tx.currencyCode,
+    payment_method: tx.paymentMethod,
+    status: tx.status,
+    details: tx.details,
+    created_at: now,
+  });
+  return { id, ...tx, createdAt: now };
+}
+
+export async function updateTransactionStatus(
+  id: string,
+  status: Transaction["status"],
+): Promise<boolean> {
+  const { error } = await (supabase as any)
+    .from("transactions")
+    .update({ status })
+    .eq("id", id);
+  return !error;
+}
+
 // ── Post helpers ─────────────────────────────────────────────────
 
 export async function getAllPosts(): Promise<Post[]> {
