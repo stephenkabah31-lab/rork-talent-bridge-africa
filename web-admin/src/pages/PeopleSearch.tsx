@@ -50,7 +50,7 @@ export default function PeopleSearch() {
             placeholder="Search by name, skill, or company"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
             autoFocus
           />
         </div>
@@ -73,7 +73,7 @@ export default function PeopleSearch() {
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#0A66C2] flex items-center justify-center text-white font-bold shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#D97706] flex items-center justify-center text-white font-bold shrink-0">
                     {(person.fullName || person.name).charAt(0)}
                   </div>
                   <div>
@@ -106,7 +106,7 @@ export default function PeopleSearch() {
                   className={`rounded-full text-sm ${
                     connected.has(person.id)
                       ? ""
-                      : "bg-[#0A66C2] hover:bg-[#004182]"
+                      : "bg-[#D97706] hover:bg-[#9A3412]"
                   }`}
                 >
                   <UserPlus className="w-3.5 h-3.5 mr-1.5" />

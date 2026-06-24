@@ -122,7 +122,7 @@ export default function Feed() {
             <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
             <Button
               onClick={() => navigate("/post-job")}
-              className="rounded-full bg-[#0A66C2] hover:bg-[#004182] gap-2"
+              className="rounded-full bg-[#D97706] hover:bg-[#9A3412] gap-2"
             >
               <Plus className="w-4 h-4" /> Post a Job
             </Button>
@@ -131,7 +131,7 @@ export default function Feed() {
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { icon: Briefcase, label: "Active Jobs", value: jobs.filter(j => j.status === "active").length, color: "text-[#0A66C2]", bg: "bg-blue-50" },
+              { icon: Briefcase, label: "Active Jobs", value: jobs.filter(j => j.status === "active").length, color: "text-[#D97706]", bg: "bg-amber-50" },
               { icon: Clock, label: "Pending", value: 0, color: "text-amber-600", bg: "bg-amber-50" },
               { icon: FileText, label: "Reviewing", value: 0, color: "text-emerald-600", bg: "bg-emerald-50" },
               { icon: CheckCircle, label: "Shortlisted", value: 0, color: "text-violet-600", bg: "bg-violet-50" },
@@ -153,7 +153,7 @@ export default function Feed() {
               <div className="text-center py-12 text-gray-400">
                 <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="font-medium">No jobs posted yet</p>
-                <Button onClick={() => navigate("/post-job")} variant="link" className="text-[#0A66C2] mt-2">
+                <Button onClick={() => navigate("/post-job")} variant="link" className="text-[#D97706] mt-2">
                   Post your first job
                 </Button>
               </div>
@@ -170,7 +170,7 @@ export default function Feed() {
                       <p className="text-sm text-gray-500">{job.location} · {job.type}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-[#0A66C2]">{job.applicants} applicants</p>
+                      <p className="text-sm font-semibold text-[#D97706]">{job.applicants} applicants</p>
                       <p className="text-xs text-gray-400 mt-0.5">
                         {typeof job.postedAt === "string"
                           ? new Date(job.postedAt).toLocaleDateString()
@@ -211,9 +211,9 @@ export default function Feed() {
           {/* Left sidebar */}
           <aside className="hidden lg:block w-[225px] shrink-0">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-[68px]">
-              <div className="h-14 bg-gradient-to-r from-[#0A66C2] to-[#004182]" />
+              <div className="h-14 bg-gradient-to-r from-[#D97706] to-[#9A3412]" />
               <div className="px-4 pb-4 -mt-7">
-                <div className="w-14 h-14 rounded-full border-2 border-white bg-[#0A66C2] flex items-center justify-center text-white text-xl font-bold">
+                <div className="w-14 h-14 rounded-full border-2 border-white bg-[#D97706] flex items-center justify-center text-white text-xl font-bold">
                   {(user?.fullName || user?.name || "U").charAt(0)}
                 </div>
                 <h3 className="font-semibold text-gray-900 mt-2">{user?.fullName || user?.name}</h3>
@@ -222,7 +222,7 @@ export default function Feed() {
               <div className="border-t border-gray-100 px-4 py-3">
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Connections</span>
-                  <span className="text-[#0A66C2] font-semibold">342</span>
+                  <span className="text-[#D97706] font-semibold">342</span>
                 </div>
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function Feed() {
             {/* Create post */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#0A66C2] flex items-center justify-center text-white text-sm font-bold shrink-0">
+                <div className="w-11 h-11 rounded-full bg-[#D97706] flex items-center justify-center text-white text-sm font-bold shrink-0">
                   {(user?.fullName || user?.name || "U").charAt(0)}
                 </div>
                 <button
@@ -245,7 +245,7 @@ export default function Feed() {
               </div>
               <div className="flex items-center justify-around mt-3">
                 {[
-                  { icon: ImageIcon, label: "Photo", color: "text-blue-500" },
+                  { icon: ImageIcon, label: "Photo", color: "text-[#D97706]" },
                   { icon: FileText, label: "Article", color: "text-emerald-500" },
                 ].map((action) => (
                   <button
@@ -292,7 +292,7 @@ export default function Feed() {
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-sm text-gray-900">{post.author.name}</span>
                           {post.author.isVerified && (
-                            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#0A66C2] text-white text-[8px] font-bold">✓</span>
+                            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#D97706] text-white text-[8px] font-bold">✓</span>
                           )}
                         </div>
                         <p className="text-xs text-gray-500">{post.author.title}</p>
@@ -334,12 +334,12 @@ export default function Feed() {
                   <div className="flex items-center justify-around px-2 py-1">
                     <button
                       onClick={() => handleLike(post.id)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${post.likedBy.includes("current") ? "text-[#0A66C2]" : "text-gray-500 hover:bg-gray-50"}`}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${post.likedBy.includes("current") ? "text-[#D97706]" : "text-gray-500 hover:bg-gray-50"}`}
                     >
                       <Heart
                         className="w-5 h-5"
-                        fill={post.likedBy.includes("current") ? "#0A66C2" : "none"}
-                        stroke={post.likedBy.includes("current") ? "#0A66C2" : "currentColor"}
+                        fill={post.likedBy.includes("current") ? "#D97706" : "none"}
+                        stroke={post.likedBy.includes("current") ? "#D97706" : "currentColor"}
                       />
                       Like
                     </button>

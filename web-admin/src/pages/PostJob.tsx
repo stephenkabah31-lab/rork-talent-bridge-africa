@@ -93,7 +93,7 @@ export default function PostJob() {
                   placeholder="e.g. Senior Software Engineer"
                   value={form.title}
                   onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -105,7 +105,7 @@ export default function PostJob() {
                   type="text"
                   value={form.company}
                   onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
               <div>
@@ -117,7 +117,7 @@ export default function PostJob() {
                     placeholder="e.g. Lagos, Nigeria"
                     value={form.location}
                     onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -129,7 +129,7 @@ export default function PostJob() {
                 <select
                   value={form.type}
                   onChange={(e) => setForm((p) => ({ ...p, type: e.target.value as typeof form.type }))}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
                 >
                   <option>Full-time</option>
                   <option>Part-time</option>
@@ -146,7 +146,7 @@ export default function PostJob() {
                     placeholder="e.g. $50,000 - $70,000"
                     value={form.salary}
                     onChange={(e) => setForm((p) => ({ ...p, salary: e.target.value }))}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function PostJob() {
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                 rows={6}
                 placeholder="Describe the role, responsibilities, and what makes this opportunity great..."
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] resize-none"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] resize-none"
               />
               <p className="text-xs text-gray-400 mt-1">{form.description.length} characters</p>
             </div>
@@ -185,7 +185,7 @@ export default function PostJob() {
                   value={form.newRequirement}
                   onChange={(e) => setForm((p) => ({ ...p, newRequirement: e.target.value }))}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRequirement())}
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
+                  className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
                 />
                 <Button type="button" onClick={addRequirement} variant="outline" size="sm">
                   <Plus className="w-4 h-4" />
@@ -200,7 +200,7 @@ export default function PostJob() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-full bg-[#0A66C2] hover:bg-[#004182] h-11 font-semibold"
+              className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold"
             >
               <FileText className="w-4 h-4 mr-2" />
               {isLoading ? "Posting..." : "Post Job"}

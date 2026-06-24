@@ -52,7 +52,7 @@ export default function Subscription() {
           <select
             value={currency.code}
             onChange={(e) => setCurrency(CURRENCIES.find((c) => c.code === e.target.value) || CURRENCIES[0])}
-            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
+            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>

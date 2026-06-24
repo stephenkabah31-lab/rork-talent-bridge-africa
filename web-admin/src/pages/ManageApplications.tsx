@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
   pending: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: <Clock className="w-3.5 h-3.5" /> },
-  reviewing: { bg: "bg-blue-50 border-blue-200", text: "text-blue-700", icon: <FileText className="w-3.5 h-3.5" /> },
+  reviewing: { bg: "bg-amber-50 border-amber-200", text: "text-[#D97706]", icon: <FileText className="w-3.5 h-3.5" /> },
   shortlisted: { bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700", icon: <CheckCircle className="w-3.5 h-3.5" /> },
   accepted: { bg: "bg-green-50 border-green-200", text: "text-green-700", icon: <CheckCircle className="w-3.5 h-3.5" /> },
   rejected: { bg: "bg-red-50 border-red-200", text: "text-red-700", icon: <XCircle className="w-3.5 h-3.5" /> },

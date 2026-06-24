@@ -92,15 +92,15 @@ export default function ApplyJob() {
               <div
                 key={s}
                 className={`flex items-center gap-2 text-sm font-medium ${
-                  i <= step ? "text-[#0A66C2]" : "text-gray-300"
+                  i <= step ? "text-[#D97706]" : "text-gray-300"
                 }`}
               >
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                     i < step
-                      ? "bg-[#0A66C2] text-white"
+                      ? "bg-[#D97706] text-white"
                       : i === step
-                        ? "bg-[#0A66C2] text-white"
+                        ? "bg-[#D97706] text-white"
                         : "bg-gray-200 text-gray-400"
                   }`}
                 >
@@ -112,7 +112,7 @@ export default function ApplyJob() {
           </div>
           <div className="h-1 bg-gray-200 rounded-full">
             <div
-              className="h-full bg-[#0A66C2] rounded-full transition-all duration-300"
+              className="h-full bg-[#D97706] rounded-full transition-all duration-300"
               style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
             />
           </div>
@@ -130,7 +130,7 @@ export default function ApplyJob() {
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input type="text" value={form.fullName} onChange={update("fullName")}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" />
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent" />
                   </div>
                 </div>
                 <div>
@@ -138,7 +138,7 @@ export default function ApplyJob() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input type="email" value={form.email} onChange={update("email")}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" />
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -147,7 +147,7 @@ export default function ApplyJob() {
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input type="tel" value={form.phoneNumber} onChange={update("phoneNumber")}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" />
+                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent" />
                     </div>
                   </div>
                   <div>
@@ -155,7 +155,7 @@ export default function ApplyJob() {
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input type="text" value={form.location} onChange={update("location")}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" />
+                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent" />
                     </div>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function ApplyJob() {
             {/* Step 1: Resume */}
             {step === 1 && (
               <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#0A66C2] transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#D97706] transition-colors cursor-pointer">
                   <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                   <p className="text-sm font-medium text-gray-700">Upload your resume</p>
                   <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX (max 5MB)</p>
@@ -188,7 +188,7 @@ export default function ApplyJob() {
                   onChange={update("coverLetter")}
                   rows={8}
                   placeholder="Tell the employer why you're a great fit for this role..."
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent resize-none"
                 />
                 <p className="text-xs text-gray-400 mt-1">{form.coverLetter.length} characters</p>
               </div>
@@ -201,7 +201,7 @@ export default function ApplyJob() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Why should we hire you?</label>
                   <textarea value={form.whyYou} onChange={update("whyYou")} rows={3}
                     placeholder="What makes you the ideal candidate?"
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent resize-none" />
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent resize-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -210,7 +210,7 @@ export default function ApplyJob() {
                     </label>
                     <input type="text" value={form.availability} onChange={update("availability")}
                       placeholder="Immediate / 2 weeks..."
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" />
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -218,7 +218,7 @@ export default function ApplyJob() {
                     </label>
                     <input type="text" value={form.salaryExpectation} onChange={update("salaryExpectation")}
                       placeholder="e.g. $50,000"
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" />
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent" />
                   </div>
                 </div>
               </div>
@@ -262,7 +262,7 @@ export default function ApplyJob() {
                 type="button"
                 onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
                 disabled={!canNext()}
-                className="rounded-full bg-[#0A66C2] hover:bg-[#004182]"
+                className="rounded-full bg-[#D97706] hover:bg-[#9A3412]"
               >
                 Continue
               </Button>
@@ -270,7 +270,7 @@ export default function ApplyJob() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-full bg-[#0A66C2] hover:bg-[#004182] gap-2"
+                className="rounded-full bg-[#D97706] hover:bg-[#9A3412] gap-2"
               >
                 <CheckCircle className="w-4 h-4" />
                 {isSubmitting ? "Submitting..." : "Submit Application"}

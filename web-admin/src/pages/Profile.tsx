@@ -53,11 +53,11 @@ export default function Profile() {
           <div className="flex-1 max-w-[800px]">
             {/* Cover + Avatar */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="h-32 bg-gradient-to-r from-[#0A66C2] via-[#004182] to-[#09223B]" />
+              <div className="h-32 bg-gradient-to-r from-[#D97706] via-[#9A3412] to-[#7C2D12]" />
               <div className="px-6 pb-6 -mt-12">
                 <div className="flex items-end justify-between">
                   <div className="flex items-end gap-4">
-                    <div className="w-[104px] h-[104px] rounded-full border-4 border-white bg-[#0A66C2] flex items-center justify-center text-white text-3xl font-bold shrink-0">
+                    <div className="w-[104px] h-[104px] rounded-full border-4 border-white bg-[#D97706] flex items-center justify-center text-white text-3xl font-bold shrink-0">
                       {displayName.charAt(0)}
                     </div>
                     <div className="mb-2">
@@ -92,7 +92,7 @@ export default function Profile() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Experience</h2>
-                <Button variant="ghost" size="sm" className="rounded-full text-[#0A66C2]">
+                <Button variant="ghost" size="sm" className="rounded-full text-[#D97706]">
                   <Plus className="w-4 h-4 mr-1" /> Add
                 </Button>
               </div>
@@ -120,7 +120,7 @@ export default function Profile() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Education</h2>
-                <Button variant="ghost" size="sm" className="rounded-full text-[#0A66C2]">
+                <Button variant="ghost" size="sm" className="rounded-full text-[#D97706]">
                   <Plus className="w-4 h-4 mr-1" /> Add
                 </Button>
               </div>
@@ -147,7 +147,7 @@ export default function Profile() {
                 {skills.map((skill) => (
                   <span
                     key={skill}
-                    className="px-3 py-1.5 bg-[#EDF3F8] text-[#0A66C2] rounded-full text-sm font-medium"
+                    className="px-3 py-1.5 bg-[#FFF7ED] text-[#D97706] rounded-full text-sm font-medium"
                   >
                     {skill}
                     <button
@@ -166,7 +166,7 @@ export default function Profile() {
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2]"
+                  className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706]"
                 />
                 <Button onClick={addSkill} variant="outline" size="sm" className="rounded-lg">
                   Add

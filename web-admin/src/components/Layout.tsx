@@ -52,7 +52,7 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-8">
               <Link to="/dashboard" className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-blue-400" />
+                  <Shield className="w-4 h-4 text-[#D97706]" />
                 </div>
                 <span className="font-bold text-gray-900">TalentBridge</span>
                 <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-0.5 rounded">
@@ -64,7 +64,7 @@ export default function Layout({ children }: LayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2">
-                    <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">
+                    <div className="w-7 h-7 rounded-full bg-[#D97706] flex items-center justify-center text-white text-xs font-semibold">
                       {initials}
                     </div>
                     <span className="hidden sm:inline text-sm font-medium">
@@ -132,13 +132,13 @@ export default function Layout({ children }: LayoutProps) {
               to="/feed"
               className="flex items-center gap-1.5 shrink-0 mr-4"
             >
-              <div className="w-[34px] h-[34px] rounded-lg bg-[#0A66C2] flex items-center justify-center">
+              <div className="w-[34px] h-[34px] rounded-lg bg-[#D97706] flex items-center justify-center">
                 <span className="text-white font-bold text-sm leading-none">
-                  in
+                  tb
                 </span>
               </div>
             </Link>
-            <div className="hidden sm:flex items-center bg-[#EDF3F8] rounded-md px-3 h-[34px] flex-1 max-w-[280px]">
+            <div className="hidden sm:flex items-center bg-[#FFF7ED] rounded-md px-3 h-[34px] flex-1 max-w-[280px]">
               <Search className="w-4 h-4 text-gray-500 shrink-0" />
               <input
                 type="text"
@@ -156,7 +156,7 @@ export default function Layout({ children }: LayoutProps) {
                 to={item.to}
                 className={`flex flex-col items-center justify-center px-4 py-1 h-[52px] text-xs font-medium border-b-2 transition-colors ${
                   item.active
-                    ? "text-[#0A66C2] border-[#0A66C2]"
+                    ? "text-[#D97706] border-[#D97706]"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
@@ -175,7 +175,7 @@ export default function Layout({ children }: LayoutProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex flex-col items-center justify-center px-4 py-1 h-[52px] text-xs font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition-colors">
-                  <div className="w-[22px] h-[22px] rounded-full bg-[#0A66C2] flex items-center justify-center text-white text-[10px] font-bold">
+                  <div className="w-[22px] h-[22px] rounded-full bg-[#D97706] flex items-center justify-center text-white text-[10px] font-bold">
                     {initials}
                   </div>
                   <span className="mt-0.5 flex items-center gap-0.5">
@@ -249,7 +249,7 @@ export default function Layout({ children }: LayoutProps) {
               key={item.to}
               to={item.to}
               className={`flex flex-col items-center gap-0.5 text-[10px] font-medium ${
-                item.active ? "text-[#0A66C2]" : "text-gray-500"
+                item.active ? "text-[#D97706]" : "text-gray-500"
               }`}
             >
               <item.icon className="w-5 h-5" />
@@ -260,11 +260,11 @@ export default function Layout({ children }: LayoutProps) {
             to="/profile"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-medium ${
               location.pathname === "/profile"
-                ? "text-[#0A66C2]"
+                ? "text-[#D97706]"
                 : "text-gray-500"
             }`}
           >
-            <div className="w-5 h-5 rounded-full bg-[#0A66C2] flex items-center justify-center text-white text-[8px] font-bold">
+            <div className="w-5 h-5 rounded-full bg-[#D97706] flex items-center justify-center text-white text-[8px] font-bold">
               {initials}
             </div>
             <span>Profile</span>

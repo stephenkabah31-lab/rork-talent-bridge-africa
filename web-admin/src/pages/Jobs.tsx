@@ -115,7 +115,7 @@ export default function Jobs() {
               {(user?.type === "recruiter" || user?.type === "company") && (
                 <Button
                   onClick={() => navigate("/post-job")}
-                  className="rounded-full bg-[#0A66C2] hover:bg-[#004182]"
+                  className="rounded-full bg-[#D97706] hover:bg-[#9A3412]"
                 >
                   Post a Job
                 </Button>
@@ -131,7 +131,7 @@ export default function Jobs() {
                   placeholder="Search jobs by title, company, or location"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
               <div className="flex gap-2 mt-3 flex-wrap">
@@ -141,7 +141,7 @@ export default function Jobs() {
                     onClick={() => setTypeFilter(t)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                       typeFilter === t
-                        ? "bg-[#0A66C2] text-white"
+                        ? "bg-[#D97706] text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
@@ -164,7 +164,7 @@ export default function Jobs() {
                   <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <Link to={`/jobs/${job.id}`} className="text-lg font-semibold text-[#0A66C2] hover:underline">
+                        <Link to={`/jobs/${job.id}`} className="text-lg font-semibold text-[#D97706] hover:underline">
                           {job.title}
                         </Link>
                         <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
@@ -176,7 +176,7 @@ export default function Jobs() {
                           <span>{job.location}</span>
                         </div>
                         <div className="flex items-center gap-3 mt-3 flex-wrap">
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-xs font-medium text-[#0A66C2]">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-xs font-medium text-[#D97706]">
                             <Briefcase className="w-3 h-3" /> {job.type}
                           </span>
                           {job.salary && (
@@ -204,7 +204,7 @@ export default function Jobs() {
                     <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
                       <Button
                         onClick={() => navigate(`/jobs/${job.id}/apply`)}
-                        className="rounded-full bg-[#0A66C2] hover:bg-[#004182] h-9 text-sm"
+                        className="rounded-full bg-[#D97706] hover:bg-[#9A3412] h-9 text-sm"
                       >
                         Apply Now
                       </Button>
@@ -227,7 +227,7 @@ export default function Jobs() {
                 <p className="text-xs text-gray-500 mb-3">
                   Get notified when new jobs match your preferences
                 </p>
-                <Button className="w-full rounded-full bg-[#0A66C2] hover:bg-[#004182] h-9 text-sm">
+                <Button className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-9 text-sm">
                   Create Alert
                 </Button>
               </div>

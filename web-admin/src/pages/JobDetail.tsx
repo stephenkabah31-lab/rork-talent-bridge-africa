@@ -139,7 +139,7 @@ export default function JobDetail() {
                 ) : (
                   <Button
                     onClick={() => navigate(`/jobs/${job.id}/apply`)}
-                    className="rounded-full bg-[#0A66C2] hover:bg-[#004182] h-10 text-sm font-semibold"
+                    className="rounded-full bg-[#D97706] hover:bg-[#9A3412] h-10 text-sm font-semibold"
                   >
                     Apply Now
                   </Button>
@@ -171,7 +171,7 @@ export default function JobDetail() {
               <ul className="space-y-2">
                 {job.requirements.map((r) => (
                   <li key={r} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-[#0A66C2] mt-1 shrink-0">•</span>
+                    <span className="text-[#D97706] mt-1 shrink-0">•</span>
                     {r}
                   </li>
                 ))}

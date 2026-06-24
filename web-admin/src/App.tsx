@@ -49,7 +49,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F3F2EF]">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#0A66C2] border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#D97706] border-t-transparent" />
       </div>
     );
   }
@@ -79,7 +79,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#0A66C2] border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#D97706] border-t-transparent" />
       </div>
     );
   }

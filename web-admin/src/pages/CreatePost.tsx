@@ -47,7 +47,7 @@ export default function CreatePost() {
         <form onSubmit={handleSubmit}>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-11 h-11 rounded-full bg-[#0A66C2] flex items-center justify-center text-white font-bold shrink-0">
+              <div className="w-11 h-11 rounded-full bg-[#D97706] flex items-center justify-center text-white font-bold shrink-0">
                 {(user.fullName || user.name).charAt(0)}
               </div>
               <div className="flex-1">
@@ -70,14 +70,14 @@ export default function CreatePost() {
             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2">
                 <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-sm text-gray-500 transition-colors">
-                  <ImageIcon className="w-5 h-5 text-blue-500" />
+                  <ImageIcon className="w-5 h-5 text-[#D97706]" />
                   Photo
                 </button>
               </div>
               <Button
                 type="submit"
                 disabled={!content.trim() || isLoading}
-                className="rounded-full bg-[#0A66C2] hover:bg-[#004182] gap-2"
+                className="rounded-full bg-[#D97706] hover:bg-[#9A3412] gap-2"
               >
                 <Send className="w-4 h-4" />
                 {isLoading ? "Posting..." : "Post"}

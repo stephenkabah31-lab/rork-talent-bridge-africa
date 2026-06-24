@@ -70,7 +70,7 @@ export default function Settings() {
                     <p className="text-xs text-gray-400">{item.desc}</p>
                   </div>
                 </div>
-                <div className="w-10 h-6 rounded-full bg-[#0A66C2] relative cursor-pointer shrink-0">
+                <div className="w-10 h-6 rounded-full bg-[#D97706] relative cursor-pointer shrink-0">
                   <div className="absolute right-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow" />
                 </div>
               </div>
