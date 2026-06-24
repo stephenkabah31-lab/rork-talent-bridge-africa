@@ -8,25 +8,18 @@ import type { User } from "@/lib/trpc-types";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 
-const MOCK_CONNECTIONS: User[] = [
-  { id: "c1", email: "amara@email.com", name: "Amara Okafor", type: "professional", fullName: "Amara Okafor", country: "Lagos, Nigeria", isPremium: false, isAdmin: false },
-  { id: "c2", email: "kwame@email.com", name: "Kwame Mensah", type: "professional", fullName: "Kwame Mensah", country: "Accra, Ghana", isPremium: true, isAdmin: false },
-  { id: "c3", email: "sarah@email.com", name: "Sarah Kimani", type: "professional", fullName: "Sarah Kimani", country: "Nairobi, Kenya", isPremium: false, isAdmin: false },
-  { id: "c4", email: "zainab@email.com", name: "Zainab Hassan", type: "professional", fullName: "Zainab Hassan", country: "Cairo, Egypt", isPremium: false, isAdmin: false },
-];
-
 export default function Network() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const { data: connections = [] } = useQuery({
+  const { data: connections = [], isLoading } = useQuery({
     queryKey: ["connections", user?.id],
     queryFn: () => (user ? trpc.users.getConnections.query({ userId: user.id }) : Promise.resolve([])),
     enabled: !!user,
   });
 
-  const displayed = connections.length > 0 ? connections : MOCK_CONNECTIONS;
+  const displayed = connections;
   const filtered = search
     ? displayed.filter(
         (c) =>

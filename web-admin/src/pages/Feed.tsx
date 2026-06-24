@@ -23,68 +23,14 @@ import type { Post } from "@/lib/trpc-types";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 
-const MOCK_POSTS: Post[] = [
-  {
-    id: "1",
-    authorId: "u1",
-    author: { id: "u1", name: "Amara Okafor", title: "Talent Acquisition Lead", isVerified: true },
-    content: "We are looking for talented software developers to join our growing team. Multiple positions available across West Africa. Competitive compensation and growth opportunities. Reach out if interested!\n\n#TechJobs #AfricaTech #Careers",
-    timestamp: "2h ago",
-    createdAt: new Date().toISOString(),
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    likedBy: [],
-  },
-  {
-    id: "2",
-    authorId: "u2",
-    author: { id: "u2", name: "Kwame Mensah", title: "Product Strategy Consultant" },
-    content: "Had an amazing session with entrepreneurs discussing digital innovation strategies. The talent and creativity in Africa continues to impress!\n\nReminder: Focus on solving real problems for your users first.",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800",
-    timestamp: "4h ago",
-    createdAt: new Date().toISOString(),
-    likes: 567,
-    comments: 89,
-    shares: 34,
-    likedBy: ["current"],
-  },
-  {
-    id: "3",
-    authorId: "u3",
-    author: { id: "u3", name: "Zainab Hassan", title: "Design Lead | Digital Agency", isVerified: true },
-    content: "Design insight: Consistency creates trust! When working on digital products, maintaining consistent patterns helps users feel comfortable and confident.\n\nWhat design principles do you follow?",
-    timestamp: "6h ago",
-    createdAt: new Date().toISOString(),
-    likes: 892,
-    comments: 156,
-    shares: 67,
-    likedBy: [],
-  },
-  {
-    id: "4",
-    authorId: "u4",
-    author: { id: "u4", name: "AfriTech Solutions", title: "Technology Company", isVerified: true },
-    content: "Exciting news! We have secured significant funding for expansion across African markets. This enables us to create hundreds of new opportunities for talented professionals.\n\nGrateful to everyone who supported this milestone. Onward!",
-    image: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800",
-    timestamp: "1d ago",
-    createdAt: new Date().toISOString(),
-    likes: 3241,
-    comments: 428,
-    shares: 231,
-    likedBy: ["current"],
-  },
-];
-
 export default function Feed() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
   const isRecruiterOrCompany = user?.type === "recruiter" || user?.type === "company";
   const isAdmin = user?.isAdmin === true;
 
   // tRPC queries
-  const { data: tRPCPosts } = useQuery({
+  const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ["posts", "feed"],
     queryFn: async () => {
       const result = await trpc.posts.getFeed.query({ limit: 20 });
@@ -99,8 +45,7 @@ export default function Feed() {
     staleTime: 30000,
   });
 
-  const combinedPosts =
-    tRPCPosts && tRPCPosts.length > 0 ? tRPCPosts : posts;
+
 
   // Redirect admin to dashboard
   if (isAdmin) {
@@ -188,20 +133,11 @@ export default function Feed() {
   }
 
   // ── Professional Feed (LinkedIn-style) ─────────────────────
-  const handleLike = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? {
-              ...p,
-              likes: p.likedBy.includes("current") ? p.likes - 1 : p.likes + 1,
-              likedBy: p.likedBy.includes("current")
-                ? p.likedBy.filter((id) => id !== "current")
-                : [...p.likedBy, "current"],
-            }
-          : p,
-      ),
-    );
+  const handleLike = async (postId: string) => {
+    if (!user) return;
+    try {
+      await trpc.posts.like.mutate({ postId, userId: user.id });
+    } catch { /* ignore */ }
   };
 
   return (
@@ -280,7 +216,7 @@ export default function Feed() {
 
             {/* Posts feed */}
             <div className="space-y-4">
-              {combinedPosts.map((post) => (
+              {posts.map((post) => (
                 <div key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                   {/* Post header */}
                   <div className="flex items-start justify-between p-4 pb-2">

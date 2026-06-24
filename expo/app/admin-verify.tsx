@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import {
@@ -12,8 +12,9 @@ import {
   MapPin,
   Globe,
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -24,132 +25,57 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
-
-interface CompanyData {
-  companyName: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  location: string;
-  industry: string;
-  companySize: string;
-  website: string;
-  registrationNumber: string;
-  verificationStatus: 'pending' | 'verified' | 'rejected';
-  verificationDocUri?: string;
-  verificationDocName?: string;
-  createdAt: string;
-}
-
-const MOCK_COMPANIES: CompanyData[] = [
-  {
-    companyName: 'Tech Africa Solutions',
-    contactPerson: 'Kwame Mensah',
-    email: 'hr@techafricasolutions.com',
-    phone: '+233 24 555 1234',
-    location: 'Accra, Ghana',
-    industry: 'Technology',
-    companySize: '51-200',
-    website: 'www.techafricasolutions.com',
-    registrationNumber: 'BN20231234',
-    verificationStatus: 'pending',
-    verificationDocUri: 'https://example.com/doc1.pdf',
-    verificationDocName: 'business_registration.pdf',
-    createdAt: '2025-01-10T10:30:00Z',
-  },
-  {
-    companyName: 'AfriBank Financial Services',
-    contactPerson: 'Amara Okafor',
-    email: 'recruitment@afribank.com',
-    phone: '+234 80 555 5678',
-    location: 'Lagos, Nigeria',
-    industry: 'Finance',
-    companySize: '200+',
-    website: 'www.afribank.com',
-    registrationNumber: 'RC45678',
-    verificationStatus: 'pending',
-    verificationDocUri: 'https://example.com/doc2.pdf',
-    verificationDocName: 'incorporation_certificate.pdf',
-    createdAt: '2025-01-11T14:20:00Z',
-  },
-  {
-    companyName: 'Innovation Hub Kenya',
-    contactPerson: 'David Kamau',
-    email: 'info@innovationhubke.com',
-    phone: '+254 70 555 9012',
-    location: 'Nairobi, Kenya',
-    industry: 'Technology',
-    companySize: '11-50',
-    website: 'www.innovationhubke.com',
-    registrationNumber: 'BN-KE-2023-789',
-    verificationStatus: 'verified',
-    verificationDocUri: 'https://example.com/doc3.pdf',
-    verificationDocName: 'company_registration.pdf',
-    createdAt: '2025-01-05T09:15:00Z',
-  },
-];
+import { trpc } from '@/lib/trpc';
 
 export default function AdminVerifyScreen() {
-  const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified' | 'rejected'>('all');
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadCompanies();
-  }, []);
+  const { data: companies = [], isLoading } = trpc.admin.getCompanies.useQuery();
 
-  const loadCompanies = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('companies');
-      if (stored) {
-        setCompanies(JSON.parse(stored));
-      } else {
-        setCompanies(MOCK_COMPANIES);
-        await AsyncStorage.setItem('companies', JSON.stringify(MOCK_COMPANIES));
-      }
-    } catch (error) {
-      console.error('Error loading companies:', error);
-      setCompanies(MOCK_COMPANIES);
-    }
-  };
+  const updateStatusMutation = trpc.admin.updateStatus.useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'companies'] });
+    },
+  });
 
-  const handleVerifyCompany = async (index: number, status: 'verified' | 'rejected') => {
-    const company = filteredCompanies[index];
+  const handleVerifyCompany = async (companyId: string, status: 'verified' | 'rejected') => {
+    const company = filteredCompanies.find((c: any) => c.id === companyId);
+    if (!company) return;
     const actionText = status === 'verified' ? 'verify' : 'reject';
 
     Alert.alert(
       `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Company`,
-      `Are you sure you want to ${actionText} ${company.companyName}?`,
+      `Are you sure you want to ${actionText} ${company.companyName || company.company_name}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: status === 'verified' ? 'Verify' : 'Reject',
           style: status === 'verified' ? 'default' : 'destructive',
-          onPress: async () => {
-            try {
-              const updatedCompanies = [...companies];
-              const companyIndex = companies.findIndex(
-                (c) => c.companyName === company.companyName
-              );
-              updatedCompanies[companyIndex].verificationStatus = status;
-
-              await AsyncStorage.setItem('companies', JSON.stringify(updatedCompanies));
-              setCompanies(updatedCompanies);
-
-              Alert.alert(
-                'Success',
-                `${company.companyName} has been ${status === 'verified' ? 'verified' : 'rejected'}.`
-              );
-            } catch (error) {
-              console.error('Error updating company status:', error);
-              Alert.alert('Error', 'Failed to update company status');
-            }
+          onPress: () => {
+            updateStatusMutation.mutate({ type: 'company', id: companyId, status: status === 'verified' ? 'approved' : 'rejected' });
           },
         },
       ]
     );
   };
 
-  const filteredCompanies = companies.filter((company) => {
+  const mappedCompanies = companies.map((c: any) => ({
+    ...c,
+    id: c.id,
+    companyName: c.companyName || c.company_name || '',
+    contactPerson: c.contactPerson || c.contact_person || '',
+    email: c.email || '',
+    phone: c.phone || '',
+    location: c.location || '',
+    industry: c.industry || '',
+    website: c.website || '',
+    registrationNumber: c.registrationNumber || c.registration_number || '',
+    verificationStatus: c.status || 'pending',
+    createdAt: c.createdAt || c.created_at || '',
+  }));
+
+  const filteredCompanies = mappedCompanies.filter((company: any) => {
     if (filter === 'all') return true;
     return company.verificationStatus === filter;
   });
@@ -157,6 +83,7 @@ export default function AdminVerifyScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'verified':
+      case 'approved':
         return Colors.success;
       case 'rejected':
         return Colors.error;
@@ -170,6 +97,7 @@ export default function AdminVerifyScreen() {
     const color = getStatusColor(status);
     switch (status) {
       case 'verified':
+      case 'approved':
         return <CheckCircle color={color} size={20} />;
       case 'rejected':
         return <XCircle color={color} size={20} />;
@@ -179,9 +107,9 @@ export default function AdminVerifyScreen() {
     }
   };
 
-  const pendingCount = companies.filter((c) => c.verificationStatus === 'pending').length;
-  const verifiedCount = companies.filter((c) => c.verificationStatus === 'verified').length;
-  const rejectedCount = companies.filter((c) => c.verificationStatus === 'rejected').length;
+  const pendingCount = mappedCompanies.filter((c: any) => c.verificationStatus === 'pending').length;
+  const verifiedCount = mappedCompanies.filter((c: any) => c.verificationStatus === 'verified' || c.verificationStatus === 'approved').length;
+  const rejectedCount = mappedCompanies.filter((c: any) => c.verificationStatus === 'rejected').length;
 
   return (
     <>
@@ -254,14 +182,18 @@ export default function AdminVerifyScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {filteredCompanies.length === 0 ? (
+            {isLoading ? (
+              <View style={{ padding: 40, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Colors.white} />
+              </View>
+            ) : filteredCompanies.length === 0 ? (
               <View style={styles.emptyState}>
                 <Building2 color={Colors.textLight} size={48} />
                 <Text style={styles.emptyStateText}>No companies found</Text>
               </View>
             ) : (
-              filteredCompanies.map((company, index) => (
-                <View key={company.companyName} style={styles.companyCard}>
+              filteredCompanies.map((company: any) => (
+                <View key={company.id || company.companyName} style={styles.companyCard}>
                   <View style={styles.companyHeader}>
                     <View style={styles.companyIcon}>
                       <Building2 color={Colors.primary} size={24} />
@@ -330,7 +262,7 @@ export default function AdminVerifyScreen() {
                           styles.rejectButton,
                           pressed && styles.actionButtonPressed,
                         ]}
-                        onPress={() => handleVerifyCompany(index, 'rejected')}
+                        onPress={() => handleVerifyCompany(company.id, 'rejected')}
                       >
                         <XCircle color={Colors.white} size={20} />
                         <Text style={styles.actionButtonText}>Reject</Text>
@@ -341,7 +273,7 @@ export default function AdminVerifyScreen() {
                           styles.verifyButton,
                           pressed && styles.actionButtonPressed,
                         ]}
-                        onPress={() => handleVerifyCompany(index, 'verified')}
+                        onPress={() => handleVerifyCompany(company.id, 'verified')}
                       >
                         <CheckCircle color={Colors.white} size={20} />
                         <Text style={styles.actionButtonText}>Verify</Text>

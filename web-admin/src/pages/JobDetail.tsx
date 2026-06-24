@@ -16,61 +16,17 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import type { Job } from "@/lib/trpc-types";
 
-const MOCK_JOB: Job = {
-  id: "1",
-  title: "Senior Software Engineer",
-  company: "TechCorp Africa",
-  companyLogo: "",
-  location: "Lagos, Nigeria",
-  type: "Full-time",
-  salary: "$60,000 - $90,000",
-  description:
-    "We are seeking a talented Senior Software Engineer to join our growing team in Lagos. You will be working on cutting-edge products that serve millions of users across Africa. Our engineering team is passionate about building scalable, reliable, and user-friendly solutions.\n\nAs a Senior Software Engineer, you will lead technical initiatives, mentor junior developers, and collaborate with cross-functional teams including Product, Design, and Data Science.\n\nWe value innovation, collaboration, and a growth mindset. If you're excited about using technology to solve real problems in Africa, we'd love to hear from you.",
-  requirements: [
-    "5+ years of professional software development experience",
-    "Strong proficiency in React Native and TypeScript",
-    "Experience with Node.js and RESTful APIs",
-    "Familiarity with AWS services (ECS, Lambda, S3)",
-    "Excellent problem-solving and communication skills",
-    "Experience leading technical projects",
-    "Knowledge of CI/CD pipelines",
-  ],
-  postedBy: "company1",
-  postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  applicants: 45,
-  status: "active",
-};
-
-const RESPONSIBILITIES = [
-  "Design and implement scalable front-end and back-end solutions",
-  "Lead code reviews and mentor junior developers",
-  "Collaborate with product managers to define technical requirements",
-  "Optimize application performance and reliability",
-  "Contribute to architecture decisions and technical roadmap",
-];
-
-const BENEFITS = [
-  "Competitive salary and equity package",
-  "Health insurance for you and your family",
-  "Flexible working hours and remote options",
-  "Professional development budget",
-  "Annual company retreats",
-  "Modern equipment and tools",
-];
-
 export default function JobDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [applied, setApplied] = useState(false);
 
-  const { data: tRPCJob } = useQuery({
+  const { data: job = null, isLoading } = useQuery({
     queryKey: ["job", id],
     queryFn: () => trpc.jobs.getById.query({ jobId: id! }),
     enabled: !!id,
   });
-
-  const job: Job | null = tRPCJob || (id === "1" ? MOCK_JOB : null);
 
   if (!job) {
     return (
@@ -157,32 +113,12 @@ export default function JobDetail() {
                 {job.description}
               </div>
 
-              <h3 className="text-base font-semibold text-gray-900 mt-6 mb-3">Responsibilities</h3>
-              <ul className="space-y-2">
-                {RESPONSIBILITIES.map((r) => (
-                  <li key={r} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-emerald-500 mt-1 shrink-0">•</span>
-                    {r}
-                  </li>
-                ))}
-              </ul>
-
               <h3 className="text-base font-semibold text-gray-900 mt-6 mb-3">Requirements</h3>
               <ul className="space-y-2">
                 {job.requirements.map((r) => (
                   <li key={r} className="flex items-start gap-2 text-sm text-gray-700">
                     <span className="text-[#D97706] mt-1 shrink-0">•</span>
                     {r}
-                  </li>
-                ))}
-              </ul>
-
-              <h3 className="text-base font-semibold text-gray-900 mt-6 mb-3">Benefits</h3>
-              <ul className="space-y-2">
-                {BENEFITS.map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-amber-500 mt-1 shrink-0">•</span>
-                    {b}
                   </li>
                 ))}
               </ul>

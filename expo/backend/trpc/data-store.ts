@@ -448,6 +448,31 @@ export async function seedDatabase(): Promise<void> {
     seeded = true;
   } catch (err) {
     console.error("[data-store] Seed error (non-fatal):", err);
+    // Seed admin user for DB-based admin login
+    const { count: userCount } = await supabase
+      .from("auth_users")
+      .select("*", { count: "exact", head: true });
+    if (!userCount || userCount === 0) {
+      await supabase.from("auth_users").insert({
+        id: "admin-seed-001",
+        email: "admin@talentbridge.com",
+        password: "hashed_admin123",
+        name: "Administrator",
+        type: "admin",
+        is_admin: true,
+        is_premium: false,
+      });
+      await supabase.from("auth_users").insert({
+        id: "admin-seed-002",
+        email: "bridge.gh@talentbridge.com",
+        password: "hashed_bridge123",
+        name: "Bridge Admin",
+        type: "admin",
+        is_admin: true,
+        is_premium: false,
+      });
+    }
+
     seeded = true; // Don't retry on error
   }
 }
@@ -693,6 +718,208 @@ export async function addConnection(conn: Connection): Promise<void> {
 export async function getConnectionById(id: string): Promise<Connection | undefined> {
   const { data } = await supabase.from("connections").select("*").eq("id", id).single();
   return data ? dbConnectionToApp(data) : undefined;
+}
+
+// ── Message helpers ──────────────────────────────────────────────
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  recipientId: string;
+  content: string;
+  createdAt: Date;
+  read: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  participantIds: string[];
+  lastMessage: string;
+  lastMessageAt: Date;
+  jobTitle?: string;
+}
+
+function dbMessageToApp(row: Record<string, unknown>): Message {
+  return {
+    id: row.id as string,
+    conversationId: row.conversation_id as string,
+    senderId: row.sender_id as string,
+    recipientId: row.recipient_id as string,
+    content: row.content as string,
+    createdAt: new Date((row.created_at as string) ?? Date.now()),
+    read: (row.read as boolean) ?? false,
+  };
+}
+
+function dbConversationToApp(row: Record<string, unknown>): Conversation {
+  return {
+    id: row.id as string,
+    participantIds: (row.participant_ids as string[]) ?? [],
+    lastMessage: (row.last_message as string) ?? "",
+    lastMessageAt: new Date((row.last_message_at as string) ?? Date.now()),
+    jobTitle: (row.job_title as string) ?? undefined,
+  };
+}
+
+export async function getConversationsByUser(userId: string): Promise<Conversation[]> {
+  const { data } = await supabase
+    .from("conversations")
+    .select("*")
+    .contains("participant_ids", [userId])
+    .order("last_message_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbConversationToApp);
+}
+
+export async function getMessagesByConversation(conversationId: string): Promise<Message[]> {
+  const { data } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
+  if (!data) return [];
+  return data.map(dbMessageToApp);
+}
+
+export async function sendMessage(msg: Message): Promise<void> {
+  await supabase.from("messages").insert({
+    id: msg.id,
+    conversation_id: msg.conversationId,
+    sender_id: msg.senderId,
+    recipient_id: msg.recipientId,
+    content: msg.content,
+    created_at: msg.createdAt.toISOString(),
+    read: msg.read,
+  });
+  await supabase
+    .from("conversations")
+    .update({
+      last_message: msg.content,
+      last_message_at: msg.createdAt.toISOString(),
+    })
+    .eq("id", msg.conversationId);
+}
+
+export async function createConversation(conv: Conversation): Promise<void> {
+  await supabase.from("conversations").insert({
+    id: conv.id,
+    participant_ids: conv.participantIds,
+    last_message: conv.lastMessage,
+    last_message_at: conv.lastMessageAt.toISOString(),
+    job_title: conv.jobTitle ?? null,
+  });
+}
+
+export async function getConversationById(id: string): Promise<Conversation | undefined> {
+  const { data } = await supabase.from("conversations").select("*").eq("id", id).single();
+  return data ? dbConversationToApp(data) : undefined;
+}
+
+// ── Notification helpers ──────────────────────────────────────────
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: "like" | "comment" | "connection" | "job";
+  title: string;
+  description: string;
+  createdAt: Date;
+  read: boolean;
+  relatedId?: string;
+}
+
+function dbNotificationToApp(row: Record<string, unknown>): AppNotification {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    type: row.type as AppNotification["type"],
+    title: row.title as string,
+    description: row.description as string,
+    createdAt: new Date((row.created_at as string) ?? Date.now()),
+    read: (row.read as boolean) ?? false,
+    relatedId: (row.related_id as string) ?? undefined,
+  };
+}
+
+export async function getNotificationsByUser(userId: string): Promise<AppNotification[]> {
+  const { data } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (!data) return [];
+  return data.map(dbNotificationToApp);
+}
+
+export async function createNotification(notif: AppNotification): Promise<void> {
+  await supabase.from("notifications").insert({
+    id: notif.id,
+    user_id: notif.userId,
+    type: notif.type,
+    title: notif.title,
+    description: notif.description,
+    created_at: notif.createdAt.toISOString(),
+    read: notif.read,
+    related_id: notif.relatedId ?? null,
+  });
+}
+
+export async function markNotificationsRead(userId: string): Promise<void> {
+  await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+}
+
+// ── Calls helpers ─────────────────────────────────────────────────
+
+export interface ScheduledCall {
+  id: string;
+  callerId: string;
+  recipientId: string;
+  recipientName: string;
+  type: "audio" | "video";
+  status: "scheduled" | "completed" | "missed" | "canceled";
+  scheduledAt: Date;
+  duration?: string;
+  jobTitle?: string;
+}
+
+function dbCallToApp(row: Record<string, unknown>): ScheduledCall {
+  return {
+    id: row.id as string,
+    callerId: row.caller_id as string,
+    recipientId: row.recipient_id as string,
+    recipientName: (row.recipient_name as string) ?? "",
+    type: row.type as ScheduledCall["type"],
+    status: row.status as ScheduledCall["status"],
+    scheduledAt: new Date((row.scheduled_at as string) ?? Date.now()),
+    duration: (row.duration as string) ?? undefined,
+    jobTitle: (row.job_title as string) ?? undefined,
+  };
+}
+
+export async function getCallsByUser(userId: string): Promise<ScheduledCall[]> {
+  const { data } = await supabase
+    .from("scheduled_calls")
+    .select("*")
+    .or(`caller_id.eq.${userId},recipient_id.eq.${userId}`)
+    .order("scheduled_at", { ascending: true });
+  if (!data) return [];
+  return data.map(dbCallToApp);
+}
+
+export async function createScheduledCall(call: ScheduledCall): Promise<void> {
+  await supabase.from("scheduled_calls").insert({
+    id: call.id,
+    caller_id: call.callerId,
+    recipient_id: call.recipientId,
+    recipient_name: call.recipientName,
+    type: call.type,
+    status: call.status,
+    scheduled_at: call.scheduledAt.toISOString(),
+    duration: call.duration ?? null,
+    job_title: call.jobTitle ?? null,
+  });
 }
 
 // ── Post helpers ─────────────────────────────────────────────────

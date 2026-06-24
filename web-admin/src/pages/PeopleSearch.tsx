@@ -8,26 +8,17 @@ import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 
-const MOCK_PEOPLE: User[] = [
-  { id: "p1", email: "john@email.com", name: "John Osei", type: "professional", fullName: "John Osei", country: "Accra, Ghana", isPremium: false, isAdmin: false, skills: ["React", "Node.js"] },
-  { id: "p2", email: "grace@email.com", name: "Grace Mwangi", type: "recruiter", fullName: "Grace Mwangi", companyName: "Innovate Kenya", country: "Nairobi, Kenya", isPremium: true, isAdmin: false },
-  { id: "p3", email: "fatima@email.com", name: "Fatima Diallo", type: "professional", fullName: "Fatima Diallo", country: "Dakar, Senegal", isPremium: false, isAdmin: false, skills: ["UI/UX", "Figma"] },
-  { id: "p4", email: "david@email.com", name: "David Adebayo", type: "company", fullName: "David Adebayo", companyName: "Tech Africa Solutions", country: "Lagos, Nigeria", isPremium: true, isAdmin: false },
-];
-
 export default function PeopleSearch() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [connected, setConnected] = useState<Set<string>>(new Set());
 
-  const { data: tRPCUsers = [] } = useQuery({
+  const { data: people = [], isLoading } = useQuery({
     queryKey: ["users", "search", search],
-    queryFn: () => (search ? trpc.users.search.query({ query: search }) : Promise.resolve([])),
-    enabled: search.length > 0,
+    queryFn: () => (search.length > 0 ? trpc.users.search.query({ query: search }) : Promise.resolve([])),
+    enabled: true,
   });
-
-  const people: User[] = search && tRPCUsers.length > 0 ? tRPCUsers : search ? [] : MOCK_PEOPLE;
 
   const handleConnect = (personId: string) => {
     setConnected((prev) => {

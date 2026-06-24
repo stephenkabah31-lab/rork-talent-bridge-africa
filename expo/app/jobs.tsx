@@ -28,6 +28,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
+import { trpc } from '@/lib/trpc';
 import { AFRICAN_CURRENCIES, Currency } from '@/constants/currencies';
 
 interface UserData {
@@ -53,85 +54,6 @@ interface Job {
   isVerified?: boolean;
   requiredSkills?: string[];
 }
-
-const MOCK_JOBS: Job[] = [
-  {
-    id: '1',
-    title: 'Senior Software Engineer',
-    company: 'Tech Africa',
-    location: 'Accra, Ghana',
-    salary: '$50,000 - $80,000',
-    type: 'Full-time',
-    postedDate: '2 days ago',
-    description:
-      'We are looking for an experienced software engineer to join our growing team in Accra. You will be working on cutting-edge technology, building scalable web and mobile applications that serve millions of users across Africa. This role offers excellent growth opportunities and the chance to work with a talented team of engineers.\n\nKey Responsibilities:\n• Design and develop high-quality software solutions\n• Collaborate with cross-functional teams\n• Participate in code reviews and technical discussions\n• Mentor junior developers\n\nRequirements:\n• 5+ years of software development experience\n• Strong knowledge of React, Node.js, and TypeScript\n• Experience with cloud platforms (AWS/GCP)\n• Excellent problem-solving skills',
-    recruiterName: 'Sarah Johnson',
-    salaryUSD: { min: 50000, max: 80000 },
-    currencyType: 'USD',
-    isVerified: true,
-    requiredSkills: ['React', 'Node.js', 'TypeScript', 'AWS', 'Problem Solving'],
-  },
-  {
-    id: '2',
-    title: 'Product Manager',
-    company: 'Innovation Hub',
-    location: 'Lagos, Nigeria',
-    salary: '$60,000 - $90,000',
-    type: 'Full-time',
-    postedDate: '5 days ago',
-    description: 'Lead product strategy and development for our mobile platform. As a Product Manager, you will define the product vision, create roadmaps, and work closely with engineering and design teams to deliver exceptional user experiences. This is a key leadership role with significant impact on company growth.\n\nResponsibilities:\n• Define product strategy and roadmap\n• Conduct user research and market analysis\n• Prioritize features and manage product backlog\n• Work with stakeholders to align on goals\n\nQualifications:\n• 3+ years in product management\n• Experience with mobile products\n• Strong analytical and communication skills\n• Data-driven decision making',
-    recruiterName: 'Michael Chen',
-    salaryUSD: { min: 60000, max: 90000 },
-    currencyType: 'local',
-    isVerified: true,
-    requiredSkills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis', 'Leadership'],
-  },
-  {
-    id: '3',
-    title: 'UI/UX Designer',
-    company: 'Creative Studios',
-    location: 'Nairobi, Kenya',
-    salary: '$40,000 - $65,000',
-    type: 'Full-time',
-    postedDate: '1 week ago',
-    description: 'Design beautiful and intuitive user experiences for our products. Join our creative team and help shape the future of digital experiences for African users. You will work on diverse projects spanning mobile apps, web platforms, and enterprise software.\n\nWhat You\'ll Do:\n• Create wireframes, prototypes, and high-fidelity designs\n• Conduct user research and usability testing\n• Collaborate with developers to ensure design quality\n• Maintain design systems and style guides\n\nRequirements:\n• 3+ years of UI/UX design experience\n• Proficiency in Figma, Sketch, or Adobe XD\n• Strong portfolio demonstrating your work\n• Understanding of mobile-first design principles',
-    recruiterName: 'Emma Thompson',
-    salaryUSD: { min: 40000, max: 65000 },
-    currencyType: 'local',
-    isVerified: false,
-    requiredSkills: ['Figma', 'UI Design', 'UX Research', 'Prototyping', 'Mobile Design'],
-  },
-  {
-    id: '4',
-    title: 'Data Analyst',
-    company: 'Analytics Pro',
-    location: 'Cape Town, South Africa',
-    salary: '$45,000 - $70,000',
-    type: 'Full-time',
-    postedDate: '3 days ago',
-    description: 'Analyze data and provide insights to drive business decisions. Work with large datasets to uncover trends, build dashboards, and help stakeholders make informed decisions. This role is perfect for someone who loves working with data and telling stories through analytics.\n\nKey Duties:\n• Analyze complex datasets and extract actionable insights\n• Create reports and dashboards for stakeholders\n• Build predictive models and forecasts\n• Collaborate with teams across the organization\n\nSkills Needed:\n• 2+ years in data analysis\n• Proficiency in SQL, Python, or R\n• Experience with BI tools (Tableau, Power BI)\n• Strong statistical knowledge',
-    recruiterName: 'David Martinez',
-    salaryUSD: { min: 45000, max: 70000 },
-    currencyType: 'local',
-    isVerified: true,
-    requiredSkills: ['SQL', 'Python', 'Tableau', 'Statistics', 'Excel'],
-  },
-  {
-    id: '5',
-    title: 'Marketing Manager',
-    company: 'Brand Builders',
-    location: 'Kigali, Rwanda',
-    salary: '$50,000 - $75,000',
-    type: 'Full-time',
-    postedDate: '4 days ago',
-    description: 'Develop and execute marketing strategies to grow our brand across African markets. Lead marketing campaigns, manage budgets, and drive customer acquisition. This role combines creativity with data-driven strategy to achieve business goals.\n\nMain Responsibilities:\n• Develop comprehensive marketing strategies\n• Manage digital marketing campaigns\n• Analyze campaign performance and optimize ROI\n• Lead a team of marketing professionals\n• Build partnerships with key stakeholders\n\nRequired Experience:\n• 4+ years in marketing management\n• Proven track record of successful campaigns\n• Experience with digital marketing tools\n• Strong leadership and communication skills',
-    recruiterName: 'Lisa Anderson',
-    salaryUSD: { min: 50000, max: 75000 },
-    currencyType: 'USD',
-    isVerified: false,
-    requiredSkills: ['Digital Marketing', 'SEO', 'Content Strategy', 'Analytics', 'Team Management'],
-  },
-];
 
 function getCurrencyFromLocation(location: string): Currency {
   const locationLower = location.toLowerCase();
@@ -188,15 +110,28 @@ export default function JobsScreen() {
     return allApplications.filter((app: any) => app.jobId === jobId).length;
   };
 
+  const { data: tRPCJobs = [], isLoading: jobsLoading } = trpc.jobs.getAll.useQuery({});
+
+  const allJobs = tRPCJobs.length > 0 ? tRPCJobs.map((j: any) => ({
+    ...j,
+    postedDate: new Date(j.postedAt).toLocaleDateString(),
+    recruiterName: j.company,
+    salary: j.salary || '$30,000 - $80,000',
+    salaryUSD: j.salary ? { min: 30000, max: 80000 } : undefined,
+    currencyType: 'USD' as const,
+    isVerified: j.status === 'active',
+    requiredSkills: j.requirements || [],
+  })) : [];
+
   const filteredJobs = useMemo(
     () =>
-      MOCK_JOBS.filter(
-        (job) =>
+      allJobs.filter(
+        (job: any) =>
           job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
           job.location.toLowerCase().includes(searchQuery.toLowerCase())
       ),
-    [searchQuery]
+    [searchQuery, allJobs]
   );
 
   const handleContactRecruiter = (job: Job) => {
@@ -317,7 +252,7 @@ export default function JobsScreen() {
                 <View style={styles.skillsContainer}>
                   <Text style={styles.skillsLabel}>Required Skills:</Text>
                   <View style={styles.skillsWrapper}>
-                    {job.requiredSkills.map((skill, index) => (
+                    {job.requiredSkills.map((skill: string, index: number) => (
                       <View key={index} style={styles.skillTag}>
                         <Text style={styles.skillText}>{skill}</Text>
                       </View>

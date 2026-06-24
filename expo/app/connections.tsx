@@ -1,8 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Search, MessageCircle } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,67 +16,35 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
-
-interface Connection {
-  id: string;
-  name: string;
-  title: string;
-  location: string;
-  profilePicture?: string;
-}
-
-const MOCK_CONNECTIONS: Connection[] = [
-  {
-    id: 'c1',
-    name: 'Sarah Johnson',
-    title: 'Senior Recruiter at Tech Africa',
-    location: 'Nairobi, Kenya',
-    profilePicture: 'https://i.pravatar.cc/150?img=5',
-  },
-  {
-    id: 'c2',
-    name: 'Michael Chen',
-    title: 'Product Manager | Innovation Hub',
-    location: 'Cape Town, South Africa',
-    profilePicture: 'https://i.pravatar.cc/150?img=13',
-  },
-  {
-    id: 'c3',
-    name: 'Emma Thompson',
-    title: 'UI/UX Designer | Creative Studios',
-    location: 'Nairobi, Kenya',
-    profilePicture: 'https://i.pravatar.cc/150?img=45',
-  },
-  {
-    id: 'c4',
-    name: 'David Martinez',
-    title: 'Data Analyst at Analytics Pro',
-    location: 'Johannesburg, South Africa',
-    profilePicture: 'https://i.pravatar.cc/150?img=33',
-  },
-  {
-    id: 'c5',
-    name: 'Lisa Anderson',
-    title: 'Marketing Manager | Brand Builders',
-    location: 'Kigali, Rwanda',
-    profilePicture: 'https://i.pravatar.cc/150?img=27',
-  },
-];
+import { trpc } from '@/lib/trpc';
 
 export default function ConnectionsScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [connections] = useState<Connection[]>(MOCK_CONNECTIONS);
 
-  const filteredConnections = connections.filter((connection) =>
-    connection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    connection.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
+  const { data: connections = [], isLoading } = trpc.users.getConnections.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user },
+  );
+
+  const filteredConnections = connections.filter(
+    (connection: { name: string; title?: string; fullName?: string }) =>
+      (connection.name || connection.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (connection.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{connections.length} Connections</Text>
+        <Text style={styles.headerTitle}>{filteredConnections.length} Connections</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -90,7 +61,11 @@ export default function ConnectionsScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {filteredConnections.map((connection) => (
+        {isLoading ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : filteredConnections.map((connection: any) => (
           <Pressable
             key={connection.id}
             style={styles.connectionCard}
@@ -105,17 +80,17 @@ export default function ConnectionsScreen() {
                 />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarText}>{connection.name.charAt(0)}</Text>
+                  <Text style={styles.avatarText}>{(connection.fullName || connection.name || '?').charAt(0)}</Text>
                 </View>
               )}
             </View>
 
             <View style={styles.connectionInfo}>
-              <Text style={styles.connectionName}>{connection.name}</Text>
+              <Text style={styles.connectionName}>{connection.fullName || connection.name}</Text>
               <Text style={styles.connectionTitle} numberOfLines={2}>
-                {connection.title}
+                {connection.bio || connection.type || ''}
               </Text>
-              <Text style={styles.connectionLocation}>{connection.location}</Text>
+              <Text style={styles.connectionLocation}>{connection.country || ''}</Text>
             </View>
 
             <Pressable

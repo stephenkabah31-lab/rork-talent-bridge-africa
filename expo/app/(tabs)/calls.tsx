@@ -12,6 +12,7 @@ import {
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -22,93 +23,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
-
-interface Call {
-  id: string;
-  name: string;
-  type: 'audio' | 'video';
-  status: 'scheduled' | 'completed' | 'missed';
-  date: string;
-  time: string;
-  duration?: string;
-  jobTitle?: string;
-  candidateId?: string;
-  recruiterId?: string;
-}
-
-const MOCK_RECRUITER_CALLS: Call[] = [
-  {
-    id: '1',
-    name: 'Amara Okafor',
-    type: 'video',
-    status: 'scheduled',
-    date: 'Today',
-    time: '2:00 PM',
-    jobTitle: 'Interview - Senior Software Engineer',
-    candidateId: 'candidate_1',
-    recruiterId: 'recruiter_1',
-  },
-  {
-    id: '2',
-    name: 'Kwame Mensah',
-    type: 'audio',
-    status: 'scheduled',
-    date: 'Tomorrow',
-    time: '10:30 AM',
-    jobTitle: 'Initial Screening - Product Manager',
-    candidateId: 'candidate_2',
-    recruiterId: 'recruiter_1',
-  },
-  {
-    id: '3',
-    name: 'Zainab Hassan',
-    type: 'video',
-    status: 'completed',
-    date: 'Yesterday',
-    time: '3:00 PM',
-    duration: '45 min',
-    jobTitle: 'Design Review - UI/UX Designer',
-    candidateId: 'candidate_3',
-    recruiterId: 'recruiter_1',
-  },
-];
-
-const MOCK_PROFESSIONAL_CALLS: Call[] = [
-  {
-    id: '4',
-    name: 'AfriTech Solutions',
-    type: 'video',
-    status: 'scheduled',
-    date: 'Today',
-    time: '3:00 PM',
-    jobTitle: 'Technical Interview - Software Engineer',
-    candidateId: 'current_user',
-    recruiterId: 'recruiter_2',
-  },
-  {
-    id: '5',
-    name: 'Tech Corp',
-    type: 'video',
-    status: 'completed',
-    date: '2 days ago',
-    time: '11:00 AM',
-    duration: '30 min',
-    jobTitle: 'Initial Screening',
-    candidateId: 'current_user',
-    recruiterId: 'recruiter_3',
-  },
-  {
-    id: '6',
-    name: 'StartUp Hub',
-    type: 'audio',
-    status: 'missed',
-    date: '3 days ago',
-    time: '4:00 PM',
-    jobTitle: 'Follow-up Call',
-    candidateId: 'current_user',
-    recruiterId: 'recruiter_4',
-  },
-];
+import { trpc } from '@/lib/trpc';
 
 export default function CallsTabScreen() {
   const router = useRouter();
@@ -122,44 +37,40 @@ export default function CallsTabScreen() {
     },
   });
 
-  const isRecruiter = user?.userType === 'recruiter' || user?.userType === 'company';
-  const userCalls = isRecruiter ? MOCK_RECRUITER_CALLS : MOCK_PROFESSIONAL_CALLS;
+  const { data: calls = [], isLoading } = trpc.calls.getByUser.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user },
+  );
+
+  const isRecruiter = user?.type === 'recruiter' || user?.type === 'company';
+  const userCalls = calls;
 
   const filteredCalls = userCalls.filter((call) => {
     if (filter === 'all') return true;
     return call.status === filter;
   });
 
-  const handleJoinCall = (call: Call) => {
-    console.log('handleJoinCall called', { call, user });
-    
-    if (call.status !== 'scheduled') {
-      console.log('Call is not scheduled, returning');
-      return;
-    }
-
-    console.log('User type check:', { userType: user?.userType, isRecruiter });
+  const handleJoinCall = (call: any) => {
+    if (call.status !== 'scheduled') return;
 
     if (isRecruiter) {
-      console.log('Navigating to admit-candidates');
       router.push({
         pathname: '/admit-candidates' as any,
         params: {
           callId: call.id,
           callType: call.type,
-          participantName: call.name,
+          participantName: call.recipientName,
           jobTitle: call.jobTitle || '',
         },
       });
     } else {
-      console.log('Navigating to waiting-room for professional');
       router.push({
         pathname: '/waiting-room',
         params: {
           callId: call.id,
           candidateName: user?.fullName || user?.name || 'Candidate',
           callType: call.type,
-          participantName: call.name,
+          participantName: call.recipientName,
           jobTitle: call.jobTitle || '',
         },
       });
@@ -178,7 +89,7 @@ export default function CallsTabScreen() {
     }
   };
 
-  const getStatusColor = (status: Call['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
         return Colors.primary;
@@ -191,7 +102,11 @@ export default function CallsTabScreen() {
     }
   };
 
-  const renderCall = ({ item }: { item: Call }) => (
+  const renderCall = ({ item }: { item: any }) => {
+    const callDate = new Date(item.scheduledAt);
+    const dateStr = callDate.toLocaleDateString();
+    const timeStr = callDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return (
     <Pressable 
       style={({ pressed }) => [
         styles.callItem,
@@ -209,7 +124,7 @@ export default function CallsTabScreen() {
       </View>
 
       <View style={styles.callContent}>
-        <Text style={styles.callName}>{item.name}</Text>
+        <Text style={styles.callName}>{item.recipientName}</Text>
         {item.jobTitle && (
           <Text style={styles.jobTitle} numberOfLines={1}>
             {item.jobTitle}
@@ -218,7 +133,7 @@ export default function CallsTabScreen() {
         <View style={styles.callDetails}>
           <Clock color={Colors.textLight} size={14} />
           <Text style={styles.callTime}>
-            {item.date} at {item.time}
+            {dateStr} at {timeStr}
           </Text>
           {item.duration && (
             <>
@@ -259,7 +174,7 @@ export default function CallsTabScreen() {
         </View>
       </View>
     </Pressable>
-  );
+  );};
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -306,7 +221,11 @@ export default function CallsTabScreen() {
         </Pressable>
       </View>
 
-      {filteredCalls.length > 0 ? (
+      {isLoading ? (
+        <View style={{ padding: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : filteredCalls.length > 0 ? (
         <FlatList
           data={filteredCalls}
           renderItem={renderCall}

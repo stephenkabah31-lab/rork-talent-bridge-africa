@@ -364,6 +364,135 @@ export interface Database {
         };
         Relationships: [];
       };
+      conversations: {
+        Row: {
+          id: string;
+          participant_ids: string[];
+          last_message: string | null;
+          last_message_at: string | null;
+          job_title: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id: string;
+          participant_ids: string[];
+          last_message?: string | null;
+          last_message_at?: string | null;
+          job_title?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          participant_ids?: string[];
+          last_message?: string | null;
+          last_message_at?: string | null;
+          job_title?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          sender_id: string;
+          recipient_id: string;
+          content: string;
+          created_at: string | null;
+          read: boolean | null;
+        };
+        Insert: {
+          id: string;
+          conversation_id: string;
+          sender_id: string;
+          recipient_id: string;
+          content: string;
+          created_at?: string | null;
+          read?: boolean | null;
+        };
+        Update: {
+          id?: string;
+          conversation_id?: string;
+          sender_id?: string;
+          recipient_id?: string;
+          content?: string;
+          created_at?: string | null;
+          read?: boolean | null;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          description: string;
+          created_at: string | null;
+          read: boolean | null;
+          related_id: string | null;
+        };
+        Insert: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          description: string;
+          created_at?: string | null;
+          read?: boolean | null;
+          related_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          description?: string;
+          created_at?: string | null;
+          read?: boolean | null;
+          related_id?: string | null;
+        };
+        Relationships: [];
+      };
+      scheduled_calls: {
+        Row: {
+          id: string;
+          caller_id: string;
+          recipient_id: string;
+          recipient_name: string | null;
+          type: string;
+          status: string;
+          scheduled_at: string | null;
+          duration: string | null;
+          job_title: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id: string;
+          caller_id: string;
+          recipient_id: string;
+          recipient_name?: string | null;
+          type: string;
+          status: string;
+          scheduled_at?: string | null;
+          duration?: string | null;
+          job_title?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          caller_id?: string;
+          recipient_id?: string;
+          recipient_name?: string | null;
+          type?: string;
+          status?: string;
+          scheduled_at?: string | null;
+          duration?: string | null;
+          job_title?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

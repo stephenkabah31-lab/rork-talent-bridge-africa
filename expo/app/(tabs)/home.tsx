@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
@@ -33,92 +33,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import { trpc } from '@/lib/trpc';
 
-interface Post {
-  id: string;
-  author: {
-    id: string;
-    name: string;
-    title: string;
-    profilePicture?: string;
-    isVerified?: boolean;
-  };
-  content: string;
-  image?: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-}
-
-const MOCK_POSTS: Post[] = [
-  {
-    id: '1',
-    author: {
-      id: 'u1',
-      name: 'Amara Okafor',
-      title: 'Talent Acquisition Lead',
-      isVerified: true,
-    },
-    content:
-      'We are looking for talented software developers to join our growing team. Multiple positions available across West Africa. Competitive compensation and growth opportunities. Reach out if interested! 🚀\n\n#TechJobs #AfricaTech #Careers',
-    timestamp: '2h ago',
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    isLiked: false,
-  },
-  {
-    id: '2',
-    author: {
-      id: 'u2',
-      name: 'Kwame Mensah',
-      title: 'Product Strategy Consultant',
-    },
-    content:
-      'Had an amazing session with entrepreneurs discussing digital innovation strategies. The talent and creativity in Africa continues to impress! 🌍\n\nReminder: Focus on solving real problems for your users first.',
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800',
-    timestamp: '4h ago',
-    likes: 567,
-    comments: 89,
-    shares: 34,
-    isLiked: true,
-  },
-  {
-    id: '3',
-    author: {
-      id: 'u3',
-      name: 'Zainab Hassan',
-      title: 'Design Lead | Digital Agency',
-      isVerified: true,
-    },
-    content:
-      'Design insight: Consistency creates trust! 🎨\n\nWhen working on digital products, maintaining consistent patterns helps users feel comfortable and confident. Small details make a big difference.\n\nWhat design principles do you follow?',
-    timestamp: '6h ago',
-    likes: 892,
-    comments: 156,
-    shares: 67,
-    isLiked: false,
-  },
-  {
-    id: '4',
-    author: {
-      id: 'u4',
-      name: 'AfriTech Solutions',
-      title: 'Technology Company',
-      isVerified: true,
-    },
-    content:
-      '🎉 Exciting news! We have secured significant funding for expansion across African markets. This enables us to create hundreds of new opportunities for talented professionals.\n\nGrateful to everyone who supported this milestone. Onward! 💪',
-    image: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800',
-    timestamp: '1d ago',
-    likes: 3241,
-    comments: 428,
-    shares: 231,
-    isLiked: true,
-  },
-];
-
 const QUICK_ACTIONS = [
   { id: '1', icon: Briefcase, label: 'Jobs', color: Colors.primary, route: '/jobs' as const },
   { id: '2', icon: Users, label: 'Network', color: Colors.secondary, route: '/people-search' as const },
@@ -128,8 +42,8 @@ const QUICK_ACTIONS = [
 
 export default function FeedScreen() {
   const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
   const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -139,32 +53,49 @@ export default function FeedScreen() {
     },
   });
 
+  const { data: feedData, isLoading: feedLoading, refetch: refetchFeed } = trpc.posts.getFeed.useQuery({ limit: 20 });
+
+  const posts = (feedData?.posts || []).map((p: any) => ({
+    ...p,
+    isLiked: user ? p.likedBy?.includes(user.id) : false,
+  }));
+
+  const likeMutation = trpc.posts.like.useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', 'feed'] });
+    },
+  });
+
   const isRecruiterOrCompany = user?.type === 'recruiter' || user?.type === 'company';
+
+  if (feedLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>TalentBridge</Text>
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isRecruiterOrCompany) {
     return <RecruiterCompanyView user={user} />;
   }
 
   const handleLike = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post
-      )
-    );
+    if (user) likeMutation.mutate({ postId, userId: user.id });
   };
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    await refetchFeed();
+    setRefreshing(false);
   };
 
-  const renderPost = ({ item }: { item: Post }) => (
+  const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
         <Pressable

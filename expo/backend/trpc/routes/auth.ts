@@ -6,6 +6,7 @@ import {
   getAuthUserByEmail,
   getAuthUser,
 } from "../data-store";
+import { supabase } from "../../../lib/supabase";
 
 interface LoginAttemptEntry {
   count: number;
@@ -106,11 +107,24 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
-      const isValidAdmin =
-        (input.username === "admin" && input.password === "admin123") ||
-        (input.username === "bridge.gh" && input.password === "bridge123");
+      // Look up admin user in the database
+      const email = `${input.username}@talentbridge.com`;
+      const { data: adminRow } = await supabase
+        .from("auth_users")
+        .select("*")
+        .eq("email", email)
+        .eq("is_admin", true)
+        .maybeSingle();
 
-      if (!isValidAdmin) {
+      if (!adminRow) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid credentials",
+        });
+      }
+
+      const hashedInput = hashPassword(input.password);
+      if (hashedInput !== (adminRow.password as string)) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid credentials",
@@ -118,9 +132,9 @@ export const authRouter = createTRPCRouter({
       }
 
       const adminUser = {
-        id: `admin_${input.username}_${Date.now()}`,
-        email: `${input.username}@talentbridge.com`,
-        name: input.username === "bridge.gh" ? "Bridge Admin" : "Administrator",
+        id: adminRow.id as string,
+        email: adminRow.email as string,
+        name: adminRow.name as string,
         type: "admin" as const,
         isAdmin: true,
       };

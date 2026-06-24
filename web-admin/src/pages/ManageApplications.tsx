@@ -22,12 +22,6 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; icon: React.Reac
   rejected: { bg: "bg-red-50 border-red-200", text: "text-red-700", icon: <XCircle className="w-3.5 h-3.5" /> },
 };
 
-const MOCK_APPS: Application[] = [
-  { id: "a1", jobId: "1", userId: "u1", coverLetter: "I am excited to apply for this position...", appliedAt: new Date().toISOString(), status: "pending" },
-  { id: "a2", jobId: "2", userId: "u2", coverLetter: "With 5 years of experience in product design...", appliedAt: new Date().toISOString(), status: "reviewing" },
-  { id: "a3", jobId: "3", userId: "u3", coverLetter: "My background in data science...", appliedAt: new Date().toISOString(), status: "shortlisted" },
-];
-
 export default function ManageApplications() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -38,12 +32,10 @@ export default function ManageApplications() {
     return null;
   }
 
-  const { data: applications = [] } = useQuery({
+  const { data: apps = [], isLoading } = useQuery({
     queryKey: ["applications"],
     queryFn: () => trpc.jobs.getApplications.query({}),
   });
-
-  const apps: Application[] = applications.length > 0 ? applications : MOCK_APPS;
   const filteredApps = filter === "all" ? apps : apps.filter((a) => a.status === filter);
 
   return (

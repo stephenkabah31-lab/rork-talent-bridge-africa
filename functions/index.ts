@@ -1,4 +1,5 @@
 // TalentBridge API Worker — handles tRPC queries and REST auth mutations.
+// v2 — DB-backed admin auth, messages, notifications, calls routes
 
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createClient } from "@supabase/supabase-js";
@@ -157,22 +158,36 @@ async function handleLogin(req: Request, env: Record<string, string>): Promise<R
   });
 }
 
-async function handleAdminLogin(req: Request, _env: Record<string, string>): Promise<Response> {
+async function handleAdminLogin(req: Request, env: Record<string, string>): Promise<Response> {
   const body = await req.json();
   const { username, password } = body as Record<string, string>;
 
-  const isValid =
-    (username === "admin" && password === "admin123") ||
-    (username === "bridge.gh" && password === "bridge123");
+  if (!username || !password) {
+    return json({ success: false, message: "Username and password are required" }, 400);
+  }
 
-  if (!isValid) {
+  const supabase = getSupabase(env);
+  const email = `${username}@talentbridge.com`;
+  const { data: adminRow } = await supabase
+    .from("auth_users")
+    .select("*")
+    .eq("email", email)
+    .eq("is_admin", true)
+    .maybeSingle();
+
+  if (!adminRow) {
+    return json({ success: false, message: "Invalid credentials" }, 401);
+  }
+
+  const hashedInput = hashPassword(password);
+  if (hashedInput !== (adminRow.password as string)) {
     return json({ success: false, message: "Invalid credentials" }, 401);
   }
 
   const adminUser = {
-    id: `admin_${username}_${Date.now()}`,
-    email: `${username}@talentbridge.com`,
-    name: username === "bridge.gh" ? "Bridge Admin" : "Administrator",
+    id: adminRow.id as string,
+    email: adminRow.email as string,
+    name: adminRow.name as string,
     type: "admin",
     isAdmin: true,
     isPremium: false,

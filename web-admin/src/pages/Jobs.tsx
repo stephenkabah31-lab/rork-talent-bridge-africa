@@ -15,77 +15,17 @@ import type { Job } from "@/lib/trpc-types";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 
-const MOCK_JOBS: Job[] = [
-  {
-    id: "1",
-    title: "Senior Software Engineer",
-    company: "TechCorp Africa",
-    location: "Lagos, Nigeria",
-    type: "Full-time",
-    salary: "$60,000 - $90,000",
-    description: "We are seeking a talented Senior Software Engineer to join our growing team. You will work on cutting-edge products used by millions across Africa.",
-    requirements: ["5+ years experience", "React Native", "Node.js", "AWS"],
-    postedBy: "company1",
-    postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 45,
-    status: "active",
-  },
-  {
-    id: "2",
-    title: "Product Designer",
-    company: "DesignHub Africa",
-    location: "Accra, Ghana",
-    type: "Remote",
-    salary: "$40,000 - $60,000",
-    description: "Looking for a creative Product Designer to help shape our products. You'll work closely with engineering and product teams.",
-    requirements: ["3+ years experience", "Figma", "User Research", "Prototyping"],
-    postedBy: "company2",
-    postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 28,
-    status: "active",
-  },
-  {
-    id: "3",
-    title: "Data Scientist",
-    company: "AfriBank Financial",
-    location: "Nairobi, Kenya",
-    type: "Full-time",
-    salary: "$50,000 - $75,000",
-    description: "Join our data team to build predictive models for financial inclusion across East Africa.",
-    requirements: ["Python", "Machine Learning", "SQL", "Statistics"],
-    postedBy: "company3",
-    postedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 32,
-    status: "active",
-  },
-  {
-    id: "4",
-    title: "Marketing Manager",
-    company: "Innovate Kenya",
-    location: "Nairobi, Kenya",
-    type: "Contract",
-    description: "Lead our marketing efforts across Kenya and East Africa. Drive growth and brand awareness.",
-    requirements: ["5+ years marketing", "Digital Marketing", "Team Leadership", "B2B"],
-    postedBy: "company4",
-    postedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 15,
-    status: "active",
-  },
-];
-
 export default function Jobs() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  const { data: tRPCJobs = [] } = useQuery({
+  const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["jobs", "all"],
     queryFn: () => trpc.jobs.getAll.query({}),
     staleTime: 30000,
   });
-
-  const jobs: Job[] = tRPCJobs.length > 0 ? tRPCJobs : MOCK_JOBS;
 
   const filteredJobs = useMemo(() => {
     let list = jobs;

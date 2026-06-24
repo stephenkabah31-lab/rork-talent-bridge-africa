@@ -1,9 +1,12 @@
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Search } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -14,56 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
-
-interface Conversation {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  avatar?: string;
-  jobTitle?: string;
-  isReceived: boolean;
-}
-
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: '1',
-    name: 'Amara Okafor',
-    lastMessage: 'Hi! I saw your application and would love to discuss the opportunity.',
-    timestamp: '10:30 AM',
-    unread: 2,
-    jobTitle: 'Senior Software Engineer',
-    isReceived: true,
-  },
-  {
-    id: '2',
-    name: 'Kwame Mensah',
-    lastMessage: 'Thank you for your interest in the position.',
-    timestamp: 'Yesterday',
-    unread: 0,
-    jobTitle: 'Product Manager',
-    isReceived: true,
-  },
-  {
-    id: '3',
-    name: 'Zainab Hassan',
-    lastMessage: 'Can we schedule a call for next week?',
-    timestamp: '2 days ago',
-    unread: 1,
-    jobTitle: 'UI/UX Designer',
-    isReceived: true,
-  },
-  {
-    id: '4',
-    name: 'AfriTech Solutions',
-    lastMessage: 'We received your application and will review it shortly.',
-    timestamp: '3 days ago',
-    unread: 0,
-    jobTitle: 'Multiple Positions',
-    isReceived: false,
-  },
-];
+import { trpc } from '@/lib/trpc';
 
 type MessageFilter = 'all' | 'received' | 'sent';
 
@@ -72,27 +26,47 @@ export default function MessagesTabScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<MessageFilter>('all');
 
-  const filteredConversations = MOCK_CONVERSATIONS.filter((conv) => {
-    const matchesSearch = conv.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
+  const { data: conversations = [], isLoading } = trpc.messages.getConversations.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user },
+  );
+
+  const filteredConversations = conversations.filter((conv: any) => {
+    const partnerId = conv.participantIds?.find((id: string) => id !== user?.id);
+    const name = partnerId || 'Unknown';
+    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (conv.jobTitle || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const isReceived = conv.participantIds?.[0] !== user?.id; // simplified
     const matchesFilter = 
       filter === 'all' || 
-      (filter === 'received' && conv.isReceived) || 
-      (filter === 'sent' && !conv.isReceived);
+      (filter === 'received' && isReceived) || 
+      (filter === 'sent' && !isReceived);
     return matchesSearch && matchesFilter;
   });
 
-  const renderConversation = ({ item }: { item: Conversation }) => (
+  const renderConversation = ({ item }: { item: any }) => {
+    const partnerId = item.participantIds?.find((id: string) => id !== user?.id) || 'Unknown';
+    const name = partnerId;
+    const timeStr = item.lastMessageAt ? new Date(item.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    return (
     <Pressable
       style={({ pressed }) => [
         styles.conversationItem,
         pressed && styles.conversationPressed,
       ]}
       onPress={() => {
-        console.log('Opening conversation with:', item.name);
         router.push({
           pathname: '/messages',
           params: {
-            candidateName: item.name,
+            candidateName: name,
             jobTitle: item.jobTitle || '',
           },
         });
@@ -100,23 +74,19 @@ export default function MessagesTabScreen() {
       android_ripple={{ color: '#E5E7EB' }}
       accessible={true}
       accessibilityRole="button"
-      accessibilityLabel={`Open conversation with ${item.name}`}
+      accessibilityLabel={`Open conversation with ${name}`}
       testID={`conversation-${item.id}`}
     >
       <View style={styles.avatar} pointerEvents="none">
-        {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
-          </View>
-        )}
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+        </View>
       </View>
 
       <View style={styles.conversationContent} pointerEvents="none">
         <View style={styles.conversationHeader}>
-          <Text style={styles.conversationName}>{item.name}</Text>
-          <Text style={styles.timestamp}>{item.timestamp}</Text>
+          <Text style={styles.conversationName}>{name}</Text>
+          <Text style={styles.timestamp}>{timeStr}</Text>
         </View>
         {item.jobTitle && (
           <Text style={styles.jobTitle} numberOfLines={1}>
@@ -125,23 +95,15 @@ export default function MessagesTabScreen() {
         )}
         <View style={styles.messagePreview}>
           <Text
-            style={[
-              styles.lastMessage,
-              item.unread > 0 && styles.lastMessageUnread,
-            ]}
+            style={styles.lastMessage}
             numberOfLines={1}
           >
             {item.lastMessage}
           </Text>
-          {item.unread > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>{item.unread}</Text>
-            </View>
-          )}
         </View>
       </View>
     </Pressable>
-  );
+  );};
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -187,7 +149,11 @@ export default function MessagesTabScreen() {
         />
       </View>
 
-      {filteredConversations.length > 0 ? (
+      {isLoading ? (
+        <View style={{ padding: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : filteredConversations.length > 0 ? (
         <FlatList
           data={filteredConversations}
           renderItem={renderConversation}

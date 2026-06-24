@@ -1,65 +1,29 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Bell, Briefcase, Heart, MessageCircle, UserPlus } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
-
-interface Notification {
-  id: string;
-  type: 'like' | 'comment' | 'connection' | 'job';
-  title: string;
-  description: string;
-  time: string;
-  isRead: boolean;
-}
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    type: 'like',
-    title: 'Sarah Johnson liked your post',
-    description: 'Your post about mobile development received a like',
-    time: '2h ago',
-    isRead: false,
-  },
-  {
-    id: '2',
-    type: 'connection',
-    title: 'Michael Chen accepted your connection',
-    description: 'You are now connected with Michael Chen',
-    time: '5h ago',
-    isRead: false,
-  },
-  {
-    id: '3',
-    type: 'comment',
-    title: 'Emma Thompson commented on your post',
-    description: '"Great insights! Thanks for sharing."',
-    time: '1d ago',
-    isRead: true,
-  },
-  {
-    id: '4',
-    type: 'job',
-    title: 'New job matches your profile',
-    description: 'Senior Software Engineer at Tech Africa',
-    time: '2d ago',
-    isRead: true,
-  },
-  {
-    id: '5',
-    type: 'connection',
-    title: 'David Martinez wants to connect',
-    description: 'Accept connection request',
-    time: '3d ago',
-    isRead: true,
-  },
-];
+import { trpc } from '@/lib/trpc';
 
 export default function NotificationsScreen() {
   const router = useRouter();
+
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
+  const { data: notifications = [], isLoading } = trpc.notifications.getByUser.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user },
+  );
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -83,7 +47,17 @@ export default function NotificationsScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {MOCK_NOTIFICATIONS.map((notification) => (
+        {isLoading ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : notifications.length === 0 ? (
+          <View style={{ padding: 40, alignItems: 'center', gap: 12 }}>
+            <Bell color={Colors.textLight} size={48} />
+            <Text style={{ fontSize: 16, color: Colors.textLight }}>No notifications yet</Text>
+          </View>
+        ) : (
+          notifications.map((notification: any) => (
           <Pressable
             key={notification.id}
             style={[
@@ -104,9 +78,9 @@ export default function NotificationsScreen() {
               </Text>
               <Text style={styles.notificationTime}>{notification.time}</Text>
             </View>
-            {!notification.isRead && <View style={styles.unreadDot} />}
+            {!notification.read && <View style={styles.unreadDot} />}
           </Pressable>
-        ))}
+        )))}
       </ScrollView>
     </SafeAreaView>
   );

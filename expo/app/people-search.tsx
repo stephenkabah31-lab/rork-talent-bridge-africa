@@ -1,8 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Search, UserPlus, UserCheck, MapPin } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,85 +16,37 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
-
-interface Person {
-  id: string;
-  name: string;
-  title: string;
-  location: string;
-  connections: number;
-  mutualConnections?: number;
-  profilePicture?: string;
-  isPending?: boolean;
-}
-
-const MOCK_PEOPLE: Person[] = [
-  {
-    id: 'p1',
-    name: 'Kwame Mensah',
-    title: 'Software Engineer at Andela',
-    location: 'Accra, Ghana',
-    connections: 342,
-    mutualConnections: 12,
-    profilePicture: 'https://i.pravatar.cc/150?img=12',
-  },
-  {
-    id: 'p2',
-    name: 'Amara Okafor',
-    title: 'Product Designer | Startups',
-    location: 'Lagos, Nigeria',
-    connections: 589,
-    mutualConnections: 8,
-    profilePicture: 'https://i.pravatar.cc/150?img=45',
-  },
-  {
-    id: 'p3',
-    name: 'Tendai Moyo',
-    title: 'Data Scientist at IBM',
-    location: 'Johannesburg, South Africa',
-    connections: 721,
-    mutualConnections: 15,
-    profilePicture: 'https://i.pravatar.cc/150?img=33',
-  },
-  {
-    id: 'p4',
-    name: 'Fatima Hassan',
-    title: 'Marketing Specialist',
-    location: 'Cairo, Egypt',
-    connections: 456,
-    mutualConnections: 5,
-    profilePicture: 'https://i.pravatar.cc/150?img=28',
-  },
-  {
-    id: 'p5',
-    name: 'John Omondi',
-    title: 'Business Analyst at Safaricom',
-    location: 'Nairobi, Kenya',
-    connections: 523,
-    mutualConnections: 20,
-    profilePicture: 'https://i.pravatar.cc/150?img=51',
-  },
-];
+import { trpc } from '@/lib/trpc';
 
 export default function PeopleSearchScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [people, setPeople] = useState<Person[]>(MOCK_PEOPLE);
+  const [pendingConnections, setPendingConnections] = useState<Set<string>>(new Set());
 
-  const filteredPeople = people.filter(
-    (person) =>
-      person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      person.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      person.location.toLowerCase().includes(searchQuery.toLowerCase())
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    },
+  });
+
+  const { data: people = [], isLoading } = trpc.users.search.useQuery(
+    { query: searchQuery || '' },
+    { enabled: true },
   );
 
+  const connectMutation = trpc.users.connect.useMutation({
+    onSuccess: (_data: any, variables: { targetUserId: string }) => {
+      setPendingConnections(prev => new Set([...prev, variables.targetUserId]));
+    },
+  });
+
   const handleConnect = (personId: string) => {
-    setPeople((prev) =>
-      prev.map((person) =>
-        person.id === personId ? { ...person, isPending: true } : person
-      )
-    );
+    if (user) connectMutation.mutate({ userId: user.id, targetUserId: personId });
   };
+
+  const filteredPeople = people;
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -113,7 +68,12 @@ export default function PeopleSearchScreen() {
           {filteredPeople.length} {filteredPeople.length === 1 ? 'person' : 'people'} found
         </Text>
 
-        {filteredPeople.map((person) => (
+        {isLoading ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : (
+          filteredPeople.map((person: any) => (
           <Pressable
             key={person.id}
             style={styles.personCard}
@@ -128,38 +88,39 @@ export default function PeopleSearchScreen() {
                 />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarText}>{person.name.charAt(0)}</Text>
+                  <Text style={styles.avatarText}>{(person.name || person.fullName || '?').charAt(0)}</Text>
                 </View>
               )}
             </View>
 
             <View style={styles.personInfo}>
-              <Text style={styles.personName}>{person.name}</Text>
+              <Text style={styles.personName}>{person.fullName || person.name}</Text>
               <Text style={styles.personTitle} numberOfLines={2}>
-                {person.title}
+                {person.bio || person.type || ''}
               </Text>
               <View style={styles.locationRow}>
                 <MapPin color={Colors.textLight} size={14} />
-                <Text style={styles.personLocation}>{person.location}</Text>
+                <Text style={styles.personLocation}>{person.country || ''}</Text>
               </View>
-              <Text style={styles.connectionInfo}>
-                {person.connections} connections
-                {person.mutualConnections && ` • ${person.mutualConnections} mutual`}
-              </Text>
+              {person.skills && person.skills.length > 0 && (
+                <Text style={styles.connectionInfo}>
+                  {person.skills.slice(0, 3).join(' • ')}
+                </Text>
+              )}
 
               <Pressable
                 style={({ pressed }) => [
                   styles.connectButton,
-                  person.isPending && styles.connectButtonPending,
+                  pendingConnections.has(person.id) && styles.connectButtonPending,
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleConnect(person.id);
                 }}
-                disabled={person.isPending}
+                disabled={pendingConnections.has(person.id)}
               >
-                {person.isPending ? (
+                {pendingConnections.has(person.id) ? (
                   <>
                     <UserCheck color={Colors.textLight} size={18} />
                     <Text style={styles.connectButtonTextPending}>Pending</Text>
@@ -173,7 +134,7 @@ export default function PeopleSearchScreen() {
               </Pressable>
             </View>
           </Pressable>
-        ))}
+        )))}
       </ScrollView>
     </SafeAreaView>
   );
