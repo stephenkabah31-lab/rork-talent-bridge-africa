@@ -60,7 +60,7 @@ export default function ApplyJob() {
       if (!user || !jobId) return;
       setIsSubmitting(true);
       try {
-        await trpc.jobs.apply.mutate({
+        await trpc.jobs.submitApplication.mutate({
           jobId,
           userId: user.id,
           coverLetter: form.coverLetter,

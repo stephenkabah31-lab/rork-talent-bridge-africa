@@ -6,7 +6,7 @@ import { defineConfig, loadEnv } from "vite";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ["VITE_", "EXPO_PUBLIC_"]);
-  const backendUrl = env.EXPO_PUBLIC_RORK_API_BASE_URL || "https://ln0w2dnjwy17g62tuteow.rork.live";
+  const backendUrl = env.EXPO_PUBLIC_RORK_FUNCTIONS_URL || "https://ln0w2dnjwy17g62tuteow.rork.live";
 
   return {
     server: {

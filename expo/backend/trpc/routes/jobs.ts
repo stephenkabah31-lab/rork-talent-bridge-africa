@@ -148,7 +148,7 @@ export const jobsRouter = createTRPCRouter({
       };
     }),
 
-  apply: protectedProcedure
+  submitApplication: protectedProcedure
     .input(
       z.object({
         jobId: z.string(),

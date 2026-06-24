@@ -2,10 +2,10 @@ import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { appRouter } from "../expo/backend/trpc/app-router";
-import { createContext } from "../expo/backend/trpc/create-context";
+import { appRouter } from "./trpc/app-router";
+import { createContext } from "./trpc/create-context";
 
-// app is mounted at /api
+// app is mounted at /api (backend worker redeploy trigger)
 const app = new Hono();
 
 // Enable CORS for all routes

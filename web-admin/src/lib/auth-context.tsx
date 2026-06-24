@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { trpc } from "./trpc";
 import type { User } from "./trpc-types";
 
 export type UserType = "professional" | "recruiter" | "company" | "admin";
@@ -31,24 +30,57 @@ export interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-// Keys mirror the Expo app pattern so data is consistent
 const STORAGE_KEY = "talentbridge_user";
 const TOKEN_KEY = "talentbridge_token";
+
+function getApiBase(): string {
+  if (import.meta.env.DEV) return "";
+  return import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "";
+}
+
+interface AuthResponse {
+  success: boolean;
+  message?: string;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    type: string;
+    fullName?: string;
+    companyName?: string;
+    phoneNumber?: string;
+    country?: string;
+    isPremium?: boolean;
+    isAdmin?: boolean;
+  };
+}
+
+async function apiFetch(path: string, body: Record<string, unknown>): Promise<AuthResponse> {
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = (await res.json()) as AuthResponse;
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || "Request failed");
+  }
+  return json;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
   useEffect(() => {
     const savedToken = localStorage.getItem(TOKEN_KEY);
     const savedUser = localStorage.getItem(STORAGE_KEY);
     if (savedToken && savedUser) {
       try {
-        const parsed = JSON.parse(savedUser);
         setToken(savedToken);
-        setUser(parsed);
+        setUser(JSON.parse(savedUser));
       } catch {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(STORAGE_KEY);
@@ -57,67 +89,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // ── Regular user login ──────────────────────────────────────
+  // ── Regular user login (REST) ──
   const login = useCallback(
     async (email: string, password: string, userType: UserType): Promise<void> => {
-      const result = await trpc.auth.login.mutate({
+      const result = await apiFetch("/api/auth/login", {
         email: email.toLowerCase().trim(),
         password,
-        userType: userType as "professional" | "recruiter" | "company",
+        userType,
       });
 
-      if (!result.success || !result.user) {
-        throw new Error("Invalid credentials");
-      }
-
       const appUser: User = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
+        id: result.user.id as string,
+        email: result.user.email as string,
+        name: result.user.name as string,
         type: result.user.type as User["type"],
-        fullName: (result.user as Record<string, string>).fullName,
-        companyName: (result.user as Record<string, string>).companyName,
-        phoneNumber: (result.user as Record<string, string>).phoneNumber,
-        country: (result.user as Record<string, string>).country,
-        isPremium: (result.user as Record<string, boolean>).isPremium ?? false,
-        isAdmin: (result.user as Record<string, boolean>).isAdmin ?? false,
+        fullName: result.user.fullName as string | undefined,
+        companyName: result.user.companyName as string | undefined,
+        phoneNumber: result.user.phoneNumber as string | undefined,
+        country: result.user.country as string | undefined,
+        isPremium: (result.user.isPremium as boolean) ?? false,
+        isAdmin: (result.user.isAdmin as boolean) ?? false,
       };
 
-      localStorage.setItem(TOKEN_KEY, result.token);
+      localStorage.setItem(TOKEN_KEY, result.token as string);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appUser));
       setUser(appUser);
-      setToken(result.token);
+      setToken(result.token as string);
     },
     [],
   );
 
-  // ── Admin login ─────────────────────────────────────────────
+  // ── Admin login (REST) ──
   const adminLogin = useCallback(
     async (username: string, password: string): Promise<void> => {
-      const result = await trpc.auth.adminLogin.mutate({ username, password });
-
-      if (!result.success || !result.user) {
-        throw new Error("Invalid credentials");
-      }
+      const result = await apiFetch("/api/auth/admin-login", { username, password });
 
       const adminUser: User = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
+        id: result.user.id as string,
+        email: result.user.email as string,
+        name: result.user.name as string,
         type: "admin",
         isAdmin: true,
         isPremium: false,
       };
 
-      localStorage.setItem(TOKEN_KEY, result.token);
+      localStorage.setItem(TOKEN_KEY, result.token as string);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(adminUser));
       setUser(adminUser);
-      setToken(result.token);
+      setToken(result.token as string);
     },
     [],
   );
 
-  // ── Signup ──────────────────────────────────────────────────
+  // ── Signup (REST) ──
   const signup = useCallback(
     async (data: {
       email: string;
@@ -128,37 +152,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phoneNumber?: string;
       country?: string;
     }): Promise<void> => {
-      const result = await trpc.auth.signup.mutate({
+      const result = await apiFetch("/api/auth/signup", {
         email: data.email.toLowerCase().trim(),
         password: data.password,
-        userType: data.userType as "professional" | "recruiter" | "company",
+        userType: data.userType,
         fullName: data.fullName,
         companyName: data.companyName,
         phoneNumber: data.phoneNumber,
         country: data.country,
       });
 
-      if (!result.success || !result.user) {
-        throw new Error("Signup failed");
-      }
-
       const appUser: User = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
+        id: result.user.id as string,
+        email: result.user.email as string,
+        name: result.user.name as string,
         type: result.user.type as User["type"],
-        fullName: (result.user as Record<string, string>).fullName,
-        companyName: (result.user as Record<string, string>).companyName,
-        phoneNumber: (result.user as Record<string, string>).phoneNumber,
-        country: (result.user as Record<string, string>).country,
-        isPremium: (result.user as Record<string, boolean>).isPremium ?? false,
+        fullName: result.user.fullName as string | undefined,
+        companyName: result.user.companyName as string | undefined,
+        phoneNumber: result.user.phoneNumber as string | undefined,
+        country: result.user.country as string | undefined,
+        isPremium: (result.user.isPremium as boolean) ?? false,
         isAdmin: false,
       };
 
-      localStorage.setItem(TOKEN_KEY, result.token);
+      localStorage.setItem(TOKEN_KEY, result.token as string);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appUser));
       setUser(appUser);
-      setToken(result.token);
+      setToken(result.token as string);
     },
     [],
   );

@@ -3,10 +3,11 @@ import superjson from "superjson";
 
 // In dev, use the Vite proxy (relative /api/trpc) so the browser
 // sends requests to the same origin where Vite forwards them.
-// In production, use Rork's injected backend URL.
+// In production, call the Cloudflare Functions backend Worker.
+const PRODUCTION_API_ORIGIN = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "";
 const trpcUrl: string = import.meta.env.DEV
   ? "/api/trpc"
-  : `${import.meta.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? ""}/api/trpc`;
+  : `${PRODUCTION_API_ORIGIN}/api/trpc`;
 
 const getAuthToken = (): string | null => {
   // Auth-context stores under "talentbridge_token" — must match
