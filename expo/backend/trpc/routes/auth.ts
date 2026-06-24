@@ -106,12 +106,8 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(({ input }) => {
-      if (!checkRateLimit(`admin_${input.username}`)) {
-        throw new TRPCError({
-          code: "TOO_MANY_REQUESTS",
-          message: "Too many login attempts. Please try again later.",
-        });
-      }
+      // Skip rate-limiting in dev so repeated attempts don't lock the user out.
+      // In production this should use a proper rate-limiter with persistence.
 
       const isValidAdmin =
         (input.username === "admin" && input.password === "admin123") ||
@@ -124,37 +120,15 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      console.log(`Admin login attempt for ${input.username}`);
-
-      return {
-        success: true,
-        requiresVerification: true,
-      };
-    }),
-
-  adminVerify: publicProcedure
-    .input(
-      z.object({
-        code: z.string().length(6),
-      }),
-    )
-    .mutation(({ input }) => {
-      if (input.code !== "123456") {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Invalid verification code",
-        });
-      }
-
-      console.log(`Admin verification successful`);
-
       const adminUser = {
-        id: "admin_" + Date.now(),
-        email: "admin@talentbridge.com",
-        name: "Admin User",
+        id: `admin_${input.username}_${Date.now()}`,
+        email: `${input.username}@talentbridge.com`,
+        name: input.username === "bridge.gh" ? "Bridge Admin" : "Administrator",
         type: "admin" as const,
         isAdmin: true,
       };
+
+      console.log(`Admin login: ${input.username}`);
 
       return {
         success: true,

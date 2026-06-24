@@ -9,16 +9,27 @@ import {
 import type { AdminUser } from "./trpc-types";
 import { trpcClient } from "./trpc";
 
-interface AuthState {
+export interface AuthState {
   user: AdminUser | null;
   token: string | null;
   isLoading: boolean;
-  login: (username: string, password: string, code: string) => Promise<void>;
-  verifyLogin: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
+
+interface AdminLoginResult {
+  success: boolean;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    type: string;
+    isAdmin: boolean;
+  };
+  token: string;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -40,54 +51,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const verifyLogin = useCallback(
-    async (username: string, password: string): Promise<boolean> => {
-      try {
-        // Use tRPC client for proper v11 protocol handling
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = await (trpcClient as any).auth.adminLogin.mutate({
-          username,
-          password,
-        });
-        return (result as { success: boolean }).success === true;
-      } catch (err) {
-        console.error("Admin login failed:", err);
-        return false;
-      }
-    },
-    [],
-  );
-
   const login = useCallback(
-    async (_username: string, _password: string, code: string) => {
-      // Use tRPC client for proper v11 protocol handling
+    async (username: string, password: string): Promise<void> => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (trpcClient as any).auth.adminVerify.mutate({
-        code,
-      });
+      const result = (await (trpcClient as any).auth.adminLogin.mutate({
+        username,
+        password,
+      })) as AdminLoginResult;
 
-      const data = result as {
-        success: boolean;
-        user: AdminUser;
-        token: string;
-      };
-
-      if (!data.success || !data.token) {
-        throw new Error("Invalid verification code");
+      if (!result.success || !result.token) {
+        throw new Error("Invalid credentials");
       }
 
       const adminUser: AdminUser = {
-        id: data.user?.id ?? `admin_${Date.now()}`,
-        email: data.user?.email ?? "admin@talentbridge.com",
-        name: data.user?.name ?? "Administrator",
+        id: result.user?.id ?? `admin_${Date.now()}`,
+        email: result.user?.email ?? "admin@talentbridge.com",
+        name: result.user?.name ?? "Administrator",
         type: "admin",
         isAdmin: true,
       };
 
-      localStorage.setItem("admin_token", data.token);
+      localStorage.setItem("admin_token", result.token);
       localStorage.setItem("admin_user", JSON.stringify(adminUser));
       setUser(adminUser);
-      setToken(data.token);
+      setToken(result.token);
     },
     [],
   );
@@ -100,8 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, token, isLoading, login, verifyLogin, logout }),
-    [user, token, isLoading, login, verifyLogin, logout],
+    () => ({ user, token, isLoading, login, logout }),
+    [user, token, isLoading, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
