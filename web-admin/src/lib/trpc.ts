@@ -12,7 +12,8 @@ const getAuthToken = (): string | null => {
   return localStorage.getItem("admin_token");
 };
 
-export const trpcClient = createTRPCClient({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const raw: any = createTRPCClient({
   links: [
     httpBatchLink({
       url: trpcUrl,
@@ -24,3 +25,5 @@ export const trpcClient = createTRPCClient({
     }),
   ],
 });
+
+export { raw as trpcClient, raw as trpc };

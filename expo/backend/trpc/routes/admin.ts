@@ -15,14 +15,14 @@ import {
 
 export const adminRouter = createTRPCRouter({
   // ── Professional applications ──────────────────────────────
-  getProfessionals: publicProcedure.query(() => {
+  getProfessionals: publicProcedure.query(async () => {
     return getAllProfessionalApplications();
   }),
 
   approveProfessional: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => {
-      const app = updateProfessionalStatus(input.id, "approved");
+    .mutation(async ({ input }) => {
+      const app = await updateProfessionalStatus(input.id, "approved");
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Professional not found" });
       }
@@ -31,8 +31,8 @@ export const adminRouter = createTRPCRouter({
 
   rejectProfessional: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => {
-      const app = updateProfessionalStatus(input.id, "rejected");
+    .mutation(async ({ input }) => {
+      const app = await updateProfessionalStatus(input.id, "rejected");
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Professional not found" });
       }
@@ -40,14 +40,14 @@ export const adminRouter = createTRPCRouter({
     }),
 
   // ── Recruiter applications ─────────────────────────────────
-  getRecruiters: publicProcedure.query(() => {
+  getRecruiters: publicProcedure.query(async () => {
     return getAllRecruiterApplications();
   }),
 
   approveRecruiter: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => {
-      const app = updateRecruiterStatus(input.id, "approved");
+    .mutation(async ({ input }) => {
+      const app = await updateRecruiterStatus(input.id, "approved");
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Recruiter not found" });
       }
@@ -56,8 +56,8 @@ export const adminRouter = createTRPCRouter({
 
   rejectRecruiter: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => {
-      const app = updateRecruiterStatus(input.id, "rejected");
+    .mutation(async ({ input }) => {
+      const app = await updateRecruiterStatus(input.id, "rejected");
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Recruiter not found" });
       }
@@ -65,14 +65,14 @@ export const adminRouter = createTRPCRouter({
     }),
 
   // ── Company applications ───────────────────────────────────
-  getCompanies: publicProcedure.query(() => {
+  getCompanies: publicProcedure.query(async () => {
     return getAllCompanyApplications();
   }),
 
   approveCompany: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => {
-      const app = updateCompanyStatus(input.id, "approved");
+    .mutation(async ({ input }) => {
+      const app = await updateCompanyStatus(input.id, "approved");
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Company not found" });
       }
@@ -81,8 +81,8 @@ export const adminRouter = createTRPCRouter({
 
   rejectCompany: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => {
-      const app = updateCompanyStatus(input.id, "rejected");
+    .mutation(async ({ input }) => {
+      const app = await updateCompanyStatus(input.id, "rejected");
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Company not found" });
       }
@@ -98,14 +98,14 @@ export const adminRouter = createTRPCRouter({
         status: z.enum(["approved", "rejected"]),
       }),
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       let app;
       if (input.type === "professional") {
-        app = updateProfessionalStatus(input.id, input.status);
+        app = await updateProfessionalStatus(input.id, input.status);
       } else if (input.type === "recruiter") {
-        app = updateRecruiterStatus(input.id, input.status);
+        app = await updateRecruiterStatus(input.id, input.status);
       } else {
-        app = updateCompanyStatus(input.id, input.status);
+        app = await updateCompanyStatus(input.id, input.status);
       }
       if (!app) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Item not found" });
@@ -114,7 +114,7 @@ export const adminRouter = createTRPCRouter({
     }),
 
   // ── Jobs ───────────────────────────────────────────────────
-  getJobs: publicProcedure.query(() => {
+  getJobs: publicProcedure.query(async () => {
     return getAllJobs();
   }),
 
@@ -125,8 +125,8 @@ export const adminRouter = createTRPCRouter({
         status: z.enum(["active", "closed", "flagged"]),
       }),
     )
-    .mutation(({ input }) => {
-      const job = updateJobStatus(input.id, input.status);
+    .mutation(async ({ input }) => {
+      const job = await updateJobStatus(input.id, input.status);
       if (!job) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Job not found" });
       }
@@ -135,7 +135,7 @@ export const adminRouter = createTRPCRouter({
 
   getJobApplicants: publicProcedure
     .input(z.object({ jobId: z.string() }))
-    .query(({ input }) => {
+    .query(async ({ input }) => {
       return getJobApplicantsByJobId(input.jobId);
     }),
 });

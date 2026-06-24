@@ -1,6 +1,9 @@
-// Shared data store — single source of truth for all tRPC routes.
-// In-memory for now; swap to a real DB (Supabase, etc.) by replacing the
-// getters/mutators while keeping the same interface.
+// Persistent data store backed by Supabase.
+// All functions are async — tRPC routes call them with await.
+
+import { supabase } from "../../lib/supabase";
+
+// ── TypeScript interfaces (camelCase, matching the app) ────────────
 
 export interface User {
   id: string;
@@ -126,326 +129,606 @@ export interface JobApplicant {
   status: "pending" | "shortlisted" | "rejected";
 }
 
-// ── In-memory stores ────────────────────────────────────────────
+// ── DB ↔ App mappers ─────────────────────────────────────────────
 
-const authUsers: Record<string, AuthUser> = {};
+function dbUserToApp(row: Record<string, unknown>): User {
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    name: row.name as string,
+    type: row.type as User["type"],
+    fullName: (row.full_name as string) ?? undefined,
+    companyName: (row.company_name as string) ?? undefined,
+    phoneNumber: (row.phone_number as string) ?? undefined,
+    country: (row.country as string) ?? undefined,
+    profilePicture: (row.profile_picture as string) ?? undefined,
+    bio: (row.bio as string) ?? undefined,
+    skills: (row.skills as string[]) ?? undefined,
+    experience: (row.experience as string) ?? undefined,
+    education: (row.education as string) ?? undefined,
+    isPremium: (row.is_premium as boolean) ?? undefined,
+    isAdmin: (row.is_admin as boolean) ?? undefined,
+    connections: (row.connections as string[]) ?? undefined,
+  };
+}
 
-const professionalApplications: ProfessionalApplication[] = [
+function dbUserToAuthUser(row: Record<string, unknown>): AuthUser {
+  return {
+    ...dbUserToApp(row),
+    password: row.password as string,
+  };
+}
+
+function appUserToDb(user: AuthUser) {
+  return {
+    id: user.id,
+    email: user.email,
+    password: user.password,
+    name: user.name,
+    type: user.type,
+    full_name: user.fullName ?? null,
+    company_name: user.companyName ?? null,
+    phone_number: user.phoneNumber ?? null,
+    country: user.country ?? null,
+    profile_picture: user.profilePicture ?? null,
+    bio: user.bio ?? null,
+    skills: user.skills ?? null,
+    experience: user.experience ?? null,
+    education: user.education ?? null,
+    is_premium: user.isPremium ?? false,
+    is_admin: user.isAdmin ?? false,
+    connections: user.connections ?? [],
+  } as const;
+}
+
+function dbProToApp(row: Record<string, unknown>): ProfessionalApplication {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    email: row.email as string,
+    phone: (row.phone as string) ?? "",
+    location: (row.location as string) ?? "",
+    title: (row.title as string) ?? "",
+    experience: (row.experience as string) ?? "",
+    skills: (row.skills as string[]) ?? [],
+    status: row.status as ProfessionalApplication["status"],
+    createdAt: (row.created_at as string) ?? "",
+  };
+}
+
+function dbRecruiterToApp(row: Record<string, unknown>): RecruiterApplication {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    email: row.email as string,
+    phone: (row.phone as string) ?? "",
+    company: (row.company as string) ?? "",
+    location: (row.location as string) ?? "",
+    status: row.status as RecruiterApplication["status"],
+    createdAt: (row.created_at as string) ?? "",
+  };
+}
+
+function dbCompanyToApp(row: Record<string, unknown>): CompanyApplication {
+  return {
+    id: row.id as string,
+    companyName: row.company_name as string,
+    contactPerson: (row.contact_person as string) ?? "",
+    email: row.email as string,
+    phone: (row.phone as string) ?? "",
+    location: (row.location as string) ?? "",
+    industry: (row.industry as string) ?? "",
+    website: (row.website as string) ?? "",
+    registrationNumber: (row.registration_number as string) ?? "",
+    status: row.status as CompanyApplication["status"],
+    createdAt: (row.created_at as string) ?? "",
+  };
+}
+
+function dbJobToApp(row: Record<string, unknown>): Job {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    company: row.company as string,
+    companyLogo: (row.company_logo as string) ?? undefined,
+    location: (row.location as string) ?? "",
+    type: row.type as Job["type"],
+    salary: (row.salary as string) ?? undefined,
+    description: (row.description as string) ?? "",
+    requirements: (row.requirements as string[]) ?? [],
+    postedBy: row.posted_by as string,
+    postedAt: new Date((row.posted_at as string) ?? Date.now()),
+    applicants: (row.applicants as number) ?? 0,
+    status: row.status as Job["status"],
+  };
+}
+
+function dbApplicationToApp(row: Record<string, unknown>): Application {
+  return {
+    id: row.id as string,
+    jobId: row.job_id as string,
+    userId: row.user_id as string,
+    coverLetter: (row.cover_letter as string) ?? "",
+    resume: (row.resume as string) ?? undefined,
+    appliedAt: new Date((row.applied_at as string) ?? Date.now()),
+    status: row.status as Application["status"],
+  };
+}
+
+function dbConnectionToApp(row: Record<string, unknown>): Connection {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    connectedUserId: row.connected_user_id as string,
+    status: row.status as Connection["status"],
+    createdAt: new Date((row.created_at as string) ?? Date.now()),
+  };
+}
+
+function dbPostToApp(row: Record<string, unknown>): Post {
+  const author = (row.author as Record<string, unknown>) ?? {};
+  return {
+    id: row.id as string,
+    authorId: row.author_id as string,
+    author: {
+      id: (author.id as string) ?? "",
+      name: (author.name as string) ?? "",
+      title: (author.title as string) ?? "",
+      profilePicture: (author.profilePicture as string) ?? undefined,
+      isVerified: (author.isVerified as boolean) ?? undefined,
+    },
+    content: row.content as string,
+    image: (row.image as string) ?? undefined,
+    timestamp: (row.timestamp as string) ?? "",
+    createdAt: new Date((row.created_at as string) ?? Date.now()),
+    likes: (row.likes as number) ?? 0,
+    comments: (row.comments as number) ?? 0,
+    shares: (row.shares as number) ?? 0,
+    likedBy: (row.liked_by as string[]) ?? [],
+  };
+}
+
+function dbJobApplicantToApp(row: Record<string, unknown>): JobApplicant {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    email: row.email as string,
+    title: (row.title as string) ?? "",
+    appliedAt: (row.applied_at as string) ?? "",
+    status: row.status as JobApplicant["status"],
+  };
+}
+
+// ── Seed data ────────────────────────────────────────────────────
+
+const SEED_PROFESSIONALS: ProfessionalApplication[] = [
   {
-    id: "1",
-    name: "Amara Okonkwo",
-    email: "amara.okonkwo@email.com",
-    phone: "+234 80 123 4567",
-    location: "Lagos, Nigeria",
-    title: "Senior Software Engineer",
-    experience: "8 years",
+    id: "1", name: "Amara Okonkwo", email: "amara.okonkwo@email.com",
+    phone: "+234 80 123 4567", location: "Lagos, Nigeria",
+    title: "Senior Software Engineer", experience: "8 years",
     skills: ["React Native", "TypeScript", "Node.js", "AWS"],
-    status: "pending",
-    createdAt: "2025-01-12T10:30:00Z",
+    status: "pending", createdAt: "2025-01-12T10:30:00Z",
   },
   {
-    id: "2",
-    name: "Kwame Mensah",
-    email: "kwame.mensah@email.com",
-    phone: "+233 24 555 1234",
-    location: "Accra, Ghana",
-    title: "Product Designer",
-    experience: "5 years",
+    id: "2", name: "Kwame Mensah", email: "kwame.mensah@email.com",
+    phone: "+233 24 555 1234", location: "Accra, Ghana",
+    title: "Product Designer", experience: "5 years",
     skills: ["UI/UX", "Figma", "Prototyping", "Design Systems"],
-    status: "pending",
-    createdAt: "2025-01-11T14:20:00Z",
+    status: "pending", createdAt: "2025-01-11T14:20:00Z",
   },
   {
-    id: "3",
-    name: "Sarah Kimani",
-    email: "sarah.kimani@email.com",
-    phone: "+254 70 555 9012",
-    location: "Nairobi, Kenya",
-    title: "Data Scientist",
-    experience: "6 years",
+    id: "3", name: "Sarah Kimani", email: "sarah.kimani@email.com",
+    phone: "+254 70 555 9012", location: "Nairobi, Kenya",
+    title: "Data Scientist", experience: "6 years",
     skills: ["Python", "Machine Learning", "TensorFlow", "SQL"],
-    status: "approved",
-    createdAt: "2025-01-10T09:15:00Z",
+    status: "approved", createdAt: "2025-01-10T09:15:00Z",
   },
 ];
 
-const recruiterApplications: RecruiterApplication[] = [
+const SEED_RECRUITERS: RecruiterApplication[] = [
   {
-    id: "1",
-    name: "John Osei",
-    email: "john.osei@techcorp.com",
-    phone: "+233 24 777 8888",
-    company: "TechCorp Africa",
-    location: "Accra, Ghana",
-    status: "pending",
-    createdAt: "2025-01-11T11:30:00Z",
+    id: "1", name: "John Osei", email: "john.osei@techcorp.com",
+    phone: "+233 24 777 8888", company: "TechCorp Africa",
+    location: "Accra, Ghana", status: "pending", createdAt: "2025-01-11T11:30:00Z",
   },
   {
-    id: "2",
-    name: "Grace Mwangi",
-    email: "grace.m@innovate.co.ke",
-    phone: "+254 70 888 9999",
-    company: "Innovate Kenya",
-    location: "Nairobi, Kenya",
-    status: "pending",
-    createdAt: "2025-01-10T15:45:00Z",
+    id: "2", name: "Grace Mwangi", email: "grace.m@innovate.co.ke",
+    phone: "+254 70 888 9999", company: "Innovate Kenya",
+    location: "Nairobi, Kenya", status: "pending", createdAt: "2025-01-10T15:45:00Z",
   },
 ];
 
-const companyApplications: CompanyApplication[] = [
+const SEED_COMPANIES: CompanyApplication[] = [
   {
-    id: "1",
-    companyName: "Tech Africa Solutions",
-    contactPerson: "Kwame Mensah",
-    email: "hr@techafricasolutions.com",
-    phone: "+233 24 555 1234",
-    location: "Accra, Ghana",
-    industry: "Technology",
-    website: "www.techafricasolutions.com",
-    registrationNumber: "BN20231234",
-    status: "pending",
-    createdAt: "2025-01-10T10:30:00Z",
+    id: "1", companyName: "Tech Africa Solutions", contactPerson: "Kwame Mensah",
+    email: "hr@techafricasolutions.com", phone: "+233 24 555 1234",
+    location: "Accra, Ghana", industry: "Technology",
+    website: "www.techafricasolutions.com", registrationNumber: "BN20231234",
+    status: "pending", createdAt: "2025-01-10T10:30:00Z",
   },
   {
-    id: "2",
-    companyName: "AfriBank Financial",
-    contactPerson: "Amara Okafor",
-    email: "recruitment@afribank.com",
-    phone: "+234 80 555 5678",
-    location: "Lagos, Nigeria",
-    industry: "Finance",
-    website: "www.afribank.com",
-    registrationNumber: "RC45678",
-    status: "pending",
-    createdAt: "2025-01-11T14:20:00Z",
+    id: "2", companyName: "AfriBank Financial", contactPerson: "Amara Okafor",
+    email: "recruitment@afribank.com", phone: "+234 80 555 5678",
+    location: "Lagos, Nigeria", industry: "Finance",
+    website: "www.afribank.com", registrationNumber: "RC45678",
+    status: "pending", createdAt: "2025-01-11T14:20:00Z",
   },
 ];
 
-const jobs: Job[] = [
+const SEED_JOBS: Job[] = [
   {
-    id: "1",
-    title: "Senior Software Engineer",
-    company: "TechCorp Africa",
-    location: "Lagos, Nigeria",
-    type: "Full-time",
-    salary: "$60,000 - $90,000",
+    id: "1", title: "Senior Software Engineer", company: "TechCorp Africa",
+    location: "Lagos, Nigeria", type: "Full-time", salary: "$60,000 - $90,000",
     description: "We are seeking a talented Senior Software Engineer to join our growing team.",
     requirements: ["5+ years experience", "React Native", "Node.js"],
-    postedBy: "recruiter1",
-    postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    applicants: 45,
-    status: "active",
+    postedBy: "recruiter1", postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    applicants: 45, status: "active",
   },
   {
-    id: "2",
-    title: "Product Designer",
-    company: "DesignHub",
-    location: "Accra, Ghana",
-    type: "Remote",
-    salary: "$40,000 - $60,000",
+    id: "2", title: "Product Designer", company: "DesignHub",
+    location: "Accra, Ghana", type: "Remote", salary: "$40,000 - $60,000",
     description: "Looking for a creative Product Designer to help shape our products.",
     requirements: ["3+ years experience", "Figma", "User Research"],
-    postedBy: "company1",
-    postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    applicants: 28,
-    status: "active",
+    postedBy: "company1", postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    applicants: 28, status: "active",
   },
 ];
 
-const jobApplications: Application[] = [];
-
-const connections: Connection[] = [];
-
-const posts: Post[] = [];
-
-const jobApplicants: Record<string, JobApplicant[]> = {
+const SEED_JOB_APPLICANTS: Record<string, JobApplicant[]> = {
   "1": [
-    {
-      id: "a1",
-      name: "John Doe",
-      email: "john.doe@email.com",
-      title: "Senior Developer",
-      appliedAt: "2025-01-10T14:30:00Z",
-      status: "pending",
-    },
-    {
-      id: "a2",
-      name: "Jane Smith",
-      email: "jane.smith@email.com",
-      title: "Full Stack Engineer",
-      appliedAt: "2025-01-09T10:20:00Z",
-      status: "shortlisted",
-    },
-    {
-      id: "a3",
-      name: "Michael Brown",
-      email: "michael.b@email.com",
-      title: "React Native Developer",
-      appliedAt: "2025-01-08T16:45:00Z",
-      status: "pending",
-    },
+    { id: "a1", name: "John Doe", email: "john.doe@email.com", title: "Senior Developer", appliedAt: "2025-01-10T14:30:00Z", status: "pending" },
+    { id: "a2", name: "Jane Smith", email: "jane.smith@email.com", title: "Full Stack Engineer", appliedAt: "2025-01-09T10:20:00Z", status: "shortlisted" },
+    { id: "a3", name: "Michael Brown", email: "michael.b@email.com", title: "React Native Developer", appliedAt: "2025-01-08T16:45:00Z", status: "pending" },
   ],
 };
 
-// Auth helpers
-export function getAuthUser(id: string): AuthUser | undefined {
-  return authUsers[id];
+let seeded = false;
+
+/** Seeds the database with initial demo data if tables are empty. */
+export async function seedDatabase(): Promise<void> {
+  if (seeded) return;
+  try {
+    // Check if data already exists
+    const { count: proCount } = await supabase
+      .from("professional_applications")
+      .select("*", { count: "exact", head: true });
+    if (proCount && proCount > 0) { seeded = true; return; }
+
+    // Seed professionals
+    for (const p of SEED_PROFESSIONALS) {
+      await supabase.from("professional_applications").insert({
+        id: p.id, name: p.name, email: p.email, phone: p.phone,
+        location: p.location, title: p.title, experience: p.experience,
+        skills: p.skills, status: p.status, created_at: p.createdAt,
+      });
+    }
+
+    // Seed recruiters
+    for (const r of SEED_RECRUITERS) {
+      await supabase.from("recruiter_applications").insert({
+        id: r.id, name: r.name, email: r.email, phone: r.phone,
+        company: r.company, location: r.location, status: r.status,
+        created_at: r.createdAt,
+      });
+    }
+
+    // Seed companies
+    for (const c of SEED_COMPANIES) {
+      await supabase.from("company_applications").insert({
+        id: c.id, company_name: c.companyName, contact_person: c.contactPerson,
+        email: c.email, phone: c.phone, location: c.location,
+        industry: c.industry, website: c.website,
+        registration_number: c.registrationNumber, status: c.status,
+        created_at: c.createdAt,
+      });
+    }
+
+    // Seed jobs
+    for (const j of SEED_JOBS) {
+      await supabase.from("jobs").insert({
+        id: j.id, title: j.title, company: j.company, location: j.location,
+        type: j.type, salary: j.salary, description: j.description,
+        requirements: j.requirements, posted_by: j.postedBy,
+        posted_at: j.postedAt.toISOString(), applicants: j.applicants,
+        status: j.status,
+      });
+    }
+
+    // Seed job applicants
+    for (const [jobId, applicants] of Object.entries(SEED_JOB_APPLICANTS)) {
+      for (const a of applicants) {
+        await supabase.from("job_applicants").insert({
+          id: a.id, job_id: jobId, name: a.name, email: a.email,
+          title: a.title, applied_at: a.appliedAt, status: a.status,
+        });
+      }
+    }
+
+    console.log("[data-store] Seeded database with demo data");
+    seeded = true;
+  } catch (err) {
+    console.error("[data-store] Seed error (non-fatal):", err);
+    seeded = true; // Don't retry on error
+  }
 }
 
-export function getAuthUserByEmail(email: string): AuthUser | undefined {
-  return Object.values(authUsers).find(
-    (u) => u.email.toLowerCase() === email.toLowerCase(),
-  );
+// ── Auth helpers ─────────────────────────────────────────────────
+
+export async function getAuthUser(id: string): Promise<AuthUser | undefined> {
+  const { data } = await supabase.from("auth_users").select("*").eq("id", id).single();
+  return data ? dbUserToAuthUser(data) : undefined;
 }
 
-export function createAuthUser(user: AuthUser): void {
-  authUsers[user.id] = user;
+export async function getAuthUserByEmail(email: string): Promise<AuthUser | undefined> {
+  const { data } = await supabase
+    .from("auth_users")
+    .select("*")
+    .ilike("email", email)
+    .single();
+  return data ? dbUserToAuthUser(data) : undefined;
 }
 
-// User helpers (for users router)
-export function getUsersForSearch(): User[] {
-  return Object.values(authUsers).map(({ password: _, ...rest }) => rest);
+export async function createAuthUser(user: AuthUser): Promise<void> {
+  await supabase.from("auth_users").insert(appUserToDb(user));
 }
 
-export function getUserById(id: string): User | undefined {
-  const u = authUsers[id];
-  if (!u) return undefined;
-  const { password: _, ...rest } = u;
-  return rest;
+// ── User helpers ─────────────────────────────────────────────────
+
+export async function getUsersForSearch(): Promise<User[]> {
+  const { data } = await supabase.from("auth_users").select("*");
+  if (!data) return [];
+  return data.map((r) => dbUserToApp(r));
 }
 
-// Admin helpers
-export function getAllProfessionalApplications(): ProfessionalApplication[] {
-  return professionalApplications;
+export async function getUserById(id: string): Promise<User | undefined> {
+  const { data } = await supabase.from("auth_users").select("*").eq("id", id).single();
+  return data ? dbUserToApp(data) : undefined;
 }
 
-export function getAllRecruiterApplications(): RecruiterApplication[] {
-  return recruiterApplications;
+// ── Admin helpers ────────────────────────────────────────────────
+
+export async function getAllProfessionalApplications(): Promise<ProfessionalApplication[]> {
+  const { data } = await supabase.from("professional_applications").select("*").order("created_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbProToApp);
 }
 
-export function getAllCompanyApplications(): CompanyApplication[] {
-  return companyApplications;
+export async function getAllRecruiterApplications(): Promise<RecruiterApplication[]> {
+  const { data } = await supabase.from("recruiter_applications").select("*").order("created_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbRecruiterToApp);
 }
 
-export function updateProfessionalStatus(
+export async function getAllCompanyApplications(): Promise<CompanyApplication[]> {
+  const { data } = await supabase.from("company_applications").select("*").order("created_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbCompanyToApp);
+}
+
+export async function updateProfessionalStatus(
   id: string,
   status: "approved" | "rejected",
-): ProfessionalApplication | undefined {
-  const app = professionalApplications.find((a) => a.id === id);
-  if (app) app.status = status;
-  return app;
+): Promise<ProfessionalApplication | undefined> {
+  const { data } = await supabase
+    .from("professional_applications")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
+  return data ? dbProToApp(data) : undefined;
 }
 
-export function updateRecruiterStatus(
+export async function updateRecruiterStatus(
   id: string,
   status: "approved" | "rejected",
-): RecruiterApplication | undefined {
-  const app = recruiterApplications.find((a) => a.id === id);
-  if (app) app.status = status;
-  return app;
+): Promise<RecruiterApplication | undefined> {
+  const { data } = await supabase
+    .from("recruiter_applications")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
+  return data ? dbRecruiterToApp(data) : undefined;
 }
 
-export function updateCompanyStatus(
+export async function updateCompanyStatus(
   id: string,
   status: "approved" | "rejected",
-): CompanyApplication | undefined {
-  const app = companyApplications.find((a) => a.id === id);
-  if (app) app.status = status;
-  return app;
+): Promise<CompanyApplication | undefined> {
+  const { data } = await supabase
+    .from("company_applications")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
+  return data ? dbCompanyToApp(data) : undefined;
 }
 
-// Job helpers
-export function getAllJobs(): Job[] {
-  return jobs;
+// ── Job helpers ──────────────────────────────────────────────────
+
+export async function getAllJobs(): Promise<Job[]> {
+  const { data } = await supabase.from("jobs").select("*").order("posted_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbJobToApp);
 }
 
-export function getJobById(id: string): Job | undefined {
-  return jobs.find((j) => j.id === id);
+export async function getJobById(id: string): Promise<Job | undefined> {
+  const { data } = await supabase.from("jobs").select("*").eq("id", id).single();
+  return data ? dbJobToApp(data) : undefined;
 }
 
-export function createJob(job: Job): void {
-  jobs.unshift(job);
+export async function createJob(job: Job): Promise<void> {
+  await supabase.from("jobs").insert({
+    id: job.id,
+    title: job.title,
+    company: job.company,
+    company_logo: job.companyLogo ?? null,
+    location: job.location,
+    type: job.type,
+    salary: job.salary ?? null,
+    description: job.description,
+    requirements: job.requirements,
+    posted_by: job.postedBy,
+    posted_at: job.postedAt.toISOString(),
+    applicants: job.applicants,
+    status: job.status,
+  });
 }
 
-export function updateJobStatus(
+export async function updateJobStatus(
   id: string,
   status: "active" | "closed" | "flagged",
-): Job | undefined {
-  const job = jobs.find((j) => j.id === id);
-  if (job) job.status = status;
-  return job;
+): Promise<Job | undefined> {
+  const { data } = await supabase
+    .from("jobs")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
+  return data ? dbJobToApp(data) : undefined;
 }
 
-export function getAllJobApplications(): Application[] {
-  return jobApplications;
+export async function incrementJobApplicants(id: string): Promise<void> {
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("applicants")
+    .eq("id", id)
+    .single();
+  const current = (job?.applicants as number) ?? 0;
+  await supabase
+    .from("jobs")
+    .update({ applicants: current + 1 })
+    .eq("id", id);
 }
 
-export function getApplicationsByUser(userId: string): Application[] {
-  return jobApplications.filter((a) => a.userId === userId);
+export async function getAllJobApplications(): Promise<Application[]> {
+  const { data } = await supabase.from("job_applications").select("*").order("applied_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbApplicationToApp);
 }
 
-export function getApplicationsByJob(jobId: string): Application[] {
-  return jobApplications.filter((a) => a.jobId === jobId);
+export async function getApplicationsByUser(userId: string): Promise<Application[]> {
+  const { data } = await supabase
+    .from("job_applications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("applied_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbApplicationToApp);
 }
 
-export function createJobApplication(app: Application): void {
-  jobApplications.push(app);
+export async function getApplicationsByJob(jobId: string): Promise<Application[]> {
+  const { data } = await supabase
+    .from("job_applications")
+    .select("*")
+    .eq("job_id", jobId)
+    .order("applied_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbApplicationToApp);
 }
 
-export function getApplicationById(
-  id: string,
-): Application | undefined {
-  return jobApplications.find((a) => a.id === id);
+export async function createJobApplication(app: Application): Promise<void> {
+  await supabase.from("job_applications").insert({
+    id: app.id,
+    job_id: app.jobId,
+    user_id: app.userId,
+    cover_letter: app.coverLetter,
+    resume: app.resume ?? null,
+    applied_at: app.appliedAt.toISOString(),
+    status: app.status,
+  });
 }
 
-export function getJobApplicantsByJobId(jobId: string): JobApplicant[] {
-  return jobApplicants[jobId] ?? [];
+export async function getApplicationById(id: string): Promise<Application | undefined> {
+  const { data } = await supabase.from("job_applications").select("*").eq("id", id).single();
+  return data ? dbApplicationToApp(data) : undefined;
 }
 
-// Connection helpers
-export function getConnectionsByUserId(userId: string): Connection[] {
-  return connections.filter(
-    (c) =>
-      (c.userId === userId || c.connectedUserId === userId) &&
-      c.status === "accepted",
-  );
+export async function getJobApplicantsByJobId(jobId: string): Promise<JobApplicant[]> {
+  const { data } = await supabase
+    .from("job_applicants")
+    .select("*")
+    .eq("job_id", jobId)
+    .order("applied_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbJobApplicantToApp);
 }
 
-export function findConnection(
+// ── Connection helpers ───────────────────────────────────────────
+
+export async function getConnectionsByUserId(userId: string): Promise<Connection[]> {
+  const { data } = await supabase
+    .from("connections")
+    .select("*")
+    .or(`user_id.eq.${userId},connected_user_id.eq.${userId}`)
+    .eq("status", "accepted");
+  if (!data) return [];
+  return data.map(dbConnectionToApp);
+}
+
+export async function findConnection(
   userId: string,
   targetUserId: string,
-): Connection | undefined {
-  return connections.find(
-    (c) =>
-      (c.userId === userId && c.connectedUserId === targetUserId) ||
-      (c.userId === targetUserId && c.connectedUserId === userId),
-  );
+): Promise<Connection | undefined> {
+  const { data } = await supabase
+    .from("connections")
+    .select("*")
+    .or(
+      `and(user_id.eq.${userId},connected_user_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},connected_user_id.eq.${userId})`,
+    )
+    .maybeSingle();
+  return data ? dbConnectionToApp(data) : undefined;
 }
 
-export function addConnection(conn: Connection): void {
-  connections.push(conn);
+export async function addConnection(conn: Connection): Promise<void> {
+  await supabase.from("connections").insert({
+    id: conn.id,
+    user_id: conn.userId,
+    connected_user_id: conn.connectedUserId,
+    status: conn.status,
+    created_at: conn.createdAt.toISOString(),
+  });
 }
 
-export function getConnectionById(id: string): Connection | undefined {
-  return connections.find((c) => c.id === id);
+export async function getConnectionById(id: string): Promise<Connection | undefined> {
+  const { data } = await supabase.from("connections").select("*").eq("id", id).single();
+  return data ? dbConnectionToApp(data) : undefined;
 }
 
-// Post helpers
-export function getAllPosts(): Post[] {
-  return posts;
+// ── Post helpers ─────────────────────────────────────────────────
+
+export async function getAllPosts(): Promise<Post[]> {
+  const { data } = await supabase.from("posts").select("*").order("created_at", { ascending: false });
+  if (!data) return [];
+  return data.map(dbPostToApp);
 }
 
-export function createPost(post: Post): void {
-  posts.unshift(post);
+export async function createPost(post: Post): Promise<void> {
+  await supabase.from("posts").insert({
+    id: post.id,
+    author_id: post.authorId,
+    author: post.author as unknown as Record<string, unknown>,
+    content: post.content,
+    image: post.image ?? null,
+    timestamp: post.timestamp,
+    created_at: post.createdAt.toISOString(),
+    likes: post.likes,
+    comments: post.comments,
+    shares: post.shares,
+    liked_by: post.likedBy,
+  });
 }
 
-export function getPostById(id: string): Post | undefined {
-  return posts.find((p) => p.id === id);
+export async function getPostById(id: string): Promise<Post | undefined> {
+  const { data } = await supabase.from("posts").select("*").eq("id", id).single();
+  return data ? dbPostToApp(data) : undefined;
 }
 
-export function deletePostById(id: string): boolean {
-  const idx = posts.findIndex((p) => p.id === id);
-  if (idx === -1) return false;
-  posts.splice(idx, 1);
+export async function deletePostById(id: string): Promise<boolean> {
+  const { error } = await supabase.from("posts").delete().eq("id", id);
+  if (error) {
+    console.error("[data-store] Delete post error:", error.message);
+    return false;
+  }
   return true;
 }

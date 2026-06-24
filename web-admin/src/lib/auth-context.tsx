@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { trpc } from "./trpc";
 import type { AdminUser } from "./trpc-types";
 
 export interface AuthState {
@@ -17,13 +18,6 @@ export interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-
-// Hardcoded dev credentials — backend deployment is pending.
-// Once the backend is live, these can be removed and the tRPC login restored.
-const DEV_CREDENTIALS: Record<string, { password: string; name: string }> = {
-  admin: { password: "admin123", name: "Administrator" },
-  "bridge.gh": { password: "bridge123", name: "Bridge Admin" },
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -47,25 +41,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (username: string, password: string): Promise<void> => {
-      // Client-side credential check — backend not yet deployed.
-      const entry = DEV_CREDENTIALS[username];
-      if (!entry || entry.password !== password) {
+      // Call the real tRPC admin login endpoint (backed by Supabase)
+      const result = await trpc.auth.adminLogin.mutate({
+        username,
+        password,
+      });
+
+      if (!result.success || !result.user) {
         throw new Error("Invalid credentials");
       }
 
-      const token = `admin_token_dev_${Date.now()}`;
       const adminUser: AdminUser = {
-        id: `admin_${username}`,
-        email: `${username}@talentbridge.com`,
-        name: entry.name,
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
         type: "admin",
         isAdmin: true,
       };
 
-      localStorage.setItem("admin_token", token);
+      localStorage.setItem("admin_token", result.token);
       localStorage.setItem("admin_user", JSON.stringify(adminUser));
       setUser(adminUser);
-      setToken(token);
+      setToken(result.token);
     },
     [],
   );

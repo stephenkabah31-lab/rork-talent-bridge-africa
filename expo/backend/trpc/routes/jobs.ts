@@ -10,6 +10,7 @@ import {
   getApplicationsByJob,
   createJobApplication,
   getApplicationById,
+  incrementJobApplicants,
 } from "../data-store";
 import type { Job } from "../data-store";
 
@@ -23,8 +24,8 @@ export const jobsRouter = createTRPCRouter({
         search: z.string().optional(),
       }),
     )
-    .query(({ input }) => {
-      let filteredJobs = [...getAllJobs()];
+    .query(async ({ input }) => {
+      let filteredJobs = [...(await getAllJobs())];
 
       if (input.filter && input.filter !== "all") {
         filteredJobs = filteredJobs.filter(
@@ -49,8 +50,8 @@ export const jobsRouter = createTRPCRouter({
 
   getById: publicProcedure
     .input(z.object({ jobId: z.string() }))
-    .query(({ input }) => {
-      const job = getJobById(input.jobId);
+    .query(async ({ input }) => {
+      const job = await getJobById(input.jobId);
       return job || null;
     }),
 
@@ -67,7 +68,7 @@ export const jobsRouter = createTRPCRouter({
         postedBy: z.string(),
       }),
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       const newJob: Job = {
         id: Date.now().toString(),
         ...input,
@@ -76,7 +77,7 @@ export const jobsRouter = createTRPCRouter({
         status: "active",
       };
 
-      createJob(newJob);
+      await createJob(newJob);
 
       console.log(`Created job ${newJob.id}: ${newJob.title}`);
 
@@ -95,8 +96,8 @@ export const jobsRouter = createTRPCRouter({
         resume: z.string().optional(),
       }),
     )
-    .mutation(({ input, ctx }) => {
-      const job = getJobById(input.jobId);
+    .mutation(async ({ input, ctx }) => {
+      const job = await getJobById(input.jobId);
 
       if (!job) {
         throw new TRPCError({
@@ -112,7 +113,8 @@ export const jobsRouter = createTRPCRouter({
         });
       }
 
-      const existingApplication = getApplicationsByJob(input.jobId).find(
+      const existingApplications = await getApplicationsByJob(input.jobId);
+      const existingApplication = existingApplications.find(
         (app) => app.userId === input.userId,
       );
 
@@ -133,8 +135,8 @@ export const jobsRouter = createTRPCRouter({
         status: "pending" as const,
       };
 
-      createJobApplication(application);
-      job.applicants += 1;
+      await createJobApplication(application);
+      await incrementJobApplicants(input.jobId);
 
       console.log(`User ${input.userId} applied to job ${input.jobId}`);
 
@@ -151,11 +153,11 @@ export const jobsRouter = createTRPCRouter({
         jobId: z.string().optional(),
       }),
     )
-    .query(({ input }) => {
-      let applications = [...getAllJobApplications()];
+    .query(async ({ input }) => {
+      let applications = [...(await getAllJobApplications())];
 
       if (input.userId) {
-        applications = getApplicationsByUser(input.userId);
+        applications = await getApplicationsByUser(input.userId);
       }
 
       if (input.jobId) {
@@ -178,8 +180,8 @@ export const jobsRouter = createTRPCRouter({
         ]),
       }),
     )
-    .mutation(({ input, ctx }) => {
-      const application = getApplicationById(input.applicationId);
+    .mutation(async ({ input, ctx }) => {
+      const application = await getApplicationById(input.applicationId);
 
       if (!application) {
         throw new TRPCError({
@@ -188,7 +190,7 @@ export const jobsRouter = createTRPCRouter({
         });
       }
 
-      const job = getJobById(application.jobId);
+      const job = await getJobById(application.jobId);
       if (job && job.postedBy !== ctx.user?.userId) {
         throw new TRPCError({
           code: "FORBIDDEN",

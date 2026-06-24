@@ -17,10 +17,10 @@ export const postsRouter = createTRPCRouter({
         cursor: z.string().optional(),
       }),
     )
-    .query(({ input }) => {
+    .query(async ({ input }) => {
       console.log(`Fetching feed with limit ${input.limit}`);
       return {
-        posts: getAllPosts(),
+        posts: await getAllPosts(),
         nextCursor: undefined,
       };
     }),
@@ -35,7 +35,7 @@ export const postsRouter = createTRPCRouter({
         authorTitle: z.string(),
       }),
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       const newPost: Post = {
         id: Date.now().toString(),
         authorId: input.authorId,
@@ -54,7 +54,7 @@ export const postsRouter = createTRPCRouter({
         likedBy: [],
       };
 
-      createPost(newPost);
+      await createPost(newPost);
 
       console.log(`Created post ${newPost.id}`);
 
@@ -71,8 +71,8 @@ export const postsRouter = createTRPCRouter({
         userId: z.string(),
       }),
     )
-    .mutation(({ input, ctx }) => {
-      const post = getPostById(input.postId);
+    .mutation(async ({ input, ctx }) => {
+      const post = await getPostById(input.postId);
 
       if (!post) {
         throw new TRPCError({
@@ -116,8 +116,8 @@ export const postsRouter = createTRPCRouter({
         userId: z.string(),
       }),
     )
-    .mutation(({ input, ctx }) => {
-      const post = getPostById(input.postId);
+    .mutation(async ({ input, ctx }) => {
+      const post = await getPostById(input.postId);
 
       if (!post) {
         throw new TRPCError({
@@ -133,7 +133,7 @@ export const postsRouter = createTRPCRouter({
         });
       }
 
-      deletePostById(input.postId);
+      await deletePostById(input.postId);
 
       console.log(`Deleted post ${input.postId}`);
 

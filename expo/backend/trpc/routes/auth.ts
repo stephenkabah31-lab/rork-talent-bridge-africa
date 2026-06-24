@@ -56,7 +56,7 @@ export const authRouter = createTRPCRouter({
         userType: z.enum(["professional", "recruiter", "company"]),
       }),
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       if (!checkRateLimit(input.email)) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
@@ -64,7 +64,7 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const existingUser = getAuthUserByEmail(input.email);
+      const existingUser = await getAuthUserByEmail(input.email);
 
       if (!existingUser) {
         throw new TRPCError({
@@ -105,10 +105,7 @@ export const authRouter = createTRPCRouter({
         password: z.string().min(6).max(100),
       }),
     )
-    .mutation(({ input }) => {
-      // Skip rate-limiting in dev so repeated attempts don't lock the user out.
-      // In production this should use a proper rate-limiter with persistence.
-
+    .mutation(async ({ input }) => {
       const isValidAdmin =
         (input.username === "admin" && input.password === "admin123") ||
         (input.username === "bridge.gh" && input.password === "bridge123");
@@ -156,8 +153,8 @@ export const authRouter = createTRPCRouter({
         userType: z.enum(["professional", "recruiter", "company"]),
       }),
     )
-    .mutation(({ input }) => {
-      const existingUser = getAuthUserByEmail(input.email);
+    .mutation(async ({ input }) => {
+      const existingUser = await getAuthUserByEmail(input.email);
 
       if (existingUser) {
         throw new TRPCError({
@@ -180,7 +177,7 @@ export const authRouter = createTRPCRouter({
         password: hashedPassword,
       };
 
-      createAuthUser(user);
+      await createAuthUser(user);
 
       console.log(`User registered: ${input.email}`);
 
@@ -195,8 +192,8 @@ export const authRouter = createTRPCRouter({
 
   getCurrentUser: publicProcedure
     .input(z.object({ userId: z.string() }))
-    .query(({ input }) => {
-      const userData = getAuthUser(input.userId);
+    .query(async ({ input }) => {
+      const userData = await getAuthUser(input.userId);
       if (!userData) return null;
 
       const { password, ...user } = userData;

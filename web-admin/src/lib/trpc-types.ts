@@ -93,3 +93,52 @@ export interface Analytics {
     rejected: number;
   };
 }
+
+// ── tRPC Router type (mirrors the backend app router) ──────────
+
+interface AdminLoginResult {
+  success: boolean;
+  user: { id: string; email: string; name: string; type: string; isAdmin: boolean };
+  token: string;
+}
+
+interface StatusUpdateResult {
+  success: boolean;
+  application: unknown;
+}
+
+interface JobStatusUpdateResult {
+  success: boolean;
+  job: unknown;
+}
+
+export interface AppRouter {
+  auth: {
+    adminLogin: {
+      mutate(input: { username: string; password: string }): Promise<AdminLoginResult>;
+    };
+  };
+  admin: {
+    getProfessionals: {
+      query(): Promise<ProfessionalApplication[]>;
+    };
+    getRecruiters: {
+      query(): Promise<RecruiterApplication[]>;
+    };
+    getCompanies: {
+      query(): Promise<CompanyApplication[]>;
+    };
+    getJobs: {
+      query(): Promise<Job[]>;
+    };
+    updateStatus: {
+      mutate(input: { type: "professional" | "recruiter" | "company"; id: string; status: "approved" | "rejected" }): Promise<StatusUpdateResult>;
+    };
+    updateJobStatus: {
+      mutate(input: { id: string; status: "active" | "closed" | "flagged" }): Promise<JobStatusUpdateResult>;
+    };
+    getJobApplicants: {
+      query(input: { jobId: string }): Promise<unknown[]>;
+    };
+  };
+}

@@ -13,8 +13,8 @@ import {
 export const usersRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ userId: z.string() }))
-    .query(({ input }) => {
-      const user = getUserById(input.userId);
+    .query(async ({ input }) => {
+      const user = await getUserById(input.userId);
       return user || null;
     }),
 
@@ -25,9 +25,9 @@ export const usersRouter = createTRPCRouter({
         type: z.enum(["all", "professional", "recruiter", "company"]).optional(),
       }),
     )
-    .query(({ input }) => {
+    .query(async ({ input }) => {
       const queryLower = input.query.toLowerCase();
-      let users = getUsersForSearch();
+      let users = await getUsersForSearch();
 
       if (input.type && input.type !== "all") {
         users = users.filter((u) => u.type === input.type);
@@ -58,8 +58,8 @@ export const usersRouter = createTRPCRouter({
         country: z.string().optional(),
       }),
     )
-    .mutation(({ input, ctx }) => {
-      const user = getUserById(input.userId);
+    .mutation(async ({ input, ctx }) => {
+      const user = await getUserById(input.userId);
 
       if (!user) {
         throw new TRPCError({
@@ -100,7 +100,7 @@ export const usersRouter = createTRPCRouter({
         targetUserId: z.string(),
       }),
     )
-    .mutation(({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       if (input.userId !== ctx.user?.userId) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -108,7 +108,7 @@ export const usersRouter = createTRPCRouter({
         });
       }
 
-      const existingConnection = findConnection(input.userId, input.targetUserId);
+      const existingConnection = await findConnection(input.userId, input.targetUserId);
 
       if (existingConnection) {
         throw new TRPCError({
@@ -125,7 +125,7 @@ export const usersRouter = createTRPCRouter({
         createdAt: new Date(),
       };
 
-      addConnection(connection);
+      await addConnection(connection);
 
       console.log(`Connection request from ${input.userId} to ${input.targetUserId}`);
 
@@ -137,24 +137,26 @@ export const usersRouter = createTRPCRouter({
 
   getConnections: publicProcedure
     .input(z.object({ userId: z.string() }))
-    .query(({ input }) => {
-      const conns = getConnectionsByUserId(input.userId);
+    .query(async ({ input }) => {
+      const conns = await getConnectionsByUserId(input.userId);
 
       const connectedUserIds = conns.map((c) =>
         c.userId === input.userId ? c.connectedUserId : c.userId,
       );
 
-      const connectedUsers = connectedUserIds
-        .map((id) => getUserById(id))
-        .filter((u): u is NonNullable<typeof u> => u !== undefined && u !== null);
+      const connectedUsers = await Promise.all(
+        connectedUserIds.map((id) => getUserById(id)),
+      );
 
-      return connectedUsers;
+      return connectedUsers.filter(
+        (u): u is NonNullable<typeof u> => u !== undefined && u !== null,
+      );
     }),
 
   acceptConnection: protectedProcedure
     .input(z.object({ connectionId: z.string() }))
-    .mutation(({ input, ctx }) => {
-      const connection = getConnectionById(input.connectionId);
+    .mutation(async ({ input, ctx }) => {
+      const connection = await getConnectionById(input.connectionId);
 
       if (!connection) {
         throw new TRPCError({

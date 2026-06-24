@@ -16,97 +16,13 @@ import {
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
+import { trpcClient } from "@/lib/trpc";
 import type {
   CompanyApplication,
   Job,
   ProfessionalApplication,
   RecruiterApplication,
 } from "@/lib/trpc-types";
-
-const API_BASE = import.meta.env.EXPO_PUBLIC_RORK_API_BASE_URL as string;
-
-// ── Mock data (used when backend is unreachable during dev) ────
-
-const MOCK_PROFESSIONALS: ProfessionalApplication[] = [
-  {
-    id: "1", name: "Amara Okonkwo", email: "amara.okonkwo@email.com",
-    phone: "+234 80 123 4567", location: "Lagos, Nigeria",
-    title: "Senior Software Engineer", experience: "8 years",
-    skills: ["React Native", "TypeScript", "Node.js", "AWS"],
-    status: "pending", createdAt: "2025-01-12T10:30:00Z",
-  },
-  {
-    id: "2", name: "Kwame Mensah", email: "kwame.mensah@email.com",
-    phone: "+233 24 555 1234", location: "Accra, Ghana",
-    title: "Product Designer", experience: "5 years",
-    skills: ["UI/UX", "Figma", "Prototyping", "Design Systems"],
-    status: "pending", createdAt: "2025-01-11T14:20:00Z",
-  },
-  {
-    id: "3", name: "Sarah Kimani", email: "sarah.kimani@email.com",
-    phone: "+254 70 555 9012", location: "Nairobi, Kenya",
-    title: "Data Scientist", experience: "6 years",
-    skills: ["Python", "Machine Learning", "TensorFlow", "SQL"],
-    status: "approved", createdAt: "2025-01-10T09:15:00Z",
-  },
-];
-
-const MOCK_RECRUITERS: RecruiterApplication[] = [
-  {
-    id: "1", name: "John Osei", email: "john.osei@techcorp.com",
-    phone: "+233 24 777 8888", company: "TechCorp Africa",
-    location: "Accra, Ghana", status: "pending",
-    createdAt: "2025-01-11T11:30:00Z",
-  },
-  {
-    id: "2", name: "Grace Mwangi", email: "grace.m@innovate.co.ke",
-    phone: "+254 70 888 9999", company: "Innovate Kenya",
-    location: "Nairobi, Kenya", status: "pending",
-    createdAt: "2025-01-10T15:45:00Z",
-  },
-];
-
-const MOCK_COMPANIES: CompanyApplication[] = [
-  {
-    id: "1", companyName: "Tech Africa Solutions",
-    contactPerson: "Kwame Mensah", email: "hr@techafricasolutions.com",
-    phone: "+233 24 555 1234", location: "Accra, Ghana",
-    industry: "Technology", website: "www.techafricasolutions.com",
-    registrationNumber: "BN20231234", status: "pending",
-    createdAt: "2025-01-10T10:30:00Z",
-  },
-  {
-    id: "2", companyName: "AfriBank Financial",
-    contactPerson: "Amara Okafor", email: "recruitment@afribank.com",
-    phone: "+234 80 555 5678", location: "Lagos, Nigeria",
-    industry: "Finance", website: "www.afribank.com",
-    registrationNumber: "RC45678", status: "pending",
-    createdAt: "2025-01-11T14:20:00Z",
-  },
-];
-
-const MOCK_JOBS: Job[] = [
-  {
-    id: "1", title: "Senior Software Engineer", company: "TechCorp Africa",
-    location: "Lagos, Nigeria", type: "Full-time",
-    salary: "$60,000 - $90,000",
-    description: "We are seeking a talented Senior Software Engineer.",
-    requirements: ["5+ years experience", "React Native", "Node.js"],
-    postedBy: "recruiter1",
-    postedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    applicants: 45, status: "active",
-  },
-  {
-    id: "2", title: "Product Designer", company: "DesignHub",
-    location: "Accra, Ghana", type: "Remote",
-    salary: "$40,000 - $60,000",
-    description: "Looking for a creative Product Designer.",
-    requirements: ["3+ years experience", "Figma", "User Research"],
-    postedBy: "company1",
-    postedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-    applicants: 28, status: "active",
-  },
-];
 
 type Department =
   | "overview"
@@ -127,22 +43,6 @@ interface DepartmentCard {
   bgColor: string;
 }
 
-async function tRPCFetch(path: string, body: Record<string, unknown> = {}) {
-  try {
-    const res = await fetch(`${API_BASE}/api/trpc/${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    return json?.result?.data ?? null;
-  } catch {
-    // Backend unreachable — caller should provide fallback via placeholderData
-    throw new Error("Backend unreachable");
-  }
-}
-
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -150,31 +50,27 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const { data: professionals = MOCK_PROFESSIONALS } = useQuery<ProfessionalApplication[]>({
+  const { data: professionals = [] } = useQuery<ProfessionalApplication[]>({
     queryKey: ["admin", "professionals"],
-    queryFn: () => tRPCFetch("admin.getProfessionals"),
-    placeholderData: MOCK_PROFESSIONALS,
+    queryFn: () => trpcClient.admin.getProfessionals.query(),
     staleTime: 30000,
   });
 
-  const { data: recruiters = MOCK_RECRUITERS } = useQuery<RecruiterApplication[]>({
+  const { data: recruiters = [] } = useQuery<RecruiterApplication[]>({
     queryKey: ["admin", "recruiters"],
-    queryFn: () => tRPCFetch("admin.getRecruiters"),
-    placeholderData: MOCK_RECRUITERS,
+    queryFn: () => trpcClient.admin.getRecruiters.query(),
     staleTime: 30000,
   });
 
-  const { data: companies = MOCK_COMPANIES } = useQuery<CompanyApplication[]>({
+  const { data: companies = [] } = useQuery<CompanyApplication[]>({
     queryKey: ["admin", "companies"],
-    queryFn: () => tRPCFetch("admin.getCompanies"),
-    placeholderData: MOCK_COMPANIES,
+    queryFn: () => trpcClient.admin.getCompanies.query(),
     staleTime: 30000,
   });
 
-  const { data: jobs = MOCK_JOBS } = useQuery<Job[]>({
+  const { data: jobs = [] } = useQuery<Job[]>({
     queryKey: ["admin", "jobs"],
-    queryFn: () => tRPCFetch("admin.getJobs"),
-    placeholderData: MOCK_JOBS,
+    queryFn: () => trpcClient.admin.getJobs.query(),
     staleTime: 30000,
   });
 
@@ -250,11 +146,14 @@ export default function AdminDashboard() {
     id: string,
     status: "approved" | "rejected",
   ) => {
-    await tRPCFetch("admin.updateStatus", { type: appType, id, status });
+    await trpcClient.admin.updateStatus.mutate({ type: appType, id, status });
   };
 
-  const handleJobStatusUpdate = async (id: string, status: "active" | "flagged") => {
-    await tRPCFetch("admin.updateJobStatus", { id, status });
+  const handleJobStatusUpdate = async (
+    id: string,
+    status: "active" | "flagged",
+  ) => {
+    await trpcClient.admin.updateJobStatus.mutate({ id, status });
   };
 
   const filteredProfessionals = useMemo(() => {
@@ -302,7 +201,6 @@ export default function AdminDashboard() {
     return list;
   }, [companies, statusFilter, search]);
 
-  // Jobs use "active"|"closed"|"flagged" — map our filters
   const jobFilter = useMemo(
     () =>
       statusFilter === "approved"
@@ -576,7 +474,6 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-2 flex-wrap">
                 {dept === "jobs" ? (
                   <>
-                    {/* Jobs use a specialized filter */}
                     {(["all", "active", "closed", "flagged"] as const).map(
                       (f) => {
                         const mapped =
