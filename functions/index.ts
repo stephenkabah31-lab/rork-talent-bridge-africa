@@ -1,10 +1,11 @@
 // TalentBridge API Worker — handles tRPC queries and REST auth mutations.
-// v2 — DB-backed admin auth, messages, notifications, calls routes
+// v3 — auto-seeds DB on first request, DB-backed admin auth, messages, notifications, calls routes
 
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createClient } from "@supabase/supabase-js";
 import { appRouter } from "../expo/backend/trpc/app-router";
 import { createContext } from "../expo/backend/trpc/create-context";
+import { seedDatabase } from "../expo/backend/trpc/data-store";
 
 // --------------- Env polyfill ---------------
 let polyfillApplied = false;
@@ -200,10 +201,19 @@ async function handleAdminLogin(req: Request, env: Record<string, string>): Prom
   });
 }
 
+let seedStarted = false;
+
 // --------------- Worker entrypoint ---------------
 export default {
   async fetch(request: Request, env: Record<string, string>): Promise<Response> {
     applyEnvPolyfill(env);
+
+    // Seed database on first request (fire-and-forget, non-blocking)
+    if (!seedStarted) {
+      seedStarted = true;
+      seedDatabase().catch((err) => console.error("[functions] Seed failed:", err));
+    }
+
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {

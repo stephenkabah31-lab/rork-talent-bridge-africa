@@ -89,8 +89,8 @@ export default function AdminDashboard() {
         label: "Overview",
         icon: <BarChart3 className="w-5 h-5" />,
         count: totalUsers,
-        color: "text-blue-600",
-        bgColor: "bg-blue-50",
+        color: "text-[#D97706]",
+        bgColor: "bg-orange-50",
       },
       {
         id: "professionals",
@@ -281,7 +281,7 @@ export default function AdminDashboard() {
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
-              <Shield className="w-5 h-5 text-blue-400" />
+              <Shield className="w-5 h-5 text-orange-300" />
             </div>
             <div>
               <h2 className="font-bold text-sm">TalentBridge</h2>
@@ -322,7 +322,7 @@ export default function AdminDashboard() {
 
         <div className="mt-auto p-6 border-t border-white/10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-9 h-9 rounded-full bg-[#D97706] flex items-center justify-center text-white font-semibold text-sm">
               {user?.name?.charAt(0) ?? "A"}
             </div>
             <div className="flex-1 min-w-0">
@@ -358,7 +358,7 @@ export default function AdminDashboard() {
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+              className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent w-64"
             />
           </div>
           {/* Mobile nav */}
@@ -393,8 +393,8 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-[#D97706]" />
                     </div>
                     <p className="text-sm text-gray-500">Total Users</p>
                   </div>

@@ -88,7 +88,7 @@ export default function SignupProfessional() {
                 placeholder="Your full name"
                 value={form.fullName}
                 onChange={update("fullName")}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function SignupProfessional() {
                 value={form.email}
                 onChange={update("email")}
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function SignupProfessional() {
                   placeholder="+234..."
                   value={form.phoneNumber}
                   onChange={update("phoneNumber")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -137,7 +137,7 @@ export default function SignupProfessional() {
                   placeholder="Nigeria"
                   value={form.country}
                   onChange={update("country")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function SignupProfessional() {
                 value={form.password}
                 onChange={update("password")}
                 autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function SignupProfessional() {
               value={form.confirmPassword}
               onChange={update("confirmPassword")}
               autoComplete="new-password"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
             />
           </div>
 
@@ -183,18 +183,18 @@ export default function SignupProfessional() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-full bg-[#0A66C2] hover:bg-[#004182] h-11 font-semibold"
+            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold"
           >
             {isLoading ? "Creating account..." : "Agree & Join"}
           </Button>
 
           <p className="text-xs text-gray-400 text-center mt-4">
             By clicking Agree & Join, you agree to the TalentBridge{" "}
-            <Link to="/terms" className="text-[#0A66C2] hover:underline">
+            <Link to="/terms" className="text-[#D97706] hover:underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link to="/privacy" className="text-[#0A66C2] hover:underline">
+            <Link to="/privacy" className="text-[#D97706] hover:underline">
               Privacy Policy
             </Link>
             .

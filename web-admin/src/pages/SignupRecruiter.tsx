@@ -86,7 +86,7 @@ export default function SignupRecruiter() {
                 placeholder="Your full name"
                 value={form.fullName}
                 onChange={update("fullName")}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function SignupRecruiter() {
                 placeholder="Where do you recruit for?"
                 value={form.companyName}
                 onChange={update("companyName")}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function SignupRecruiter() {
                 value={form.email}
                 onChange={update("email")}
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function SignupRecruiter() {
                   placeholder="+234..."
                   value={form.phoneNumber}
                   onChange={update("phoneNumber")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function SignupRecruiter() {
                   placeholder="Nigeria"
                   value={form.country}
                   onChange={update("country")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function SignupRecruiter() {
                 value={form.password}
                 onChange={update("password")}
                 autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function SignupRecruiter() {
               value={form.confirmPassword}
               onChange={update("confirmPassword")}
               autoComplete="new-password"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
             />
           </div>
 
@@ -193,7 +193,7 @@ export default function SignupRecruiter() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-full bg-[#0A66C2] hover:bg-[#004182] h-11 font-semibold"
+            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold"
           >
             {isLoading ? "Creating account..." : "Agree & Join"}
           </Button>

@@ -4,7 +4,7 @@ export default function Terms() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <Link to="/" className="text-sm text-[#0A66C2] hover:underline mb-8 inline-block">
+        <Link to="/" className="text-sm text-[#D97706] hover:underline mb-8 inline-block">
           ← Back to TalentBridge
         </Link>
         <h1 className="text-3xl font-semibold text-gray-900 mb-8">Terms of Service</h1>

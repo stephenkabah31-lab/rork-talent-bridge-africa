@@ -80,7 +80,7 @@ export default function SignupCompany() {
               <input
                 type="text" placeholder="Your company name" value={form.companyName}
                 onChange={update("companyName")}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function SignupCompany() {
               <input
                 type="text" placeholder="Your full name" value={form.fullName}
                 onChange={update("fullName")}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function SignupCompany() {
               <input
                 type="email" placeholder="hr@company.com" value={form.email}
                 onChange={update("email")} autoComplete="email"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function SignupCompany() {
                 <input
                   type="tel" placeholder="+234..." value={form.phoneNumber}
                   onChange={update("phoneNumber")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -128,7 +128,7 @@ export default function SignupCompany() {
                 <input
                   type="text" placeholder="Nigeria" value={form.country}
                   onChange={update("country")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function SignupCompany() {
               <input
                 type="text" placeholder="Technology" value={form.industry}
                 onChange={update("industry")}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
             <div>
@@ -150,7 +150,7 @@ export default function SignupCompany() {
                 <input
                   type="text" placeholder="company.com" value={form.website}
                   onChange={update("website")}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function SignupCompany() {
               <input
                 type="password" placeholder="Min. 8 characters" value={form.password}
                 onChange={update("password")} autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function SignupCompany() {
             <input
               type="password" placeholder="Re-enter password" value={form.confirmPassword}
               onChange={update("confirmPassword")} autoComplete="new-password"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
             />
           </div>
 
@@ -183,7 +183,7 @@ export default function SignupCompany() {
 
           <Button
             type="submit" disabled={isLoading}
-            className="w-full rounded-full bg-[#0A66C2] hover:bg-[#004182] h-11 font-semibold"
+            className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold"
           >
             {isLoading ? "Creating account..." : "Agree & Join"}
           </Button>

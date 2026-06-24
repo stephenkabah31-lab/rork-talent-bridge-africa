@@ -42,16 +42,16 @@ export default function AdminLogin() {
   return (
     <div className="flex min-h-screen">
       {/* Left — brand */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.15),transparent_50%)]" />
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#7C2D12] via-[#9A3412] to-[#D97706] relative overflow-hidden items-center justify-center">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,146,60,0.2),transparent_50%)]" />
         <div className="relative z-10 text-center px-12">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 backdrop-blur border border-white/20 mb-8">
-            <Shield className="w-10 h-10 text-blue-400" />
+            <Shield className="w-10 h-10 text-orange-300" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
             TalentBridge
           </h1>
-          <p className="text-lg text-blue-200/80 font-light">Admin Portal</p>
+          <p className="text-lg text-orange-200/80 font-light">Admin Portal</p>
           <div className="mt-10 flex items-center justify-center gap-2 text-white/50 text-sm">
             <Lock className="w-4 h-4" />
             <span>Encrypted & secure connection</span>
@@ -72,8 +72,8 @@ export default function AdminLogin() {
           </div>
 
           <div className="lg:hidden flex items-center gap-3 mb-6">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-900">
-              <Shield className="w-5 h-5 text-blue-400" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#D97706]">
+              <Shield className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900">TalentBridge</span>
           </div>
@@ -92,7 +92,7 @@ export default function AdminLogin() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
 
@@ -107,7 +107,7 @@ export default function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
-                  className="w-full px-4 py-2.5 pr-12 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 pr-12 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
                 <button
                   type="button"

@@ -445,10 +445,12 @@ export async function seedDatabase(): Promise<void> {
     }
 
     console.log("[data-store] Seeded database with demo data");
-    seeded = true;
   } catch (err) {
     console.error("[data-store] Seed error (non-fatal):", err);
-    // Seed admin user for DB-based admin login
+  }
+
+  // Always seed admin users so admin login works from the start
+  try {
     const { count: userCount } = await supabase
       .from("auth_users")
       .select("*", { count: "exact", head: true });
@@ -471,10 +473,13 @@ export async function seedDatabase(): Promise<void> {
         is_admin: true,
         is_premium: false,
       });
+      console.log("[data-store] Seeded admin users");
     }
-
-    seeded = true; // Don't retry on error
+  } catch (adminErr) {
+    console.error("[data-store] Admin seed error:", adminErr);
   }
+
+  seeded = true;
 }
 
 // ── Auth helpers ─────────────────────────────────────────────────

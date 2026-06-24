@@ -8,8 +8,8 @@ const accountTypes = [
     title: "Professional",
     icon: User,
     desc: "Find jobs, connect with recruiters, and grow your career across Africa.",
-    color: "bg-blue-50 text-[#0A66C2]",
-    borderColor: "hover:border-[#0A66C2]",
+    color: "bg-orange-50 text-[#D97706]",
+    borderColor: "hover:border-[#D97706]",
   },
   {
     id: "recruiter",
@@ -37,8 +37,8 @@ export default function SignupType() {
       <div className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-lg">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-[#0A66C2] mb-5">
-              <span className="text-white font-bold text-lg">in</span>
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-[#D97706] mb-5 rounded-lg">
+              <span className="text-white font-bold text-sm">tb</span>
             </div>
             <h1 className="text-3xl font-semibold text-gray-900 mb-2">
               Join TalentBridge
@@ -77,7 +77,7 @@ export default function SignupType() {
               Already have an account?{" "}
               <button
                 onClick={() => navigate("/login")}
-                className="text-[#0A66C2] font-semibold hover:underline"
+                className="text-[#D97706] font-semibold hover:underline"
               >
                 Sign in
               </button>
