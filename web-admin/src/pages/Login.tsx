@@ -53,19 +53,19 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left — brand */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0A66C2] via-[#004182] to-[#09223B] relative overflow-hidden items-center justify-center">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#9A3412] via-[#D97706] to-[#7C2D12] relative overflow-hidden items-center justify-center">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-white blur-3xl" />
           <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-white blur-3xl" />
         </div>
         <div className="relative text-center px-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 backdrop-blur border border-white/20 mb-8">
-            <span className="text-white font-bold text-3xl">in</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur border border-white/20 mb-8">
+            <span className="text-white font-bold text-xl tracking-tight">tb</span>
           </div>
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
             TalentBridge
           </h1>
-          <p className="text-lg text-blue-100/80 font-light">
+          <p className="text-lg text-amber-100/80 font-light">
             Connecting Africa's Talent
           </p>
           <div className="mt-10 flex items-center justify-center gap-2 text-white/40 text-sm">
@@ -80,8 +80,8 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-lg bg-[#0A66C2] flex items-center justify-center">
-              <span className="text-white font-bold text-sm">in</span>
+            <div className="w-10 h-10 rounded-full bg-[#D97706] flex items-center justify-center">
+              <span className="text-white font-bold text-xs leading-none">tb</span>
             </div>
             <span className="text-xl font-bold text-gray-900">TalentBridge</span>
           </div>
@@ -121,7 +121,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
                 />
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#D97706] focus:border-transparent"
               />
             </div>
 
@@ -149,7 +149,7 @@ export default function Login() {
             <Button
               type="submit"
               disabled={isLoading || !email || !password}
-              className="w-full rounded-full bg-[#0A66C2] hover:bg-[#004182] h-11 font-semibold"
+              className="w-full rounded-full bg-[#D97706] hover:bg-[#9A3412] h-11 font-semibold shadow-sm"
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
@@ -160,7 +160,7 @@ export default function Login() {
               New to TalentBridge?{" "}
               <Link
                 to="/signup"
-                className="text-[#0A66C2] font-semibold hover:underline"
+                className="text-[#D97706] font-semibold hover:underline"
               >
                 Join now
               </Link>
