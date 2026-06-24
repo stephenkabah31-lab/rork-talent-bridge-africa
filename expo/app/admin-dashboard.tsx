@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
 import {
@@ -18,7 +17,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -30,228 +29,47 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
+import { trpc } from '@/lib/trpc';
 
 type ViewType = 'departments' | 'user-management' | 'job-management' | 'analytics' | 'system';
-type SubViewType = 'professionals' | 'recruiters' | 'companies' | 'jobs' | 'applications' | 'overview';
-
-interface ProfessionalApplication {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  title: string;
-  experience: string;
-  skills: string[];
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-}
-
-interface RecruiterApplication {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  location: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-}
-
-interface CompanyApplication {
-  id: string;
-  companyName: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  location: string;
-  industry: string;
-  website: string;
-  registrationNumber: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-}
-
-interface JobPosting {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  postedBy: string;
-  applicants: number;
-  status: 'active' | 'closed' | 'flagged';
-  createdAt: string;
-}
-
-const MOCK_PROFESSIONALS: ProfessionalApplication[] = [
-  {
-    id: '1',
-    name: 'Amara Okonkwo',
-    email: 'amara.okonkwo@email.com',
-    phone: '+234 80 123 4567',
-    location: 'Lagos, Nigeria',
-    title: 'Senior Software Engineer',
-    experience: '8 years',
-    skills: ['React Native', 'TypeScript', 'Node.js', 'AWS'],
-    status: 'pending',
-    createdAt: '2025-01-12T10:30:00Z',
-  },
-  {
-    id: '2',
-    name: 'Kwame Mensah',
-    email: 'kwame.mensah@email.com',
-    phone: '+233 24 555 1234',
-    location: 'Accra, Ghana',
-    title: 'Product Designer',
-    experience: '5 years',
-    skills: ['UI/UX', 'Figma', 'Prototyping', 'Design Systems'],
-    status: 'pending',
-    createdAt: '2025-01-11T14:20:00Z',
-  },
-  {
-    id: '3',
-    name: 'Sarah Kimani',
-    email: 'sarah.kimani@email.com',
-    phone: '+254 70 555 9012',
-    location: 'Nairobi, Kenya',
-    title: 'Data Scientist',
-    experience: '6 years',
-    skills: ['Python', 'Machine Learning', 'TensorFlow', 'SQL'],
-    status: 'approved',
-    createdAt: '2025-01-10T09:15:00Z',
-  },
-];
-
-const MOCK_RECRUITERS: RecruiterApplication[] = [
-  {
-    id: '1',
-    name: 'John Osei',
-    email: 'john.osei@techcorp.com',
-    phone: '+233 24 777 8888',
-    company: 'TechCorp Africa',
-    location: 'Accra, Ghana',
-    status: 'pending',
-    createdAt: '2025-01-11T11:30:00Z',
-  },
-  {
-    id: '2',
-    name: 'Grace Mwangi',
-    email: 'grace.m@innovate.co.ke',
-    phone: '+254 70 888 9999',
-    company: 'Innovate Kenya',
-    location: 'Nairobi, Kenya',
-    status: 'pending',
-    createdAt: '2025-01-10T15:45:00Z',
-  },
-];
-
-const MOCK_COMPANIES: CompanyApplication[] = [
-  {
-    id: '1',
-    companyName: 'Tech Africa Solutions',
-    contactPerson: 'Kwame Mensah',
-    email: 'hr@techafricasolutions.com',
-    phone: '+233 24 555 1234',
-    location: 'Accra, Ghana',
-    industry: 'Technology',
-    website: 'www.techafricasolutions.com',
-    registrationNumber: 'BN20231234',
-    status: 'pending',
-    createdAt: '2025-01-10T10:30:00Z',
-  },
-  {
-    id: '2',
-    companyName: 'AfriBank Financial',
-    contactPerson: 'Amara Okafor',
-    email: 'recruitment@afribank.com',
-    phone: '+234 80 555 5678',
-    location: 'Lagos, Nigeria',
-    industry: 'Finance',
-    website: 'www.afribank.com',
-    registrationNumber: 'RC45678',
-    status: 'pending',
-    createdAt: '2025-01-11T14:20:00Z',
-  },
-];
-
-const MOCK_JOBS: JobPosting[] = [
-  {
-    id: '1',
-    title: 'Senior React Native Developer',
-    company: 'Tech Africa Solutions',
-    location: 'Accra, Ghana',
-    type: 'Full-time',
-    postedBy: 'Kwame Mensah',
-    applicants: 24,
-    status: 'active',
-    createdAt: '2025-01-08T10:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'Product Manager',
-    company: 'Innovate Kenya',
-    location: 'Nairobi, Kenya',
-    type: 'Full-time',
-    postedBy: 'Grace Mwangi',
-    applicants: 18,
-    status: 'active',
-    createdAt: '2025-01-09T14:30:00Z',
-  },
-];
+type SubViewType = 'professionals' | 'recruiters' | 'companies' | 'jobs' | 'overview';
 
 export default function AdminDashboardScreen() {
   const [currentView, setCurrentView] = useState<ViewType>('departments');
   const [currentSubView, setCurrentSubView] = useState<SubViewType | null>(null);
-  const [professionals, setProfessionals] = useState<ProfessionalApplication[]>([]);
-  const [recruiters, setRecruiters] = useState<RecruiterApplication[]>([]);
-  const [companies, setCompanies] = useState<CompanyApplication[]>([]);
-  const [jobs, setJobs] = useState<JobPosting[]>([]);
-  
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // ── tRPC queries ───────────────────────────────────────────
+  const professionalsQuery = trpc.admin.getProfessionals.useQuery();
+  const recruitersQuery = trpc.admin.getRecruiters.useQuery();
+  const companiesQuery = trpc.admin.getCompanies.useQuery();
+  const jobsQuery = trpc.admin.getJobs.useQuery();
 
-  const loadData = async () => {
-    try {
-      const storedProfessionals = await AsyncStorage.getItem('professionalApplications');
-      const storedRecruiters = await AsyncStorage.getItem('recruiterApplications');
-      const storedCompanies = await AsyncStorage.getItem('companyApplications');
-      const storedJobs = await AsyncStorage.getItem('jobPostings');
+  const professionals = professionalsQuery.data ?? [];
+  const recruiters = recruitersQuery.data ?? [];
+  const companies = companiesQuery.data ?? [];
+  const jobs = jobsQuery.data ?? [];
 
-      setProfessionals(storedProfessionals ? JSON.parse(storedProfessionals) : MOCK_PROFESSIONALS);
-      setRecruiters(storedRecruiters ? JSON.parse(storedRecruiters) : MOCK_RECRUITERS);
-      setCompanies(storedCompanies ? JSON.parse(storedCompanies) : MOCK_COMPANIES);
-      setJobs(storedJobs ? JSON.parse(storedJobs) : MOCK_JOBS);
-
-      if (!storedProfessionals) await AsyncStorage.setItem('professionalApplications', JSON.stringify(MOCK_PROFESSIONALS));
-      if (!storedRecruiters) await AsyncStorage.setItem('recruiterApplications', JSON.stringify(MOCK_RECRUITERS));
-      if (!storedCompanies) await AsyncStorage.setItem('companyApplications', JSON.stringify(MOCK_COMPANIES));
-      if (!storedJobs) await AsyncStorage.setItem('jobPostings', JSON.stringify(MOCK_JOBS));
-    } catch (error) {
-      console.error('Error loading data:', error);
-      setProfessionals(MOCK_PROFESSIONALS);
-      setRecruiters(MOCK_RECRUITERS);
-      setCompanies(MOCK_COMPANIES);
-      setJobs(MOCK_JOBS);
-    }
-  };
+  const isLoading =
+    professionalsQuery.isLoading ||
+    recruitersQuery.isLoading ||
+    companiesQuery.isLoading ||
+    jobsQuery.isLoading;
 
   const filteredProfessionals = useMemo(() => {
     let filtered = professionals;
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(p => p.status === statusFilter);
+      filtered = filtered.filter((p) => p.status === statusFilter);
     }
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(query) ||
-        p.email.toLowerCase().includes(query) ||
-        p.title.toLowerCase().includes(query) ||
-        p.location.toLowerCase().includes(query)
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.email.toLowerCase().includes(q) ||
+          p.title.toLowerCase().includes(q) ||
+          p.location.toLowerCase().includes(q),
       );
     }
     return filtered;
@@ -260,15 +78,16 @@ export default function AdminDashboardScreen() {
   const filteredRecruiters = useMemo(() => {
     let filtered = recruiters;
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(r => r.status === statusFilter);
+      filtered = filtered.filter((r) => r.status === statusFilter);
     }
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(r => 
-        r.name.toLowerCase().includes(query) ||
-        r.email.toLowerCase().includes(query) ||
-        r.company.toLowerCase().includes(query) ||
-        r.location.toLowerCase().includes(query)
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          r.email.toLowerCase().includes(q) ||
+          r.company.toLowerCase().includes(q) ||
+          r.location.toLowerCase().includes(q),
       );
     }
     return filtered;
@@ -277,16 +96,17 @@ export default function AdminDashboardScreen() {
   const filteredCompanies = useMemo(() => {
     let filtered = companies;
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(c => c.status === statusFilter);
+      filtered = filtered.filter((c) => c.status === statusFilter);
     }
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(c => 
-        c.companyName.toLowerCase().includes(query) ||
-        c.email.toLowerCase().includes(query) ||
-        c.contactPerson.toLowerCase().includes(query) ||
-        c.location.toLowerCase().includes(query) ||
-        c.industry.toLowerCase().includes(query)
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.companyName.toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q) ||
+          c.contactPerson.toLowerCase().includes(q) ||
+          c.location.toLowerCase().includes(q) ||
+          c.industry.toLowerCase().includes(q),
       );
     }
     return filtered;
@@ -295,23 +115,31 @@ export default function AdminDashboardScreen() {
   const filteredJobs = useMemo(() => {
     let filtered = jobs;
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(j => 
-        j.title.toLowerCase().includes(query) ||
-        j.company.toLowerCase().includes(query) ||
-        j.location.toLowerCase().includes(query) ||
-        j.postedBy.toLowerCase().includes(query)
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (j) =>
+          j.title.toLowerCase().includes(q) ||
+          j.company.toLowerCase().includes(q) ||
+          j.location.toLowerCase().includes(q) ||
+          j.postedBy.toLowerCase().includes(q),
       );
     }
     return filtered;
   }, [jobs, searchQuery]);
 
-  const pendingProfessionals = professionals.filter(p => p.status === 'pending').length;
-  const pendingRecruiters = recruiters.filter(r => r.status === 'pending').length;
-  const pendingCompanies = companies.filter(c => c.status === 'pending').length;
+  const pendingProfessionals = professionals.filter((p) => p.status === 'pending').length;
+  const pendingRecruiters = recruiters.filter((r) => r.status === 'pending').length;
+  const pendingCompanies = companies.filter((c) => c.status === 'pending').length;
   const totalUsers = professionals.length + recruiters.length + companies.length;
-  const activeJobs = jobs.filter(j => j.status === 'active').length;
+  const activeJobs = jobs.filter((j) => j.status === 'active').length;
   const totalApplicants = jobs.reduce((sum, job) => sum + job.applicants, 0);
+
+  const navigateToDetail = (type: string, id: string) => {
+    router.push({
+      pathname: '/admin-detail' as any,
+      params: { type, id },
+    });
+  };
 
   const renderSearchBar = () => (
     <View style={styles.searchContainer}>
@@ -336,7 +164,7 @@ export default function AdminDashboardScreen() {
   const renderFilterBar = () => (
     <View style={styles.filterContainer}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {['all', 'pending', 'approved', 'rejected'].map((filter) => (
+        {(['all', 'pending', 'approved', 'rejected'] as const).map((filter) => (
           <Pressable
             key={filter}
             style={({ pressed }) => [
@@ -344,7 +172,7 @@ export default function AdminDashboardScreen() {
               statusFilter === filter && styles.filterButtonActive,
               pressed && styles.filterButtonPressed,
             ]}
-            onPress={() => setStatusFilter(filter as typeof statusFilter)}
+            onPress={() => setStatusFilter(filter)}
           >
             <Text
               style={[
@@ -447,7 +275,7 @@ export default function AdminDashboardScreen() {
               <Text style={styles.departmentStatLabel}>Applicants</Text>
             </View>
             <View style={styles.departmentStatItem}>
-              <Text style={styles.departmentStatNumber}>{professionals.filter(p => p.status === 'approved').length}</Text>
+              <Text style={styles.departmentStatNumber}>{professionals.filter((p) => p.status === 'approved').length}</Text>
               <Text style={styles.departmentStatLabel}>Approved</Text>
             </View>
           </View>
@@ -567,12 +395,12 @@ export default function AdminDashboardScreen() {
         </View>
         <View style={styles.statCardSmall}>
           <Clock color="#6B7280" size={20} />
-          <Text style={styles.statNumberSmall}>{jobs.filter(j => j.status === 'closed').length}</Text>
+          <Text style={styles.statNumberSmall}>{jobs.filter((j) => j.status === 'closed').length}</Text>
           <Text style={styles.statLabelSmall}>Closed</Text>
         </View>
         <View style={styles.statCardSmall}>
           <Shield color="#EF4444" size={20} />
-          <Text style={styles.statNumberSmall}>{jobs.filter(j => j.status === 'flagged').length}</Text>
+          <Text style={styles.statNumberSmall}>{jobs.filter((j) => j.status === 'flagged').length}</Text>
           <Text style={styles.statLabelSmall}>Flagged</Text>
         </View>
       </View>
@@ -612,7 +440,7 @@ export default function AdminDashboardScreen() {
         </View>
         <View style={styles.statCardSmall}>
           <Activity color="#EF4444" size={20} />
-          <Text style={styles.statNumberSmall}>{professionals.filter(p => p.status === 'approved').length}</Text>
+          <Text style={styles.statNumberSmall}>{professionals.filter((p) => p.status === 'approved').length}</Text>
           <Text style={styles.statLabelSmall}>Approved</Text>
         </View>
       </View>
@@ -622,17 +450,17 @@ export default function AdminDashboardScreen() {
         <View style={styles.userStatsGrid}>
           <View style={styles.userStatCard}>
             <User color="#3B82F6" size={24} />
-            <Text style={styles.userStatNumber}>{professionals.filter(p => p.status === 'approved').length}</Text>
+            <Text style={styles.userStatNumber}>{professionals.filter((p) => p.status === 'approved').length}</Text>
             <Text style={styles.userStatLabel}>Professionals</Text>
           </View>
           <View style={styles.userStatCard}>
             <Users color="#10B981" size={24} />
-            <Text style={styles.userStatNumber}>{recruiters.filter(r => r.status === 'approved').length}</Text>
+            <Text style={styles.userStatNumber}>{recruiters.filter((r) => r.status === 'approved').length}</Text>
             <Text style={styles.userStatLabel}>Recruiters</Text>
           </View>
           <View style={styles.userStatCard}>
             <Building2 color="#F59E0B" size={24} />
-            <Text style={styles.userStatNumber}>{companies.filter(c => c.status === 'approved').length}</Text>
+            <Text style={styles.userStatNumber}>{companies.filter((c) => c.status === 'approved').length}</Text>
             <Text style={styles.userStatLabel}>Companies</Text>
           </View>
         </View>
@@ -677,12 +505,7 @@ export default function AdminDashboardScreen() {
               styles.applicationCard,
               pressed && styles.cardPressed,
             ]}
-            onPress={() => {
-              router.push({
-                pathname: '/admin-detail' as any,
-                params: { type: 'professional', id: professional.id },
-              });
-            }}
+            onPress={() => navigateToDetail('professional', professional.id)}
           >
             <View style={styles.applicationHeader}>
               <View style={styles.applicationIcon}>
@@ -745,12 +568,7 @@ export default function AdminDashboardScreen() {
               styles.applicationCard,
               pressed && styles.cardPressed,
             ]}
-            onPress={() => {
-              router.push({
-                pathname: '/admin-detail' as any,
-                params: { type: 'recruiter', id: recruiter.id },
-              });
-            }}
+            onPress={() => navigateToDetail('recruiter', recruiter.id)}
           >
             <View style={styles.applicationHeader}>
               <View style={styles.applicationIcon}>
@@ -813,12 +631,7 @@ export default function AdminDashboardScreen() {
               styles.applicationCard,
               pressed && styles.cardPressed,
             ]}
-            onPress={() => {
-              router.push({
-                pathname: '/admin-detail' as any,
-                params: { type: 'company', id: company.id },
-              });
-            }}
+            onPress={() => navigateToDetail('company', company.id)}
           >
             <View style={styles.applicationHeader}>
               <View style={styles.applicationIcon}>
@@ -880,12 +693,7 @@ export default function AdminDashboardScreen() {
               styles.applicationCard,
               pressed && styles.cardPressed,
             ]}
-            onPress={() => {
-              router.push({
-                pathname: '/admin-detail' as any,
-                params: { type: 'job', id: job.id },
-              });
-            }}
+            onPress={() => navigateToDetail('job', job.id)}
           >
             <View style={styles.applicationHeader}>
               <View style={styles.applicationIcon}>
@@ -895,14 +703,28 @@ export default function AdminDashboardScreen() {
                 <Text style={styles.applicationName}>{job.title}</Text>
                 <Text style={styles.applicationTitle}>{job.company}</Text>
               </View>
-              <View style={[styles.statusBadgeInline, { 
-                backgroundColor: job.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 
-                               job.status === 'closed' ? 'rgba(107, 114, 128, 0.15)' : 'rgba(239, 68, 68, 0.15)' 
-              }]}>
-                <Text style={[styles.statusTextInline, { 
-                  color: job.status === 'active' ? Colors.success : 
-                         job.status === 'closed' ? Colors.textLight : Colors.error 
-                }]}>
+              <View style={[
+                styles.statusBadgeInline,
+                {
+                  backgroundColor:
+                    job.status === 'active'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : job.status === 'closed'
+                        ? 'rgba(107, 114, 128, 0.15)'
+                        : 'rgba(239, 68, 68, 0.15)',
+                },
+              ]}>
+                <Text style={[
+                  styles.statusTextInline,
+                  {
+                    color:
+                      job.status === 'active'
+                        ? Colors.success
+                        : job.status === 'closed'
+                          ? Colors.textLight
+                          : Colors.error,
+                  },
+                ]}>
                   {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                 </Text>
               </View>
@@ -928,8 +750,6 @@ export default function AdminDashboardScreen() {
     </View>
   );
 
-
-
   return (
     <>
       <Stack.Screen
@@ -938,9 +758,7 @@ export default function AdminDashboardScreen() {
           headerTransparent: true,
           headerTitle: '',
           headerTintColor: Colors.white,
-          headerStyle: {
-            backgroundColor: 'transparent',
-          },
+          headerStyle: { backgroundColor: 'transparent' },
         }}
       />
       <View style={styles.container}>
@@ -988,15 +806,20 @@ export default function AdminDashboardScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {currentView === 'departments' && renderDepartments()}
-            {currentView === 'user-management' && !currentSubView && renderUserManagement()}
-            {currentView === 'user-management' && currentSubView === 'professionals' && renderProfessionals()}
-            {currentView === 'user-management' && currentSubView === 'recruiters' && renderRecruiters()}
-            {currentView === 'user-management' && currentSubView === 'companies' && renderCompanies()}
-            {currentView === 'job-management' && !currentSubView && renderJobManagement()}
-            {currentView === 'job-management' && currentSubView === 'jobs' && renderJobs()}
-            {currentView === 'analytics' && renderAnalytics()}
-            {currentView === 'system' && renderSystem()}
+            {isLoading && (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading data...</Text>
+              </View>
+            )}
+            {!isLoading && currentView === 'departments' && renderDepartments()}
+            {!isLoading && currentView === 'user-management' && !currentSubView && renderUserManagement()}
+            {!isLoading && currentView === 'user-management' && currentSubView === 'professionals' && renderProfessionals()}
+            {!isLoading && currentView === 'user-management' && currentSubView === 'recruiters' && renderRecruiters()}
+            {!isLoading && currentView === 'user-management' && currentSubView === 'companies' && renderCompanies()}
+            {!isLoading && currentView === 'job-management' && !currentSubView && renderJobManagement()}
+            {!isLoading && currentView === 'job-management' && currentSubView === 'jobs' && renderJobs()}
+            {!isLoading && currentView === 'analytics' && renderAnalytics()}
+            {!isLoading && currentView === 'system' && renderSystem()}
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -1005,432 +828,148 @@ export default function AdminDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 100,
-    paddingBottom: 16,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  header: { paddingHorizontal: 24, paddingTop: 100, paddingBottom: 16 },
+  headerTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 48, height: 48, borderRadius: 24,
     backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    borderWidth: 2,
-    borderColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 2, borderColor: '#3B82F6',
+    alignItems: 'center', justifyContent: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: Colors.light,
-    marginTop: 2,
-  },
+  title: { fontSize: 24, fontWeight: '800' as const, color: Colors.white },
+  subtitle: { fontSize: 13, color: Colors.light, marginTop: 2 },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 24, paddingVertical: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    marginHorizontal: 24,
-    marginVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
+    marginHorizontal: 24, marginVertical: 8,
+    borderRadius: 12, borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  backButtonPressed: {
-    opacity: 0.7,
-  },
-  backButtonText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.white,
-  },
-  departmentsContainer: {
-    gap: 16,
-  },
-  departmentsTitle: {
-    fontSize: 24,
-    fontWeight: '800' as const,
-    color: Colors.white,
-    marginBottom: 4,
-  },
-  departmentsSubtitle: {
-    fontSize: 14,
-    color: Colors.light,
-    marginBottom: 8,
-  },
+  backButtonPressed: { opacity: 0.7 },
+  backButtonText: { fontSize: 15, fontWeight: '600' as const, color: Colors.white },
+  departmentsContainer: { gap: 16 },
+  departmentsTitle: { fontSize: 24, fontWeight: '800' as const, color: Colors.white, marginBottom: 4 },
+  departmentsSubtitle: { fontSize: 14, color: Colors.light, marginBottom: 8 },
   departmentCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
+    borderRadius: 16, padding: 20, borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12,
   },
-  departmentIconWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  departmentIconWrapper: { alignItems: 'center', justifyContent: 'center' },
   departmentIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 64, height: 64, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center',
   },
-  departmentContent: {
-    flex: 1,
-  },
-  departmentTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.white,
-    marginBottom: 4,
-  },
-  departmentDescription: {
-    fontSize: 13,
-    color: Colors.light,
-    marginBottom: 12,
-  },
-  departmentStats: {
-    flexDirection: 'row',
-    gap: 24,
-  },
-  departmentStatItem: {
-    gap: 2,
-  },
-  departmentStatNumber: {
-    fontSize: 20,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  departmentStatLabel: {
-    fontSize: 11,
-    color: Colors.textLight,
-  },
-  subDepartmentContainer: {
-    gap: 16,
-  },
-  subDepartmentTitle: {
-    fontSize: 22,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  subDepartmentSubtitle: {
-    fontSize: 14,
-    color: Colors.light,
-    marginBottom: 8,
-  },
+  departmentContent: { flex: 1 },
+  departmentTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.white, marginBottom: 4 },
+  departmentDescription: { fontSize: 13, color: Colors.light, marginBottom: 12 },
+  departmentStats: { flexDirection: 'row', gap: 24 },
+  departmentStatItem: { gap: 2 },
+  departmentStatNumber: { fontSize: 20, fontWeight: '800' as const, color: Colors.white },
+  departmentStatLabel: { fontSize: 11, color: Colors.textLight },
+  subDepartmentContainer: { gap: 16 },
+  subDepartmentTitle: { fontSize: 22, fontWeight: '800' as const, color: Colors.white },
+  subDepartmentSubtitle: { fontSize: 14, color: Colors.light, marginBottom: 8 },
   infoSection: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    padding: 20,
-    gap: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 16, padding: 20, gap: 16,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-  },
-  overviewContainer: {
-    gap: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
+  scrollView: { flex: 1 },
+  scrollContent: { padding: 24 },
+  overviewContainer: { gap: 16 },
+  statsGrid: { flexDirection: 'row', gap: 12 },
   statCardLarge: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16, padding: 20, alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   statCardSmall: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14, padding: 16, alignItems: 'center', gap: 6,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   statIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 56, height: 56, borderRadius: 28,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  statNumberLarge: {
-    fontSize: 32,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  statLabelLarge: {
-    fontSize: 13,
-    color: Colors.light,
-    textAlign: 'center',
-  },
-  statNumberSmall: {
-    fontSize: 22,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  statLabelSmall: {
-    fontSize: 11,
-    color: Colors.light,
-    textAlign: 'center',
-  },
-  quickActionsSection: {
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.white,
-    marginBottom: 12,
-  },
+  statNumberLarge: { fontSize: 32, fontWeight: '800' as const, color: Colors.white },
+  statLabelLarge: { fontSize: 13, color: Colors.light, textAlign: 'center' },
+  statNumberSmall: { fontSize: 22, fontWeight: '800' as const, color: Colors.white },
+  statLabelSmall: { fontSize: 11, color: Colors.light, textAlign: 'center' },
+  sectionTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.white, marginBottom: 12 },
   quickActionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 14, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  quickActionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
+  quickActionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 48, height: 48, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
   },
-  quickActionTitle: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.white,
-  },
-  quickActionSubtitle: {
-    fontSize: 13,
-    color: Colors.light,
-    marginTop: 2,
-  },
-  badge: {
-    backgroundColor: Colors.accent,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: Colors.white,
-  },
-  cardPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }],
-  },
-  listContainer: {
-    gap: 16,
-  },
-  listHeader: {
-    marginBottom: 4,
-  },
-  listTitle: {
-    fontSize: 20,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  listSubtitle: {
-    fontSize: 13,
-    color: Colors.light,
-    marginTop: 4,
-  },
-  searchContainer: {
-    marginBottom: 12,
-  },
+  quickActionTitle: { fontSize: 15, fontWeight: '700' as const, color: Colors.white },
+  quickActionSubtitle: { fontSize: 13, color: Colors.light, marginTop: 2 },
+  cardPressed: { opacity: 0.7, transform: [{ scale: 0.98 }] },
+  listContainer: { gap: 16 },
+  listHeader: { marginBottom: 4 },
+  listTitle: { fontSize: 20, fontWeight: '800' as const, color: Colors.white },
+  listSubtitle: { fontSize: 13, color: Colors.light, marginTop: 4 },
+  searchContainer: { marginBottom: 12 },
   searchInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, gap: 12,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: Colors.white,
-  },
-  filterContainer: {
-    marginBottom: 16,
-  },
+  searchInput: { flex: 1, fontSize: 15, color: Colors.white },
+  filterContainer: { marginBottom: 16 },
   filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    marginRight: 8,
-    borderWidth: 1,
+    paddingVertical: 8, paddingHorizontal: 16,
+    borderRadius: 10, backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginRight: 8, borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  filterButtonActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  filterButtonPressed: {
-    opacity: 0.7,
-  },
-  filterButtonText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.textLight,
-  },
-  filterButtonTextActive: {
-    color: Colors.white,
-  },
+  filterButtonActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  filterButtonPressed: { opacity: 0.7 },
+  filterButtonText: { fontSize: 13, fontWeight: '600' as const, color: Colors.textLight },
+  filterButtonTextActive: { color: Colors.white },
   applicationCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginBottom: 12,
+    borderRadius: 16, padding: 18, borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)', marginBottom: 12,
   },
-  applicationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-    gap: 12,
-  },
+  applicationHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 12 },
   applicationIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 48, height: 48, borderRadius: 12, backgroundColor: Colors.white,
+    alignItems: 'center', justifyContent: 'center',
   },
-  applicationHeaderText: {
-    flex: 1,
-  },
-  applicationName: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.white,
-  },
-  applicationTitle: {
-    fontSize: 14,
-    color: Colors.light,
-    marginTop: 2,
-  },
-  applicationDetails: {
-    gap: 10,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  detailText: {
-    fontSize: 14,
-    color: Colors.white,
-    flex: 1,
-  },
-  chevronContainer: {
-    position: 'absolute',
-    top: 18,
-    right: 18,
-  },
-  statusBadgeInline: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-  },
-  statusTextInline: {
-    fontSize: 12,
-    fontWeight: '700' as const,
-  },
-  userStatsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
+  applicationHeaderText: { flex: 1 },
+  applicationName: { fontSize: 17, fontWeight: '700' as const, color: Colors.white },
+  applicationTitle: { fontSize: 14, color: Colors.light, marginTop: 2 },
+  applicationDetails: { gap: 10 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  detailText: { fontSize: 14, color: Colors.white, flex: 1 },
+  chevronContainer: { position: 'absolute', top: 18, right: 18 },
+  statusBadgeInline: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8 },
+  statusTextInline: { fontSize: 12, fontWeight: '700' as const },
+  userStatsGrid: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   userStatCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12, padding: 14, alignItems: 'center', gap: 6,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  userStatNumber: {
-    fontSize: 24,
-    fontWeight: '800' as const,
-    color: Colors.white,
-  },
-  userStatLabel: {
-    fontSize: 11,
-    color: Colors.light,
-    textAlign: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.white,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: Colors.light,
-    textAlign: 'center',
-  },
+  userStatNumber: { fontSize: 24, fontWeight: '800' as const, color: Colors.white },
+  userStatLabel: { fontSize: 11, color: Colors.light, textAlign: 'center' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 12 },
+  emptyStateText: { fontSize: 18, fontWeight: '700' as const, color: Colors.white },
+  emptyStateSubtext: { fontSize: 14, color: Colors.light, textAlign: 'center' },
+  loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  loadingText: { fontSize: 16, color: Colors.white },
 });

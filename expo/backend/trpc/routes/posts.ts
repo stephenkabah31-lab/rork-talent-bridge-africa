@@ -1,83 +1,13 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
-
-interface Post {
-  id: string;
-  authorId: string;
-  author: {
-    id: string;
-    name: string;
-    title: string;
-    profilePicture?: string;
-    isVerified?: boolean;
-  };
-  content: string;
-  image?: string;
-  timestamp: string;
-  createdAt: Date;
-  likes: number;
-  comments: number;
-  shares: number;
-  likedBy: string[];
-}
-
-const mockPosts: Post[] = [
-  {
-    id: "1",
-    authorId: "u1",
-    author: {
-      id: "u1",
-      name: "Amara Okafor",
-      title: "Talent Acquisition Lead",
-      isVerified: true,
-    },
-    content:
-      "We are looking for talented software developers to join our growing team. Multiple positions available across West Africa. Competitive compensation and growth opportunities. Reach out if interested! 🚀\n\n#TechJobs #AfricaTech #Careers",
-    timestamp: "2h ago",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    likedBy: [],
-  },
-  {
-    id: "2",
-    authorId: "u2",
-    author: {
-      id: "u2",
-      name: "Kwame Mensah",
-      title: "Product Strategy Consultant",
-    },
-    content:
-      "Had an amazing session with entrepreneurs discussing digital innovation strategies. The talent and creativity in Africa continues to impress! 🌍\n\nReminder: Focus on solving real problems for your users first.",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800",
-    timestamp: "4h ago",
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    likes: 567,
-    comments: 89,
-    shares: 34,
-    likedBy: [],
-  },
-  {
-    id: "3",
-    authorId: "u3",
-    author: {
-      id: "u3",
-      name: "Zainab Hassan",
-      title: "Design Lead | Digital Agency",
-      isVerified: true,
-    },
-    content:
-      "Design insight: Consistency creates trust! 🎨\n\nWhen working on digital products, maintaining consistent patterns helps users feel comfortable and confident. Small details make a big difference.\n\nWhat design principles do you follow?",
-    timestamp: "6h ago",
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    likes: 892,
-    comments: 156,
-    shares: 67,
-    likedBy: [],
-  },
-];
+import {
+  getAllPosts,
+  createPost,
+  getPostById,
+  deletePostById,
+} from "../data-store";
+import type { Post } from "../data-store";
 
 export const postsRouter = createTRPCRouter({
   getFeed: publicProcedure
@@ -85,12 +15,12 @@ export const postsRouter = createTRPCRouter({
       z.object({
         limit: z.number().min(1).max(100).default(10),
         cursor: z.string().optional(),
-      })
+      }),
     )
     .query(({ input }) => {
       console.log(`Fetching feed with limit ${input.limit}`);
       return {
-        posts: mockPosts,
+        posts: getAllPosts(),
         nextCursor: undefined,
       };
     }),
@@ -103,7 +33,7 @@ export const postsRouter = createTRPCRouter({
         authorId: z.string(),
         authorName: z.string(),
         authorTitle: z.string(),
-      })
+      }),
     )
     .mutation(({ input }) => {
       const newPost: Post = {
@@ -124,7 +54,7 @@ export const postsRouter = createTRPCRouter({
         likedBy: [],
       };
 
-      mockPosts.unshift(newPost);
+      createPost(newPost);
 
       console.log(`Created post ${newPost.id}`);
 
@@ -139,22 +69,22 @@ export const postsRouter = createTRPCRouter({
       z.object({
         postId: z.string(),
         userId: z.string(),
-      })
+      }),
     )
     .mutation(({ input, ctx }) => {
-      const post = mockPosts.find((p) => p.id === input.postId);
+      const post = getPostById(input.postId);
 
       if (!post) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Post not found',
+          code: "NOT_FOUND",
+          message: "Post not found",
         });
       }
 
       if (input.userId !== ctx.user?.userId) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Unauthorized action',
+          code: "FORBIDDEN",
+          message: "Unauthorized action",
         });
       }
 
@@ -168,7 +98,9 @@ export const postsRouter = createTRPCRouter({
         post.likes += 1;
       }
 
-      console.log(`User ${input.userId} ${isLiked ? "unliked" : "liked"} post ${input.postId}`);
+      console.log(
+        `User ${input.userId} ${isLiked ? "unliked" : "liked"} post ${input.postId}`,
+      );
 
       return {
         success: true,
@@ -182,26 +114,26 @@ export const postsRouter = createTRPCRouter({
       z.object({
         postId: z.string(),
         userId: z.string(),
-      })
+      }),
     )
     .mutation(({ input, ctx }) => {
-      const postIndex = mockPosts.findIndex((p) => p.id === input.postId);
+      const post = getPostById(input.postId);
 
-      if (postIndex === -1) {
+      if (!post) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Post not found',
+          code: "NOT_FOUND",
+          message: "Post not found",
         });
       }
 
-      if (mockPosts[postIndex].authorId !== input.userId || input.userId !== ctx.user?.userId) {
+      if (post.authorId !== input.userId || input.userId !== ctx.user?.userId) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Unauthorized action',
+          code: "FORBIDDEN",
+          message: "Unauthorized action",
         });
       }
 
-      mockPosts.splice(postIndex, 1);
+      deletePostById(input.postId);
 
       console.log(`Deleted post ${input.postId}`);
 

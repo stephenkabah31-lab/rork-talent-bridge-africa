@@ -1,80 +1,34 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  companyLogo?: string;
-  location: string;
-  type: "Full-time" | "Part-time" | "Contract" | "Remote";
-  salary?: string;
-  description: string;
-  requirements: string[];
-  postedBy: string;
-  postedAt: Date;
-  applicants: number;
-  status: "active" | "closed";
-}
-
-const mockJobs: Job[] = [
-  {
-    id: "1",
-    title: "Senior Software Engineer",
-    company: "TechCorp Africa",
-    location: "Lagos, Nigeria",
-    type: "Full-time",
-    salary: "$60,000 - $90,000",
-    description: "We are seeking a talented Senior Software Engineer to join our growing team.",
-    requirements: ["5+ years experience", "React Native", "Node.js"],
-    postedBy: "recruiter1",
-    postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    applicants: 45,
-    status: "active",
-  },
-  {
-    id: "2",
-    title: "Product Designer",
-    company: "DesignHub",
-    location: "Accra, Ghana",
-    type: "Remote",
-    salary: "$40,000 - $60,000",
-    description: "Looking for a creative Product Designer to help shape our products.",
-    requirements: ["3+ years experience", "Figma", "User Research"],
-    postedBy: "company1",
-    postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    applicants: 28,
-    status: "active",
-  },
-];
-
-interface Application {
-  id: string;
-  jobId: string;
-  userId: string;
-  coverLetter: string;
-  resume?: string;
-  appliedAt: Date;
-  status: "pending" | "reviewing" | "shortlisted" | "accepted" | "rejected";
-}
-
-const mockApplications: Application[] = [];
+import {
+  getAllJobs,
+  getJobById,
+  createJob,
+  getAllJobApplications,
+  getApplicationsByUser,
+  getApplicationsByJob,
+  createJobApplication,
+  getApplicationById,
+} from "../data-store";
+import type { Job } from "../data-store";
 
 export const jobsRouter = createTRPCRouter({
   getAll: publicProcedure
     .input(
       z.object({
-        filter: z.enum(["all", "full-time", "part-time", "contract", "remote"]).optional(),
+        filter: z
+          .enum(["all", "full-time", "part-time", "contract", "remote"])
+          .optional(),
         search: z.string().optional(),
-      })
+      }),
     )
     .query(({ input }) => {
-      let filteredJobs = [...mockJobs];
+      let filteredJobs = [...getAllJobs()];
 
       if (input.filter && input.filter !== "all") {
-        filteredJobs = filteredJobs.filter((job) =>
-          job.type.toLowerCase() === input.filter?.replace("-", " ")
+        filteredJobs = filteredJobs.filter(
+          (job) => job.type.toLowerCase() === input.filter?.replace("-", " "),
         );
       }
 
@@ -84,7 +38,7 @@ export const jobsRouter = createTRPCRouter({
           (job) =>
             job.title.toLowerCase().includes(searchLower) ||
             job.company.toLowerCase().includes(searchLower) ||
-            job.location.toLowerCase().includes(searchLower)
+            job.location.toLowerCase().includes(searchLower),
         );
       }
 
@@ -96,7 +50,7 @@ export const jobsRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ jobId: z.string() }))
     .query(({ input }) => {
-      const job = mockJobs.find((j) => j.id === input.jobId);
+      const job = getJobById(input.jobId);
       return job || null;
     }),
 
@@ -111,7 +65,7 @@ export const jobsRouter = createTRPCRouter({
         description: z.string().min(1),
         requirements: z.array(z.string()),
         postedBy: z.string(),
-      })
+      }),
     )
     .mutation(({ input }) => {
       const newJob: Job = {
@@ -122,7 +76,7 @@ export const jobsRouter = createTRPCRouter({
         status: "active",
       };
 
-      mockJobs.unshift(newJob);
+      createJob(newJob);
 
       console.log(`Created job ${newJob.id}: ${newJob.title}`);
 
@@ -139,47 +93,47 @@ export const jobsRouter = createTRPCRouter({
         userId: z.string(),
         coverLetter: z.string(),
         resume: z.string().optional(),
-      })
+      }),
     )
     .mutation(({ input, ctx }) => {
-      const job = mockJobs.find((j) => j.id === input.jobId);
+      const job = getJobById(input.jobId);
 
       if (!job) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Job not found',
+          code: "NOT_FOUND",
+          message: "Job not found",
         });
       }
 
       if (input.userId !== ctx.user?.userId) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Unauthorized action',
+          code: "FORBIDDEN",
+          message: "Unauthorized action",
         });
       }
 
-      const existingApplication = mockApplications.find(
-        (app) => app.jobId === input.jobId && app.userId === input.userId
+      const existingApplication = getApplicationsByJob(input.jobId).find(
+        (app) => app.userId === input.userId,
       );
 
       if (existingApplication) {
         throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'Already applied to this job',
+          code: "CONFLICT",
+          message: "Already applied to this job",
         });
       }
 
-      const application: Application = {
+      const application = {
         id: Date.now().toString(),
         jobId: input.jobId,
         userId: input.userId,
         coverLetter: input.coverLetter,
         resume: input.resume,
         appliedAt: new Date(),
-        status: "pending",
+        status: "pending" as const,
       };
 
-      mockApplications.push(application);
+      createJobApplication(application);
       job.applicants += 1;
 
       console.log(`User ${input.userId} applied to job ${input.jobId}`);
@@ -195,13 +149,13 @@ export const jobsRouter = createTRPCRouter({
       z.object({
         userId: z.string().optional(),
         jobId: z.string().optional(),
-      })
+      }),
     )
     .query(({ input }) => {
-      let applications = [...mockApplications];
+      let applications = [...getAllJobApplications()];
 
       if (input.userId) {
-        applications = applications.filter((app) => app.userId === input.userId);
+        applications = getApplicationsByUser(input.userId);
       }
 
       if (input.jobId) {
@@ -215,30 +169,38 @@ export const jobsRouter = createTRPCRouter({
     .input(
       z.object({
         applicationId: z.string(),
-        status: z.enum(["pending", "reviewing", "shortlisted", "accepted", "rejected"]),
-      })
+        status: z.enum([
+          "pending",
+          "reviewing",
+          "shortlisted",
+          "accepted",
+          "rejected",
+        ]),
+      }),
     )
     .mutation(({ input, ctx }) => {
-      const application = mockApplications.find((app) => app.id === input.applicationId);
+      const application = getApplicationById(input.applicationId);
 
       if (!application) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Application not found',
+          code: "NOT_FOUND",
+          message: "Application not found",
         });
       }
 
-      const job = mockJobs.find((j) => j.id === application.jobId);
+      const job = getJobById(application.jobId);
       if (job && job.postedBy !== ctx.user?.userId) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Unauthorized action',
+          code: "FORBIDDEN",
+          message: "Unauthorized action",
         });
       }
 
       application.status = input.status;
 
-      console.log(`Updated application ${input.applicationId} status to ${input.status}`);
+      console.log(
+        `Updated application ${input.applicationId} status to ${input.status}`,
+      );
 
       return {
         success: true,
