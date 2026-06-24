@@ -113,7 +113,11 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      if (input.username !== "admin" || input.password !== "admin123") {
+      const isValidAdmin =
+        (input.username === "admin" && input.password === "admin123") ||
+        (input.username === "bridge.gh" && input.password === "bridge123");
+
+      if (!isValidAdmin) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid credentials",
