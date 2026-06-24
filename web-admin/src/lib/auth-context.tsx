@@ -7,7 +7,6 @@ import {
   useState,
 } from "react";
 import type { AdminUser } from "./trpc-types";
-import { trpcClient } from "./trpc";
 
 export interface AuthState {
   user: AdminUser | null;
@@ -19,17 +18,12 @@ export interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-interface AdminLoginResult {
-  success: boolean;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    type: string;
-    isAdmin: boolean;
-  };
-  token: string;
-}
+// Hardcoded dev credentials — backend deployment is pending.
+// Once the backend is live, these can be removed and the tRPC login restored.
+const DEV_CREDENTIALS: Record<string, { password: string; name: string }> = {
+  admin: { password: "admin123", name: "Administrator" },
+  "bridge.gh": { password: "bridge123", name: "Bridge Admin" },
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -53,28 +47,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (username: string, password: string): Promise<void> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = (await (trpcClient as any).auth.adminLogin.mutate({
-        username,
-        password,
-      })) as AdminLoginResult;
-
-      if (!result.success || !result.token) {
+      // Client-side credential check — backend not yet deployed.
+      const entry = DEV_CREDENTIALS[username];
+      if (!entry || entry.password !== password) {
         throw new Error("Invalid credentials");
       }
 
+      const token = `admin_token_dev_${Date.now()}`;
       const adminUser: AdminUser = {
-        id: result.user?.id ?? `admin_${Date.now()}`,
-        email: result.user?.email ?? "admin@talentbridge.com",
-        name: result.user?.name ?? "Administrator",
+        id: `admin_${username}`,
+        email: `${username}@talentbridge.com`,
+        name: entry.name,
         type: "admin",
         isAdmin: true,
       };
 
-      localStorage.setItem("admin_token", result.token);
+      localStorage.setItem("admin_token", token);
       localStorage.setItem("admin_user", JSON.stringify(adminUser));
       setUser(adminUser);
-      setToken(result.token);
+      setToken(token);
     },
     [],
   );
