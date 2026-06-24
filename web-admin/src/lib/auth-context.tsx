@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import type { AdminUser } from "./trpc-types";
+import { trpcClient } from "./trpc";
 
 interface AuthState {
   user: AdminUser | null;
@@ -18,15 +19,6 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-
-function getBaseUrl(): string {
-  const url = import.meta.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  if (!url) {
-    console.error("EXPO_PUBLIC_RORK_API_BASE_URL is not set");
-    throw new Error("Backend URL not configured");
-  }
-  return url;
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -51,24 +43,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyLogin = useCallback(
     async (username: string, password: string): Promise<boolean> => {
       try {
-        const baseUrl = getBaseUrl();
-        const res = await fetch(`${baseUrl}/api/trpc/auth.adminLogin`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
+        // Use tRPC client for proper v11 protocol handling
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await (trpcClient as any).auth.adminLogin.mutate({
+          username,
+          password,
         });
-        if (!res.ok) {
-          console.error("Admin login HTTP error:", res.status, res.statusText);
-          return false;
-        }
-        const json = await res.json();
-        if (json?.error) {
-          console.error("Admin login tRPC error:", json.error.message);
-          return false;
-        }
-        return json?.result?.data?.success === true;
+        return (result as { success: boolean }).success === true;
       } catch (err) {
-        console.error("Admin login request failed:", err);
+        console.error("Admin login failed:", err);
         return false;
       }
     },
@@ -77,35 +60,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (_username: string, _password: string, code: string) => {
-      const baseUrl = getBaseUrl();
-      const res = await fetch(`${baseUrl}/api/trpc/auth.adminVerify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+      // Use tRPC client for proper v11 protocol handling
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (trpcClient as any).auth.adminVerify.mutate({
+        code,
       });
-      if (!res.ok) {
-        throw new Error(`Verification failed (${res.status})`);
-      }
-      const json = await res.json();
 
-      if (json?.error || !json?.result?.data?.success) {
-        throw new Error(json?.error?.message ?? "Invalid verification code");
+      const data = result as {
+        success: boolean;
+        user: AdminUser;
+        token: string;
+      };
+
+      if (!data.success || !data.token) {
+        throw new Error("Invalid verification code");
       }
 
       const adminUser: AdminUser = {
-        id: `admin_${Date.now()}`,
-        email: "admin@talentbridge.com",
-        name: "Administrator",
+        id: data.user?.id ?? `admin_${Date.now()}`,
+        email: data.user?.email ?? "admin@talentbridge.com",
+        name: data.user?.name ?? "Administrator",
         type: "admin",
         isAdmin: true,
       };
 
-      const adminToken = json.result.data.token;
-
-      localStorage.setItem("admin_token", adminToken);
+      localStorage.setItem("admin_token", data.token);
       localStorage.setItem("admin_user", JSON.stringify(adminUser));
       setUser(adminUser);
-      setToken(adminToken);
+      setToken(data.token);
     },
     [],
   );
