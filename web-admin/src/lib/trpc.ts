@@ -9,7 +9,8 @@ const trpcUrl: string = import.meta.env.DEV
   : `${import.meta.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? ""}/api/trpc`;
 
 const getAuthToken = (): string | null => {
-  return localStorage.getItem("admin_token");
+  // Auth-context stores under "talentbridge_token" — must match
+  return localStorage.getItem("talentbridge_token");
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

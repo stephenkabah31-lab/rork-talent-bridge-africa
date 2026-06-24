@@ -12,6 +12,7 @@ import {
   Megaphone,
   MessageCircle,
   Search,
+  Shield,
   Sparkles,
   Star,
   Target,
@@ -20,7 +21,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 
 // ── Animated counter hook ─────────────────────────────────────
@@ -87,7 +87,7 @@ function StatCard({
       className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
     >
       <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4`}
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
         style={{ backgroundColor: `${color}15` }}
       >
         <Icon className="w-5 h-5" color={color} />
@@ -202,40 +202,10 @@ function Testimonial({
 }
 
 // ──────────────────────────────────────────────────────────────
-// Landing page
+// Landing page — fully static, no auth/backend dependency
 // ──────────────────────────────────────────────────────────────
 export default function Landing() {
-  const { user, login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"professional" | "recruiter" | "company">("professional");
-
-  if (user) {
-    if (user.isAdmin) navigate("/dashboard", { replace: true });
-    else navigate("/feed", { replace: true });
-    return null;
-  }
-
-  const handleQuickJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-    try {
-      await login(
-        email || "demo@talentbridge.com",
-        password || "Demo1234",
-        activeTab as "professional" | "recruiter" | "company",
-      );
-      navigate("/feed", { replace: true });
-    } catch {
-      setError("Invalid credentials. Try demo@talentbridge.com / Demo1234");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -276,13 +246,11 @@ export default function Landing() {
               to="/admin-login"
               className="text-xs text-gray-400 hover:text-gray-600 transition-colors hidden sm:inline mr-1"
             >
+              <Shield className="w-3 h-3 inline mr-0.5" />
               Admin
             </Link>
             <Button
-              onClick={() => {
-                const el = document.getElementById("hero-join");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }}
+              onClick={() => navigate("/signup")}
               className="rounded-full bg-[#0A66C2] hover:bg-[#004182] text-sm font-semibold px-5 shadow-sm"
             >
               Join Now
@@ -340,80 +308,23 @@ export default function Landing() {
                 </p>
               </div>
 
-              {/* Quick join form */}
-              <div id="hero-join" className="bg-white rounded-2xl border border-gray-200 p-6 max-w-md shadow-lg shadow-gray-100">
-                {/* User type tabs */}
-                <div className="flex bg-gray-100 rounded-lg p-1 mb-5">
-                  {[
-                    { id: "professional" as const, label: "Job Seeker" },
-                    { id: "recruiter" as const, label: "Recruiter" },
-                    { id: "company" as const, label: "Company" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                        activeTab === tab.id
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : "text-gray-500 hover:text-gray-700"
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                <form onSubmit={handleQuickJoin} className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="email"
-                      placeholder="Email address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent transition-all"
-                    />
-                    <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  </div>
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent transition-all"
-                  />
-                  {error && (
-                    <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 animate-in fade-in slide-in-from-top-2">
-                      {error}
-                    </p>
-                  )}
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full rounded-xl bg-[#0A66C2] hover:bg-[#004182] font-semibold h-12 text-base shadow-md shadow-[#0A66C2]/20 hover:shadow-lg hover:shadow-[#0A66C2]/25 transition-all"
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Joining...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        Start for free <ArrowRight className="w-4 h-4" />
-                      </span>
-                    )}
-                  </Button>
-                </form>
-                <p className="text-xs text-gray-400 text-center mt-4">
-                  By continuing, you agree to our{" "}
-                  <Link to="/terms" className="text-[#0A66C2] hover:underline">
-                    Terms
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-[#0A66C2] hover:underline">
-                    Privacy Policy
-                  </Link>
-                  .
-                </p>
+              {/* CTA buttons */}
+              <div className="flex flex-col sm:flex-row gap-3" id="hero-join">
+                <Button
+                  onClick={() => navigate("/signup")}
+                  size="lg"
+                  className="rounded-full bg-[#0A66C2] hover:bg-[#004182] font-semibold px-8 h-12 text-base shadow-lg shadow-[#0A66C2]/20 hover:shadow-xl hover:shadow-[#0A66C2]/25 transition-all"
+                >
+                  Get Started Free <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate("/login")}
+                  className="rounded-full font-semibold px-8 h-12 text-base border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all"
+                >
+                  Sign In
+                </Button>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-gray-500">
@@ -758,10 +669,7 @@ export default function Landing() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
-              onClick={() => {
-                const el = document.getElementById("hero-join");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }}
+              onClick={() => navigate("/signup")}
               size="lg"
               className="rounded-full bg-white text-[#0A66C2] hover:bg-gray-100 font-semibold px-8 h-12 shadow-lg w-full sm:w-auto"
             >
@@ -864,6 +772,9 @@ export default function Landing() {
               </Link>
               <Link to="/privacy" className="hover:text-gray-600 transition-colors">
                 Privacy
+              </Link>
+              <Link to="/admin-login" className="hover:text-gray-600 transition-colors">
+                <Shield className="w-3 h-3 inline mr-0.5" /> Admin
               </Link>
               <span className="flex items-center gap-1">
                 Made with <Heart className="w-3 h-3 text-red-400 fill-red-400" /> in Africa

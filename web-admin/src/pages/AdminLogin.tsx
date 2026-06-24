@@ -4,13 +4,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 
 export default function AdminLogin() {
-  const { adminLogin } = useAuth();
+  const { user, adminLogin } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // If already logged in as admin, redirect to dashboard
+  if (user?.isAdmin) {
+    navigate("/dashboard", { replace: true });
+    return null;
+  }
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {

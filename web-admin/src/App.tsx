@@ -94,15 +94,8 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 
 const AppRoutes = () => (
   <Routes>
-    {/* Landing */}
-    <Route
-      path="/"
-      element={
-        <GuestRoute>
-          <Landing />
-        </GuestRoute>
-      }
-    />
+    {/* Landing — always public, no auth required */}
+    <Route path="/" element={<Landing />} />
 
     {/* Auth */}
     <Route
@@ -146,15 +139,8 @@ const AppRoutes = () => (
       }
     />
 
-    {/* Admin */}
-    <Route
-      path="/admin-login"
-      element={
-        <GuestRoute>
-          <AdminLogin />
-        </GuestRoute>
-      }
-    />
+    {/* Admin login — public, separate from regular user auth */}
+    <Route path="/admin-login" element={<AdminLogin />} />
     <Route
       path="/dashboard"
       element={
