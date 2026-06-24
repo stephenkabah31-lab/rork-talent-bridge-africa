@@ -35,7 +35,7 @@ const TOKEN_KEY = "talentbridge_token";
 
 function getApiBase(): string {
   if (import.meta.env.DEV) return "";
-  return import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "";
+  return import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "https://hire-me-africa-backend.rork.app";
 }
 
 interface AuthResponse {

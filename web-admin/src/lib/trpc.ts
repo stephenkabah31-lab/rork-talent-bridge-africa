@@ -4,7 +4,7 @@ import superjson from "superjson";
 // In dev, use the Vite proxy (relative /api/trpc) so the browser
 // sends requests to the same origin where Vite forwards them.
 // In production, call the Cloudflare Functions backend Worker.
-const PRODUCTION_API_ORIGIN = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "";
+const PRODUCTION_API_ORIGIN = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "https://hire-me-africa-backend.rork.app";
 const trpcUrl: string = import.meta.env.DEV
   ? "/api/trpc"
   : `${PRODUCTION_API_ORIGIN}/api/trpc`;

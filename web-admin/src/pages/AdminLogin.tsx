@@ -135,7 +135,7 @@ export default function AdminLogin() {
           </form>
 
           <p className="text-xs text-gray-400 text-center mt-4">
-            Default credentials: <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin</code> / <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin123</code>
+            Default credentials: <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin</code> / <code className="bg-gray-100 px-1.5 py-0.5 rounded">Admin1234</code>
           </p>
         </div>
       </div>

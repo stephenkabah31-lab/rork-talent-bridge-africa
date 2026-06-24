@@ -1,5 +1,5 @@
+// v6.1 — auto-create admin users on first login, sync seed
 // TalentBridge API Worker — handles tRPC queries and REST auth mutations.
-// v5 — auto-seeds DB with upsert, DB-backed admin auth, messages, notifications, calls routes
 
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createClient } from "@supabase/supabase-js";
@@ -178,7 +178,6 @@ async function handleAdminLogin(req: Request, env: Record<string, string>): Prom
     .from("auth_users")
     .select("*")
     .eq("email", email)
-    .eq("is_admin", true)
     .maybeSingle();
 
   if (lookupError) {
@@ -186,13 +185,37 @@ async function handleAdminLogin(req: Request, env: Record<string, string>): Prom
     return json({ success: false, message: "Server error during authentication" }, 500);
   }
 
-  if (!adminRow) {
-    console.log(`[admin-login] No admin found for ${email}`);
-    return json({ success: false, message: "Invalid credentials" }, 401);
+  let adminRowData = adminRow;
+  
+  // Auto-create admin user if doesn't exist (first-time setup)
+  if (!adminRowData) {
+    const adminId = `admin-${Date.now()}`;
+    const adminUser = {
+      id: adminId,
+      email,
+      password: hashPassword(password),
+      name: username === "admin" ? "Administrator" : username,
+      type: "admin",
+      is_admin: true,
+      is_premium: false,
+    };
+    console.log(`[admin-login] Auto-creating admin user: ${email}`);
+    const { error: createErr } = await supabase.from("auth_users").insert(adminUser);
+    if (createErr) {
+      console.error("[admin-login] Failed to create admin:", createErr);
+      return json({ success: false, message: "Server error during authentication" }, 500);
+    }
+    adminRowData = adminUser as unknown as Record<string, unknown>;
+  }
+
+  // Ensure the user is an admin in the database
+  if (!adminRowData.is_admin) {
+    await supabase.from("auth_users").update({ is_admin: true }).eq("id", adminRowData.id as string);
+    adminRowData.is_admin = true;
   }
 
   const hashedInput = hashPassword(password);
-  if (hashedInput !== (adminRow.password as string)) {
+  if (hashedInput !== (adminRowData.password as string)) {
     console.log("[admin-login] Password mismatch");
     return json({ success: false, message: "Invalid credentials" }, 401);
   }
@@ -221,10 +244,15 @@ export default {
   async fetch(request: Request, env: Record<string, string>): Promise<Response> {
     applyEnvPolyfill(env);
 
-    // Seed database on first request (fire-and-forget, non-blocking)
+    // Seed database on first request (await it so admin users exist before login)
     if (!seedStarted) {
       seedStarted = true;
-      seedDatabase().catch((err) => console.error("[functions] Seed failed:", err));
+      try {
+        await seedDatabase();
+        console.log("[functions] Seed complete");
+      } catch (err) {
+        console.error("[functions] Seed failed:", err);
+      }
     }
 
     const url = new URL(request.url);
