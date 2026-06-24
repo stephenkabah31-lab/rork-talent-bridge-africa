@@ -15,6 +15,67 @@ import {
 import type { Job } from "../data-store";
 
 export const jobsRouter = createTRPCRouter({
+  landingStats: publicProcedure.query(async () => {
+    const jobs = await getAllJobs();
+    const activeJobs = jobs.filter((j) => j.status === "active");
+    const totalApplicants = activeJobs.reduce((sum, j) => sum + j.applicants, 0);
+    const featured = activeJobs.slice(0, 6);
+
+    // Count unique companies
+    const companies = new Set(activeJobs.map((j) => j.company));
+
+    // Job type breakdown
+    const byType = {
+      fullTime: activeJobs.filter((j) => j.type === "Full-time").length,
+      partTime: activeJobs.filter((j) => j.type === "Part-time").length,
+      contract: activeJobs.filter((j) => j.type === "Contract").length,
+      remote: activeJobs.filter((j) => j.type === "Remote").length,
+    };
+
+    // Industry categories from job titles/companies
+    const industryCounts: Record<string, number> = {};
+    const industryKeywords: Record<string, string[]> = {
+      Technology: ["engineer", "developer", "software", "tech", "devops", "cloud", "data"],
+      Finance: ["finance", "bank", "accounting", "investment", "fintech"],
+      Healthcare: ["health", "medical", "doctor", "nurse", "clinical", "pharma"],
+      Marketing: ["marketing", "brand", "content", "social media", "seo", "growth"],
+      Engineering: ["engineer", "civil", "mechanical", "electrical", "structural"],
+      Design: ["designer", "design", "ux", "ui", "product design", "graphic"],
+      Sales: ["sales", "account", "business development", "bdr"],
+      Education: ["teacher", "educator", "professor", "training", "academic"],
+      Consulting: ["consultant", "consulting", "advisory", "strategy"],
+      Logistics: ["logistics", "supply chain", "warehouse", "shipping", "transport"],
+    };
+    for (const job of activeJobs) {
+      const lower = `${job.title} ${job.company}`.toLowerCase();
+      for (const [industry, keywords] of Object.entries(industryKeywords)) {
+        if (keywords.some((kw) => lower.includes(kw))) {
+          industryCounts[industry] = (industryCounts[industry] || 0) + 1;
+        }
+      }
+    }
+
+    return {
+      totalJobs: activeJobs.length,
+      totalCompanies: companies.size,
+      totalApplicants,
+      byType,
+      featuredJobs: featured.map((j) => ({
+        id: j.id,
+        title: j.title,
+        company: j.company,
+        location: j.location,
+        type: j.type,
+        salary: j.salary,
+        applicants: j.applicants,
+        postedAt: j.postedAt.toISOString(),
+      })),
+      industryCategories: Object.entries(industryCounts)
+        .map(([name, count]) => ({ name, count: `${count}+ jobs` }))
+        .sort((a, b) => parseInt(b.count) - parseInt(a.count)),
+    };
+  }),
+
   getAll: publicProcedure
     .input(
       z.object({

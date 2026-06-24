@@ -1,5 +1,28 @@
 // ── Shared API types mirroring the TalentBridge backend tRPC router ──────────
 
+export interface LandingStats {
+  totalJobs: number;
+  totalCompanies: number;
+  totalApplicants: number;
+  byType: {
+    fullTime: number;
+    partTime: number;
+    contract: number;
+    remote: number;
+  };
+  featuredJobs: {
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    type: string;
+    salary?: string;
+    applicants: number;
+    postedAt: string;
+  }[];
+  industryCategories: { name: string; count: string }[];
+}
+
 export interface User {
   id: string;
   email: string;
@@ -169,6 +192,9 @@ export interface AppRouter {
     };
   };
   jobs: {
+    landingStats: {
+      query(): Promise<LandingStats>;
+    };
     getAll: {
       query(input?: { filter?: string; search?: string }): Promise<Job[]>;
     };
