@@ -1,4 +1,4 @@
-// Shared API types mirroring the TalentBridge backend tRPC router
+// ── Shared API types mirroring the TalentBridge backend tRPC router ──────────
 
 export interface User {
   id: string;
@@ -14,13 +14,9 @@ export interface User {
   skills?: string[];
   experience?: string;
   education?: string;
-  isPremium?: boolean;
-  isAdmin?: boolean;
+  isPremium: boolean;
+  isAdmin: boolean;
   connections?: string[];
-}
-
-export interface AdminUser extends User {
-  isAdmin: true;
 }
 
 export interface ProfessionalApplication {
@@ -72,29 +68,56 @@ export interface Job {
   description: string;
   requirements: string[];
   postedBy: string;
-  postedAt: string;
+  postedAt: Date | string;
   applicants: number;
   status: "active" | "closed" | "flagged";
 }
 
-export interface Analytics {
-  totalUsers: number;
-  totalJobs: number;
-  totalApplications: number;
-  totalPosts: number;
-  pendingApprovals: number;
-  activeUsers: number;
-  jobsByStatus: { active: number; closed: number; flagged: number };
-  applicationsByStatus: {
-    pending: number;
-    reviewing: number;
-    shortlisted: number;
-    accepted: number;
-    rejected: number;
-  };
+export interface Application {
+  id: string;
+  jobId: string;
+  userId: string;
+  coverLetter: string;
+  resume?: string;
+  appliedAt: Date | string;
+  status: "pending" | "reviewing" | "shortlisted" | "accepted" | "rejected";
 }
 
-// ── tRPC Router type (mirrors the backend app router) ──────────
+export interface Post {
+  id: string;
+  authorId: string;
+  author: {
+    id: string;
+    name: string;
+    title: string;
+    profilePicture?: string;
+    isVerified?: boolean;
+  };
+  content: string;
+  image?: string;
+  timestamp: string;
+  createdAt: Date | string;
+  likes: number;
+  comments: number;
+  shares: number;
+  likedBy: string[];
+}
+
+export interface Connection {
+  id: string;
+  userId: string;
+  connectedUserId: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: Date | string;
+}
+
+// ── tRPC Router type ──────────────────────────────────────────────────────────
+
+interface LoginResult {
+  success: boolean;
+  user: Record<string, unknown>;
+  token: string;
+}
 
 interface AdminLoginResult {
   success: boolean;
@@ -102,43 +125,115 @@ interface AdminLoginResult {
   token: string;
 }
 
-interface StatusUpdateResult {
+interface MutationResult {
   success: boolean;
-  application: unknown;
-}
-
-interface JobStatusUpdateResult {
-  success: boolean;
-  job: unknown;
+  [key: string]: unknown;
 }
 
 export interface AppRouter {
   auth: {
+    login: {
+      mutate(input: { email: string; password: string; userType: "professional" | "recruiter" | "company" }): Promise<LoginResult>;
+    };
     adminLogin: {
       mutate(input: { username: string; password: string }): Promise<AdminLoginResult>;
     };
+    signup: {
+      mutate(input: {
+        email: string;
+        password: string;
+        userType: "professional" | "recruiter" | "company";
+        fullName?: string;
+        companyName?: string;
+        phoneNumber?: string;
+        country?: string;
+      }): Promise<LoginResult>;
+    };
+    getCurrentUser: {
+      query(input: { userId: string }): Promise<User | null>;
+    };
   };
   admin: {
-    getProfessionals: {
-      query(): Promise<ProfessionalApplication[]>;
-    };
-    getRecruiters: {
-      query(): Promise<RecruiterApplication[]>;
-    };
-    getCompanies: {
-      query(): Promise<CompanyApplication[]>;
-    };
-    getJobs: {
-      query(): Promise<Job[]>;
-    };
+    getProfessionals: { query(): Promise<ProfessionalApplication[]> };
+    getRecruiters: { query(): Promise<RecruiterApplication[]> };
+    getCompanies: { query(): Promise<CompanyApplication[]> };
+    getJobs: { query(): Promise<Job[]> };
     updateStatus: {
-      mutate(input: { type: "professional" | "recruiter" | "company"; id: string; status: "approved" | "rejected" }): Promise<StatusUpdateResult>;
+      mutate(input: { type: "professional" | "recruiter" | "company"; id: string; status: "approved" | "rejected" }): Promise<MutationResult>;
     };
     updateJobStatus: {
-      mutate(input: { id: string; status: "active" | "closed" | "flagged" }): Promise<JobStatusUpdateResult>;
+      mutate(input: { id: string; status: "active" | "closed" | "flagged" }): Promise<MutationResult>;
     };
     getJobApplicants: {
       query(input: { jobId: string }): Promise<unknown[]>;
+    };
+  };
+  jobs: {
+    getAll: {
+      query(input?: { filter?: string; search?: string }): Promise<Job[]>;
+    };
+    getById: {
+      query(input: { jobId: string }): Promise<Job | null>;
+    };
+    create: {
+      mutate(input: {
+        title: string;
+        company: string;
+        location: string;
+        type: string;
+        salary?: string;
+        description: string;
+        requirements: string[];
+        postedBy: string;
+      }): Promise<MutationResult>;
+    };
+    apply: {
+      mutate(input: {
+        jobId: string;
+        userId: string;
+        coverLetter: string;
+        resume?: string;
+      }): Promise<MutationResult>;
+    };
+    getApplications: {
+      query(input?: { userId?: string; jobId?: string }): Promise<Application[]>;
+    };
+  };
+  posts: {
+    getFeed: {
+      query(input?: { limit?: number }): Promise<{ posts: Post[]; nextCursor?: string }>;
+    };
+    create: {
+      mutate(input: {
+        content: string;
+        image?: string;
+        authorId: string;
+        authorName: string;
+        authorTitle: string;
+      }): Promise<MutationResult>;
+    };
+    like: {
+      mutate(input: { postId: string; userId: string }): Promise<MutationResult>;
+    };
+    delete: {
+      mutate(input: { postId: string; userId: string }): Promise<MutationResult>;
+    };
+  };
+  users: {
+    getById: {
+      query(input: { userId: string }): Promise<User | null>;
+    };
+    search: {
+      query(input: { query: string; type?: string }): Promise<User[]>;
+    };
+    updateProfile: {
+      mutate(input: Record<string, unknown>): Promise<MutationResult>;
+    };
+    connect: {
+      mutate(input: { userId: string; targetUserId: string }): Promise<MutationResult>;
+    };
+    getConnections: {
+      query(input: { userId: string }): Promise<User[]>;
     };
   };
 }
