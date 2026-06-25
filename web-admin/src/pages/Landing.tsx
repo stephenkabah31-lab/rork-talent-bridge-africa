@@ -135,6 +135,7 @@ export default function Landing() {
                 desc: "Create a profile, browse jobs matched to your skills, apply in one click, message recruiters, and schedule video interviews.",
                 color: "#D97706",
                 image: "a_young_african",
+                route: "/signup/professional",
               },
               {
                 icon: Users,
@@ -142,6 +143,7 @@ export default function Landing() {
                 desc: "Post jobs that reach thousands of professionals, get smart candidate matches, message and screen applicants, all from one dashboard.",
                 color: "#059669",
                 image: "recruiter_tablet_desk",
+                route: "/signup/recruiter",
               },
               {
                 icon: Building2,
@@ -149,18 +151,20 @@ export default function Landing() {
                 desc: "Build your employer brand, attract top talent, post unlimited roles, and track your hiring pipeline with real-time analytics.",
                 color: "#7C3AED",
                 image: "glass_tower_african_city",
+                route: "/signup/company",
               },
             ].map((item) => (
-              <div
+              <button
                 key={item.title}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                onClick={() => navigate(item.route)}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all overflow-hidden text-left cursor-pointer group"
               >
                 {/* Card image */}
                 <div className="h-48 overflow-hidden">
                   <img
                     src={`https://rork.app/pa/ln0w2dnjwy17g62tuteow/${item.image}`}
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${item.image === "recruiter_tablet_desk" ? "-scale-x-100" : ""}`}
                   />
                 </div>
                 <div className="p-6">
@@ -170,12 +174,12 @@ export default function Landing() {
                   >
                     <item.icon className="w-5 h-5" style={{ color: item.color }} />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-[#D97706] transition-colors">
                     {item.title}
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
