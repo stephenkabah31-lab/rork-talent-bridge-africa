@@ -110,7 +110,7 @@ export default function Landing() {
             className="w-full rounded-2xl shadow-lg h-full object-cover"
           />
           <img
-            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/african_talent_network"
+            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_talent_network"
             alt="African talent network connectivity"
             className="w-full rounded-2xl shadow-lg h-full object-cover"
           />
