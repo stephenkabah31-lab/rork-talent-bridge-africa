@@ -57,7 +57,7 @@ export default function Landing() {
       {/* ── HERO ── */}
       <section className="relative bg-gradient-to-b from-[#FFF7ED] via-white to-white overflow-hidden">
         {/* Hero background image */}
-        <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 opacity-50">
           <img
             src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/african_professionals_office"
             alt=""
@@ -98,9 +98,6 @@ export default function Landing() {
             </Button>
           </div>
 
-          <p className="mt-6 text-sm text-gray-400">
-            Free to join &middot; No credit card required
-          </p>
         </div>
       </section>
 
