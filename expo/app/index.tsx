@@ -144,6 +144,30 @@ function WelcomeScreen() {
           </SafeAreaView>
         </View>
 
+        {/* ── AFRICA NETWORK MAP ── */}
+        <View style={styles.mapSection}>
+          <Text style={styles.sectionTitle}>{t('landing.africaNetwork')}</Text>
+          <View style={styles.mapContainer}>
+            <Image
+              source={{ uri: rorkAsset('africa_network_map') }}
+              style={styles.mapImage}
+              resizeMode="contain"
+            />
+            {/* City labels overlaid */}
+            <Text style={[styles.cityLabel, { top: '6%', left: '46%' }]}>Cairo</Text>
+            <Text style={[styles.cityLabel, { top: '27%', left: '5%' }]}>Dakar</Text>
+            <Text style={[styles.cityLabel, { top: '37%', left: '33%' }]}>Lagos</Text>
+            <Text style={[styles.cityLabel, { top: '32%', left: '60%' }]}>Nairobi</Text>
+            <Text style={[styles.cityLabel, { top: '41%', left: '50%' }]}>Kinshasa</Text>
+            <Text style={[styles.cityLabel, { top: '67%', left: '46%' }]}>Johannesburg</Text>
+            <Text style={[styles.cityLabel, { top: '72%', left: '37%' }]}>Cape Town</Text>
+            <Text style={[styles.cityLabel, { top: '16%', left: '63%' }]}>Addis Ababa</Text>
+            <Text style={[styles.cityLabel, { top: '13%', left: '26%' }]}>Casablanca</Text>
+            <Text style={[styles.cityLabel, { top: '43%', left: '18%' }]}>Accra</Text>
+            <Text style={[styles.cityLabel, { top: '47%', left: '66%' }]}>Dar es Salaam</Text>
+          </View>
+        </View>
+
         {/* ── HOW IT WORKS ── */}
         <View style={styles.howSection}>
           <Text style={styles.sectionTitle}>{t('landing.howItWorks')}</Text>
@@ -333,6 +357,39 @@ const styles = StyleSheet.create({
   btnPressed: {
     opacity: 0.75,
     transform: [{ scale: 0.98 }],
+  },
+
+  /* ── AFRICA NETWORK MAP ── */
+  mapSection: {
+    paddingVertical: 36,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  mapContainer: {
+    position: 'relative',
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  mapImage: {
+    width: '100%',
+    aspectRatio: 1.5,
+  },
+  cityLabel: {
+    position: 'absolute',
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(217, 119, 6, 0.85)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
 
   /* ── HOW IT WORKS ── */
