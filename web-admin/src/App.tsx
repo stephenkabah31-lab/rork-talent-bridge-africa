@@ -114,30 +114,9 @@ const AppRoutes = () => (
         </GuestRoute>
       }
     />
-    <Route
-      path="/signup/professional"
-      element={
-        <GuestRoute>
-          <SignupProfessional />
-        </GuestRoute>
-      }
-    />
-    <Route
-      path="/signup/recruiter"
-      element={
-        <GuestRoute>
-          <SignupRecruiter />
-        </GuestRoute>
-      }
-    />
-    <Route
-      path="/signup/company"
-      element={
-        <GuestRoute>
-          <SignupCompany />
-        </GuestRoute>
-      }
-    />
+    <Route path="/signup/professional" element={<SignupProfessional />} />
+    <Route path="/signup/recruiter" element={<SignupRecruiter />} />
+    <Route path="/signup/company" element={<SignupCompany />} />
 
     {/* Admin login — public, separate from regular user auth */}
     <Route path="/admin-login" element={<AdminLogin />} />

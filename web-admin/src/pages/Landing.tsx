@@ -164,7 +164,7 @@ export default function Landing() {
                   <img
                     src={`https://rork.app/pa/ln0w2dnjwy17g62tuteow/${item.image}`}
                     alt={item.title}
-                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${item.image === "recruiter_tablet_desk" ? "-scale-x-100" : ""}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
                 <div className="p-6">
