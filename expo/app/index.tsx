@@ -2,17 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
-  Briefcase,
+  ArrowRight,
   Building2,
   Heart,
-  MessageCircle,
-  Shield,
   Target,
   Users,
 } from 'lucide-react-native';
 import React from 'react';
 import {
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -25,10 +22,36 @@ import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/colors';
 
-const { width } = Dimensions.get('window');
 const PROJECT_ID = 'ln0w2dnjwy17g62tuteow';
 const rorkAsset = (key: string) =>
   `https://rork.app/pa/${PROJECT_ID}/${key}`;
+
+const howItWorksCards = [
+  {
+    icon: Target,
+    titleKey: 'landing.forProfessionals',
+    descKey: 'landing.forProfessionalsDesc',
+    color: '#D97706',
+    image: 'a_young_african',
+    route: '/signup-professional',
+  },
+  {
+    icon: Users,
+    titleKey: 'landing.forRecruiters',
+    descKey: 'landing.forRecruitersDesc',
+    color: '#059669',
+    image: 'female_recruiter_at_desk',
+    route: '/signup-recruiter',
+  },
+  {
+    icon: Building2,
+    titleKey: 'landing.forCompanies',
+    descKey: 'landing.forCompaniesDesc',
+    color: '#7C3AED',
+    image: 'glass_tower_african_city',
+    route: '/signup-company',
+  },
+];
 
 export default function IndexRedirect() {
   const router = useRouter();
@@ -38,7 +61,12 @@ export default function IndexRedirect() {
     try {
       const stored = await AsyncStorage.getItem('user');
       if (stored) {
-        router.replace('/(tabs)/home' as any);
+        const parsed = JSON.parse(stored);
+        if (parsed?.isAdmin) {
+          router.replace('/admin-dashboard' as any);
+        } else {
+          router.replace('/(tabs)/home' as any);
+        }
       } else {
         setIsChecking(false);
       }
@@ -53,9 +81,7 @@ export default function IndexRedirect() {
 
   if (isChecking) {
     return (
-      <View style={styles.splashContainer}>
-        <View style={StyleSheet.absoluteFill} />
-      </View>
+      <View style={styles.splashContainer} />
     );
   }
 
@@ -66,72 +92,6 @@ function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const howItWorksCards = [
-    {
-      icon: Target,
-      title: t('landing.forProfessionals'),
-      desc: t('landing.forProfessionalsDesc'),
-      color: Colors.primary,
-      image: 'a_young_african',
-      route: '/signup-professional',
-    },
-    {
-      icon: Users,
-      title: t('landing.forRecruiters'),
-      desc: t('landing.forRecruitersDesc'),
-      color: Colors.secondary,
-      image: 'female_recruiter_at_desk',
-      route: '/signup-recruiter',
-    },
-    {
-      icon: Building2,
-      title: t('landing.forCompanies'),
-      desc: t('landing.forCompaniesDesc'),
-      color: '#7C3AED',
-      image: 'glass_tower_african_city',
-      route: '/signup-company',
-    },
-  ];
-
-  const features = [
-    {
-      icon: Briefcase,
-      title: 'Live job listings',
-      desc: 'Browse hundreds of roles across Africa\'s top companies.',
-      color: Colors.primary,
-    },
-    {
-      icon: MessageCircle,
-      title: 'Direct messaging',
-      desc: 'Chat with recruiters and peers — no middlemen, no delays.',
-      color: Colors.secondary,
-    },
-    {
-      icon: Users,
-      title: 'Professional network',
-      desc: 'Build connections that open doors to new opportunities.',
-      color: '#7C3AED',
-    },
-    {
-      icon: Target,
-      title: 'Smart matching',
-      desc: 'Our algorithm surfaces roles that fit your skills and goals.',
-      color: Colors.accent,
-    },
-    {
-      icon: MessageCircle,
-      title: 'Video interviews',
-      desc: 'Schedule and conduct calls right on the platform.',
-      color: '#0891B2',
-    },
-    {
-      icon: Shield,
-      title: 'Verified employers',
-      desc: 'Every company goes through a verification process.',
-      color: Colors.secondary,
-    },
-  ];
-
   return (
     <View style={styles.root}>
       <ScrollView
@@ -141,24 +101,13 @@ function WelcomeScreen() {
       >
         {/* ── HERO ── */}
         <View style={styles.hero}>
-          <View style={styles.heroBg}>
-            <Image
-              source={{ uri: rorkAsset('african_professionals_office') }}
-              style={styles.heroBgImage}
-              resizeMode="cover"
-            />
-          </View>
           <SafeAreaView edges={['top']}>
             <View style={styles.heroContent}>
               <Text style={styles.heroTitle}>
-                Africa's professional{'\n'}network for{' '}
-                <Text style={styles.heroHighlight}>finding work</Text>
-                {' '}and{' '}
-                <Text style={styles.heroHighlight}>hiring talent</Text>
+                {t('landing.heroTitle', "Africa's professional network for finding work and hiring talent")}
               </Text>
               <Text style={styles.heroSubtitle}>
-                Connect with professionals, browse live job listings, message
-                recruiters directly, and land your next role — all in one place.
+                {t('landing.heroSubtitle', "Connect with professionals, browse live job listings, message recruiters directly, and land your next role — all in one place.")}
               </Text>
               <View style={styles.heroButtons}>
                 <Pressable
@@ -175,7 +124,7 @@ function WelcomeScreen() {
                     style={styles.primaryBtnGradient}
                   >
                     <Text style={styles.primaryBtnText}>
-                      {t('landing.joinNow')}
+                      {t('landing.joinNow')} <ArrowRight size={16} color="#fff" style={{ marginLeft: 4 }} />
                     </Text>
                   </LinearGradient>
                 </Pressable>
@@ -186,67 +135,22 @@ function WelcomeScreen() {
                   ]}
                   onPress={() => router.push('/jobs' as any)}
                 >
-                  <Text style={styles.outlineBtnText}>Browse Jobs</Text>
+                  <Text style={styles.outlineBtnText}>
+                    {t('landing.browseJobs', 'Browse Jobs')}
+                  </Text>
                 </Pressable>
               </View>
             </View>
           </SafeAreaView>
         </View>
 
-        {/* ── AFRICA NETWORK MAP ── */}
-        <View style={styles.mapSection}>
-          <View style={styles.mapContainer}>
-            <Image
-              source={{ uri: rorkAsset('africa_network_map') }}
-              style={styles.mapImage}
-              resizeMode="cover"
-            />
-            <Text style={[styles.cityLabel, { top: '8%', left: '48%' }]}>
-              Cairo
-            </Text>
-            <Text style={[styles.cityLabel, { top: '28%', left: '12%' }]}>
-              Dakar
-            </Text>
-            <Text style={[styles.cityLabel, { top: '38%', left: '35%' }]}>
-              Lagos
-            </Text>
-            <Text style={[styles.cityLabel, { top: '33%', left: '62%' }]}>
-              Nairobi
-            </Text>
-            <Text style={[styles.cityLabel, { top: '42%', left: '52%' }]}>
-              Kinshasa
-            </Text>
-            <Text style={[styles.cityLabel, { top: '68%', left: '48%' }]}>
-              Johannesburg
-            </Text>
-            <Text style={[styles.cityLabel, { top: '73%', left: '40%' }]}>
-              Cape Town
-            </Text>
-            <Text style={[styles.cityLabel, { top: '18%', left: '65%' }]}>
-              Addis Ababa
-            </Text>
-            <Text style={[styles.cityLabel, { top: '15%', left: '28%' }]}>
-              Casablanca
-            </Text>
-            <Text style={[styles.cityLabel, { top: '45%', left: '22%' }]}>
-              Accra
-            </Text>
-            <Text style={[styles.cityLabel, { top: '48%', left: '68%' }]}>
-              Dar es Salaam
-            </Text>
-          </View>
-        </View>
-
         {/* ── HOW IT WORKS ── */}
         <View style={styles.howSection}>
           <Text style={styles.sectionTitle}>{t('landing.howItWorks')}</Text>
-          <Text style={styles.sectionSubtitle}>
-            {t('landing.heroSubtitle')}
-          </Text>
 
           {howItWorksCards.map((card) => (
             <Pressable
-              key={card.title}
+              key={card.titleKey}
               style={({ pressed }) => [
                 styles.howCard,
                 pressed && styles.cardPressed,
@@ -267,35 +171,11 @@ function WelcomeScreen() {
                 >
                   <card.icon color={card.color} size={20} />
                 </View>
-                <Text style={styles.howCardTitle}>{card.title}</Text>
-                <Text style={styles.howCardDesc}>{card.desc}</Text>
+                <Text style={styles.howCardTitle}>{t(card.titleKey)}</Text>
+                <Text style={styles.howCardDesc}>{t(card.descKey)}</Text>
               </View>
             </Pressable>
           ))}
-        </View>
-
-        {/* ── FEATURES ── */}
-        <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>Everything in one place</Text>
-
-          <View style={styles.featuresGrid}>
-            {features.map((item) => (
-              <View key={item.title} style={styles.featureItem}>
-                <View
-                  style={[
-                    styles.featureIcon,
-                    { backgroundColor: `${item.color}18` },
-                  ]}
-                >
-                  <item.icon color={item.color} size={20} />
-                </View>
-                <View style={styles.featureTextWrap}>
-                  <Text style={styles.featureTitle}>{item.title}</Text>
-                  <Text style={styles.featureDesc}>{item.desc}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
         </View>
 
         {/* ── CTA ── */}
@@ -305,10 +185,11 @@ function WelcomeScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.ctaSection}
         >
-          <Text style={styles.ctaTitle}>Ready to take the next step?</Text>
+          <Text style={styles.ctaTitle}>
+            {t('landing.ctaTitle', 'Ready to take the next step?')}
+          </Text>
           <Text style={styles.ctaSubtitle}>
-            Join thousands of professionals already using TalentBridge to find
-            opportunities and grow their careers across Africa.
+            {t('landing.ctaSubtitle', "Join thousands of professionals already using TalentBridge to find opportunities and grow their careers across Africa.")}
           </Text>
           <View style={styles.ctaButtons}>
             <Pressable
@@ -383,41 +264,29 @@ const styles = StyleSheet.create({
 
   /* ── HERO ── */
   hero: {
-    position: 'relative',
     backgroundColor: '#FFF7ED',
-  },
-  heroBg: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.5,
-  },
-  heroBgImage: {
-    width: '100%',
-    height: '100%',
+    paddingBottom: 48,
   },
   heroContent: {
     paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 48,
+    paddingTop: 80,
     alignItems: 'center',
   },
   heroTitle: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: '700',
     color: '#111827',
     textAlign: 'center',
-    lineHeight: 38,
+    lineHeight: 36,
     letterSpacing: -0.5,
-  },
-  heroHighlight: {
-    color: Colors.primary,
   },
   heroSubtitle: {
     fontSize: 15,
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 22,
-    marginTop: 16,
-    paddingHorizontal: 8,
+    marginTop: 14,
+    paddingHorizontal: 4,
   },
   heroButtons: {
     marginTop: 28,
@@ -439,6 +308,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
   },
   primaryBtnText: {
     fontSize: 17,
@@ -465,38 +335,6 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
 
-  /* ── AFRICA MAP ── */
-  mapSection: {
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  mapContainer: {
-    position: 'relative',
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  mapImage: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-  },
-  cityLabel: {
-    position: 'absolute',
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    backgroundColor: 'rgba(217, 119, 6, 0.85)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-
   /* ── HOW IT WORKS ── */
   howSection: {
     paddingVertical: 40,
@@ -508,15 +346,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  sectionSubtitle: {
-    fontSize: 15,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 28,
-    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   howCard: {
     backgroundColor: '#FFFFFF',
@@ -560,47 +390,6 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.985 }],
-  },
-
-  /* ── FEATURES ── */
-  featuresSection: {
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  featuresGrid: {
-    marginTop: 28,
-    gap: 4,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  featureTextWrap: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 3,
-  },
-  featureDesc: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
   },
 
   /* ── CTA ── */

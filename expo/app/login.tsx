@@ -41,31 +41,6 @@ export default function LoginScreen() {
       return;
     }
 
-    // Dev admin bypass — sign in as admin with bridge.gh / bridge123
-    if (email.toLowerCase().trim() === 'bridge.gh' && password === 'bridge123') {
-      setIsLoading(true);
-      try {
-        const adminUser = {
-          id: 'admin_dev_' + Date.now().toString(),
-          email: 'bridge.gh',
-          name: 'Bridge Admin',
-          type: 'admin' as const,
-          isAdmin: true,
-        };
-        const token = `admin_token_${adminUser.id}`;
-        await secureStorage.setAuthToken(token);
-        await secureStorage.setUserData(adminUser);
-        await AsyncStorage.setItem('user', JSON.stringify(adminUser));
-        router.replace('/admin-dashboard' as any);
-      } catch (error) {
-        console.error('Dev admin login error:', error);
-        Alert.alert('Error', 'Failed to login. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
