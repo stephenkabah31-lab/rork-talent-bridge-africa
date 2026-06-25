@@ -142,7 +142,7 @@ export default function Landing() {
                 title: "For Recruiters",
                 desc: "Post jobs that reach thousands of professionals, get smart candidate matches, message and screen applicants, all from one dashboard.",
                 color: "#059669",
-                image: "recruiter_with_tablet",
+                image: "female_recruiter_at_desk",
                 route: "/signup/recruiter",
               },
               {
