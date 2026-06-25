@@ -101,13 +101,18 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── AFRICA NETWORK VISUAL ── */}
+      {/* ── AFRICA NETWORK VISUALS ── */}
       <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-8">
           <img
             src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_talent_flow"
             alt="TalentBridge connects professionals across Africa"
-            className="w-full rounded-2xl shadow-lg"
+            className="w-full rounded-2xl shadow-lg h-full object-cover"
+          />
+          <img
+            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/african_talent_network"
+            alt="African talent network connectivity"
+            className="w-full rounded-2xl shadow-lg h-full object-cover"
           />
         </div>
       </section>
@@ -129,34 +134,47 @@ export default function Landing() {
                 title: "For Professionals",
                 desc: "Create a profile, browse jobs matched to your skills, apply in one click, message recruiters, and schedule video interviews.",
                 color: "#D97706",
+                image: "a_young_african",
               },
               {
                 icon: Users,
                 title: "For Recruiters",
                 desc: "Post jobs that reach thousands of professionals, get smart candidate matches, message and screen applicants, all from one dashboard.",
                 color: "#059669",
+                image: "recruiter_tablet_desk",
               },
               {
                 icon: Building2,
                 title: "For Companies",
                 desc: "Build your employer brand, attract top talent, post unlimited roles, and track your hiring pipeline with real-time analytics.",
                 color: "#7C3AED",
+                image: "glass_tower_african_city",
               },
             ].map((item) => (
               <div
                 key={item.title}
-                className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
               >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ backgroundColor: `${item.color}12` }}
-                >
-                  <item.icon className="w-6 h-6" style={{ color: item.color }} />
+                {/* Card image */}
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={`https://rork.app/pa/ln0w2dnjwy17g62tuteow/${item.image}`}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {item.title}
-                </h3>
-                <p className="text-gray-500 leading-relaxed">{item.desc}</p>
+                <div className="p-6">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                    style={{ backgroundColor: `${item.color}12` }}
+                  >
+                    <item.icon className="w-5 h-5" style={{ color: item.color }} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -175,11 +193,30 @@ export default function Landing() {
       </section>
 
       {/* ── KEY FEATURES ── */}
-      <section className="py-20 lg:py-24 bg-[#F9FAFB]">
+      <section className="py-20 lg:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 text-center mb-14">
             Everything in one place
           </h2>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* Dashboard preview */}
+            <div className="rounded-2xl overflow-hidden shadow-md">
+              <img
+                src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/recruitment_dashboard"
+                alt="Platform dashboard"
+                className="w-full h-auto"
+              />
+            </div>
+            {/* Video interview preview */}
+            <div className="rounded-2xl overflow-hidden shadow-md">
+              <img
+                src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/video_interview_call"
+                alt="Video interviews"
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
@@ -222,7 +259,7 @@ export default function Landing() {
             ].map((item) => (
               <div
                 key={item.title}
-                className="flex gap-4 p-5 rounded-xl hover:bg-white transition-colors"
+                className="flex gap-4 p-5 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
