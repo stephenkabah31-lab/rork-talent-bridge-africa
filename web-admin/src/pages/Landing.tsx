@@ -55,8 +55,17 @@ export default function Landing() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="bg-gradient-to-b from-[#FFF7ED] via-white to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-24 lg:py-32 text-center">
+      <section className="relative bg-gradient-to-b from-[#FFF7ED] via-white to-white overflow-hidden">
+        {/* Hero background image */}
+        <div className="absolute inset-0 opacity-20">
+          <img
+            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/african_professionals_office"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-24 lg:py-32 text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-900 leading-tight tracking-tight">
             Africa's professional
             <br />
@@ -95,8 +104,19 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── AFRICA NETWORK VISUAL ── */}
+      <section className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <img
+            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_talent_flow"
+            alt="TalentBridge connects professionals across Africa"
+            className="w-full rounded-2xl shadow-lg"
+          />
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ── */}
-      <section className="py-20 lg:py-24 bg-white">
+      <section className="py-20 lg:py-24 bg-[#F9FAFB]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 text-center mb-4">
             {t("landing.howItWorks")}
@@ -143,6 +163,17 @@ export default function Landing() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS VISUAL ── */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <img
+            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/hiring_journey_cards"
+            alt="How TalentBridge works for professionals, recruiters, and companies"
+            className="w-full rounded-2xl"
+          />
         </div>
       </section>
 
