@@ -101,18 +101,13 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── AFRICA NETWORK VISUALS ── */}
+      {/* ── AFRICA NETWORK VISUAL ── */}
       <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <img
-            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_talent_flow"
+            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_network_map"
             alt="TalentBridge connects professionals across Africa"
-            className="w-full rounded-2xl shadow-lg h-full object-cover"
-          />
-          <img
-            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_talent_network"
-            alt="African talent network connectivity"
-            className="w-full rounded-2xl shadow-lg h-full object-cover"
+            className="w-full rounded-2xl shadow-lg"
           />
         </div>
       </section>
