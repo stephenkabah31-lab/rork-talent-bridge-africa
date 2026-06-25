@@ -104,11 +104,25 @@ export default function Landing() {
       {/* ── AFRICA NETWORK VISUAL ── */}
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <img
-            src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_network_map"
-            alt="TalentBridge connects professionals across Africa"
-            className="w-full rounded-2xl shadow-lg"
-          />
+          <div className="relative rounded-2xl shadow-lg overflow-hidden">
+            <img
+              src="https://rork.app/pa/ln0w2dnjwy17g62tuteow/africa_network_map"
+              alt="TalentBridge connects professionals across Africa"
+              className="w-full"
+            />
+            {/* City labels overlaid on the map */}
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '8%', left: '48%' }}>Cairo</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '28%', left: '12%' }}>Dakar</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '38%', left: '35%' }}>Lagos</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '33%', left: '62%' }}>Nairobi</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '42%', left: '52%' }}>Kinshasa</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '68%', left: '48%' }}>Johannesburg</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '73%', left: '40%' }}>Cape Town</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '18%', left: '65%' }}>Addis Ababa</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '15%', left: '28%' }}>Casablanca</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '45%', left: '22%' }}>Accra</span>
+            <span className="absolute text-[10px] sm:text-xs font-semibold text-white bg-[#D97706]/80 px-1.5 py-0.5 rounded" style={{ top: '48%', left: '68%' }}>Dar es Salaam</span>
+          </div>
         </div>
       </section>
 
